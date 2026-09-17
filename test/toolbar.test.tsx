@@ -62,6 +62,12 @@ test("bold is disabled at a bare caret with no word to wrap", () => {
   expect(BUILTIN_BY_ID.bold!.disabled!(mkView("a word here", 4).state)).toBe(false) // on "word"
 })
 
+test("bold with a bare caret mid-word wraps the whole word instead of splitting it", () => {
+  const view = mkView("a word here", 4) // caret between "wo" and "rd"
+  BUILTIN_BY_ID.bold!.run(view)
+  expect(view.state.doc.toString()).toBe("a **word** here")
+})
+
 test("wrapActive reports the pressed state for bold", () => {
   const view = mkView("a **bold** word", 5)
   expect(BUILTIN_BY_ID.bold!.isActive!(view.state)).toBe(true)
@@ -280,6 +286,16 @@ test("orderedList numbers the selected lines 1. 2. 3. and strips them back", () 
   expect(view.state.doc.toString()).toBe("1. alpha\n2. beta\n3. gamma")
   BUILTIN_BY_ID.orderedList!.run(view)
   expect(view.state.doc.toString()).toBe("alpha\nbeta\ngamma")
+})
+
+test("orderedList recognizes existing 1) 2) markers, not just 1.", () => {
+  const doc = "1) First\n2) Second"
+  const view = mkView(doc, 0, doc.length)
+  expect(BUILTIN_BY_ID.orderedList!.isActive!(view.state)).toBe(true)
+  BUILTIN_BY_ID.orderedList!.run(view)
+  // Already ordered (paren style counts) — toggling strips it rather than
+  // stacking a second, period-style marker in front.
+  expect(view.state.doc.toString()).toBe("First\nSecond")
 })
 
 test("codeBlock fences the selected lines and unwraps them again", () => {

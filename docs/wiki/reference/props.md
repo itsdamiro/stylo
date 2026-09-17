@@ -186,9 +186,14 @@ reference; return a React node to render in the embed's place.
   rejects or resolves to `null` — the literal `![[ref]]` text stands in, so a
   reference is never silently dropped.
 - **Resolutions are cached by `ref`** (per `embedSource` identity), so an embed
-  scrolled out of the canvas and back is not re-fetched and does not flash. Vary
-  the `ref` or pass a new `embedSource` if a reference's content can change;
-  rejections are not cached.
+  scrolled out of the canvas and back is not re-fetched and does not flash. The
+  cache has no TTL and never re-checks a settled entry on its own — if the
+  content behind a reference changes while the editor is open, call
+  **`handle.invalidateEmbed(ref)`** (see [Ref — imperative handle](#ref--imperative-handle))
+  to drop the stale entry; any embed for that `ref` currently on screen
+  re-resolves immediately. Rejections are never cached, so those already retry
+  on their own. See
+  [ADR-011](../../journal/2026-09/2026-09-17_adr-011-embed-cache-invalidation.md).
 - Works on **`preview`, `split`, and the in-place canvas** (ADR-009). On the
   canvas the resolved node is portalled into the rendered line; put the caret on
   the line to reveal the raw `![[ref]]` for editing. Interactive host content
@@ -325,15 +330,18 @@ editor.current?.scrollToHeading("Background") // open a note, jump to a heading
 editor.current?.insertAtCursor("![](…)") //     drop text in at the caret
 ```
 
-| Method                  | Returns              | Notes                                                                                                                           |
-| ----------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `focus()`               | `void`               | Move keyboard focus into the editing surface.                                                                                   |
-| `scrollToHeading(text)` | `boolean`            | Caret to the first ATX heading whose text matches `text` (trimmed, case-insensitive); scrolls it to the top. `true` if matched. |
-| `insertAtCursor(md)`    | `void`               | Replace the selection, or insert at the caret when it is empty. No effect when `readOnly`.                                      |
-| `getView()`             | `EditorView \| null` | The underlying CodeMirror view. An escape hatch — **not** covered by semver; the other three are.                               |
+| Method                  | Returns              | Notes                                                                                                                                                                                  |
+| ----------------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `focus()`               | `void`               | Move keyboard focus into the editing surface.                                                                                                                                          |
+| `scrollToHeading(text)` | `boolean`            | Caret to the first ATX heading whose text matches `text` (trimmed, case-insensitive); scrolls it to the top. `true` if matched.                                                        |
+| `insertAtCursor(md)`    | `void`               | Replace the selection, or insert at the caret when it is empty. No effect when `readOnly`.                                                                                             |
+| `getView()`             | `EditorView \| null` | The underlying CodeMirror view. An escape hatch — **not** covered by semver; the other four are.                                                                                       |
+| `invalidateEmbed(ref?)` | `void`               | Drop the cached `embedSource` result for `ref` — or, with no argument, every cached embed — so the next render re-resolves it. See [Embeds](#embeds). No-op without `embedSource` set. |
 
-Every method is inert (`null` / `false` / no-op) in `preview` mode and before the
-surface has mounted.
+`focus()`, `scrollToHeading()`, `insertAtCursor()`, and `getView()` are inert
+(`null` / `false` / no-op) in `preview` mode and before the surface has mounted —
+there is no editor then. `invalidateEmbed()` is the exception: it targets the
+embed cache, not the editor, so it works in every mode, `preview` included.
 
 ## Styling tokens
 

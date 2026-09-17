@@ -1,6 +1,6 @@
 import { createRef, useState } from "react"
 import { afterEach, expect, test, vi } from "vitest"
-import { cleanup, render } from "@testing-library/react"
+import { cleanup, render, screen } from "@testing-library/react"
 import { Stylo } from "../src/Stylo"
 import type { StyloHandle } from "../src/types"
 
@@ -101,4 +101,59 @@ test("the handle is inert in preview mode", () => {
   expect(ref.current!.scrollToHeading("hi")).toBe(false)
   expect(() => ref.current!.insertAtCursor("x")).not.toThrow()
   expect(() => ref.current!.focus()).not.toThrow()
+})
+
+test("invalidateEmbed is a no-op without an embedSource, in every mode", () => {
+  const ref = createRef<StyloHandle>()
+  render(<Stylo ref={ref} value="# hi" onChange={() => {}} mode="preview" />)
+  expect(() => ref.current!.invalidateEmbed("Note")).not.toThrow()
+  expect(() => ref.current!.invalidateEmbed()).not.toThrow()
+})
+
+test("invalidateEmbed makes an already-rendered embed re-resolve and update", async () => {
+  const ref = createRef<StyloHandle>()
+  let version = 1
+  const embedSource = vi.fn(() => <span data-testid="embed">v{version}</span>)
+  render(
+    <Stylo
+      ref={ref}
+      value="![[Note]]"
+      onChange={() => {}}
+      mode="preview"
+      embedSource={embedSource}
+    />,
+  )
+
+  expect((await screen.findByTestId("embed")).textContent).toBe("v1")
+  expect(embedSource).toHaveBeenCalledTimes(1)
+
+  version = 2
+  ref.current!.invalidateEmbed("Note")
+
+  await vi.waitFor(() => {
+    expect(screen.getByTestId("embed").textContent).toBe("v2")
+  })
+  expect(embedSource).toHaveBeenCalledTimes(2)
+})
+
+test("invalidateEmbed with no ref clears every cached embed for the source", async () => {
+  const ref = createRef<StyloHandle>()
+  const embedSource = vi.fn((r: string) => <span data-testid={`embed-${r}`}>{r}</span>)
+  render(
+    <Stylo
+      ref={ref}
+      value={"![[A]]\n\n![[B]]"}
+      onChange={() => {}}
+      mode="preview"
+      embedSource={embedSource}
+    />,
+  )
+
+  await screen.findByTestId("embed-A")
+  await screen.findByTestId("embed-B")
+  expect(embedSource).toHaveBeenCalledTimes(2)
+
+  ref.current!.invalidateEmbed()
+
+  await vi.waitFor(() => expect(embedSource).toHaveBeenCalledTimes(4))
 })

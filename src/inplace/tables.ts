@@ -85,6 +85,25 @@ function parseTable(node: SyntaxNode, doc: Text): ParsedTable | null {
   return { head: grid.rows[0]!, body: grid.rows.slice(1), aligns: grid.aligns }
 }
 
+/** Is `pos` inside (or on the edge of) a `Table` node — cheap via the syntax
+ *  tree's own incremental point-resolution, unlike a document-wide rescan.
+ *  Checked on both sides of `pos`: resolving a boundary position with only
+ *  one bias can land just past the table instead of inside it (e.g. a caret
+ *  placed at the table's own closing edge). */
+function nearTable(state: EditorState, pos: number): boolean {
+  const tree = syntaxTree(state)
+  for (const side of [-1, 1] as const) {
+    for (let node: SyntaxNode | null = tree.resolveInner(pos, side); node; node = node.parent) {
+      if (node.name === "Table") return true
+    }
+  }
+  return false
+}
+
+function selectionNearTable(state: EditorState, selection: EditorState["selection"]): boolean {
+  return selection.ranges.some((r) => nearTable(state, r.from) || nearTable(state, r.to))
+}
+
 function build(state: EditorState): DecorationSet {
   if (!state.facet(inPlaceConfigFacet).tables) return Decoration.none
   // `EditableTableWidget`'s cells are a native `contenteditable` DOM region
@@ -153,7 +172,16 @@ export const tableField = StateField.define<DecorationSet>({
     if (tr.state.facet(tableEditingFacet) === "cells") {
       return tr.docChanged || readOnlyToggled ? build(tr.state) : value.map(tr.changes)
     }
-    return tr.docChanged || tr.selection || readOnlyToggled ? build(tr.state) : value
+    if (tr.docChanged || readOnlyToggled) return build(tr.state)
+    if (!tr.selection) return value
+    // A pure caret move only ever needs a rebuild if it entered or left a
+    // table's line range (to reveal or re-hide its source) — most keystrokes
+    // are nowhere near one, so check the (already incrementally maintained)
+    // syntax tree before re-parsing every table in the document.
+    const near =
+      selectionNearTable(tr.state, tr.startState.selection) ||
+      selectionNearTable(tr.state, tr.state.selection)
+    return near ? build(tr.state) : value
   },
   provide: (field) => [
     EditorView.decorations.from(field),

@@ -2,6 +2,10 @@ import type { EditorState } from "@codemirror/state"
 import type { EditorView } from "@codemirror/view"
 import { selectedLines } from "./block"
 
+/** An ATX heading's `#` … `###### ` prefix — the single source of truth for
+ *  the toolbar and the in-place canvas's Backspace-unwrap alike. */
+export const HEADING_PREFIX = /^(#{1,6}) +/
+
 /**
  * Set, swap, or clear an ATX heading prefix on every line the selection touches.
  * A line already at `level` is cleared; any other level (or none) is set to it.
@@ -13,7 +17,7 @@ export function toggleHeading(view: EditorView, level: number): boolean {
   const changes = []
   for (let n = first; n <= last; n++) {
     const line = s.doc.line(n)
-    const m = /^(#{1,6}) +/.exec(line.text)
+    const m = HEADING_PREFIX.exec(line.text)
     if (m && m[1]!.length === level) {
       changes.push({ from: line.from, to: line.from + m[0].length })
     } else if (m) {
@@ -35,7 +39,7 @@ export function clearHeading(view: EditorView): boolean {
   const changes = []
   for (let n = first; n <= last; n++) {
     const line = s.doc.line(n)
-    const m = /^#{1,6} +/.exec(line.text)
+    const m = HEADING_PREFIX.exec(line.text)
     if (m) changes.push({ from: line.from, to: line.from + m[0].length })
   }
   if (!changes.length) return false

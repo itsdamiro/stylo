@@ -45,6 +45,14 @@ test("Backspace at column 0 of a nested list item outdents one step", () => {
   expect(view.state.doc.toString()).toBe("- a\n- b")
 })
 
+test("Backspace under a 3-wide ordered marker outdents by the parent's own width", () => {
+  // "1. " is 3 columns; a fixed 2-space outdent would leave a stray leading
+  // space that reparses as a detached top-level list instead of a sibling.
+  const view = mkView("1. a\n   - b", 10) // visual start of "b"
+  expect(unwrapLinePrefix(view)).toBe(true)
+  expect(view.state.doc.toString()).toBe("1. a\n- b")
+})
+
 test("Backspace at column 0 of a task line drops the checkbox prefix", () => {
   const view = mkView("- [ ] todo", 6)
   expect(unwrapLinePrefix(view)).toBe(true)

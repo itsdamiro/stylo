@@ -18,6 +18,12 @@ export function remarkWikilink() {
       for (const match of node.value.matchAll(WIKILINK_PATTERN)) {
         const [raw = "", rawTarget = "", rawLabel] = match
         const start = match.index ?? 0
+        // A `![[ref]]` embed either was already consumed by `remarkEmbed`
+        // earlier in the pipeline (when `embedSource` is set), or wasn't —
+        // either way its inner `[[ref]]` must stay untouched here rather than
+        // becoming a dead link, per `EmbedSource`'s documented fallback (a
+        // bare `![[ref]]` renders unchanged with no `embedSource`).
+        if (start > 0 && node.value[start - 1] === "!") continue
         if (start > cursor) {
           out.push({ type: "text", value: node.value.slice(cursor, start) })
         }

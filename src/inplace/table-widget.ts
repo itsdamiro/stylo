@@ -1,17 +1,17 @@
 import { Annotation } from "@codemirror/state"
 import { EditorView, WidgetType } from "@codemirror/view"
-import { handleCellShortcut } from "../toolbar/cell-inline"
 import { type Align, serializeGrid } from "../toolbar/table-grid"
 import { cellHasSelection, cellSelectionRows } from "./context-menu-actions"
 import { attachLongPress, type LongPressHandle } from "./long-press"
 import { createTableGizmos, type StructOp, type TableGizmos } from "./table-gizmos"
-import { caretInCell } from "./table-widget-caret"
+import { handleTableKey } from "./table-widget-keys"
 import { paintCell, renderTableCells } from "./table-widget-render"
 import {
   gridOf,
   offsetFromPoint,
   placeCaret,
   renderedCaretOffset,
+  selectionOffsets,
   selectWordAtPoint,
   trimGrid,
 } from "./table-cell-dom"
@@ -54,7 +54,6 @@ export class EditableTableWidget extends WidgetType {
   private syncing = false
   /** Rendered-text offset from the mousedown that is bringing a cell into edit. */
   private pendingOffset: number | null = null
-  private current: string[][]
   private gizmos: TableGizmos | null = null
   private longPress: LongPressHandle | null = null
   /** When a long-press last opened the structural menu; a `contextmenu` the
@@ -69,7 +68,6 @@ export class EditableTableWidget extends WidgetType {
   ) {
     super()
     this.rows = gridOf(data)
-    this.current = trimGrid(this.rows)
   }
 
   override eq(other: EditableTableWidget) {
@@ -79,7 +77,7 @@ export class EditableTableWidget extends WidgetType {
     // Widget-originated edits use the `fromTableWidget` annotation path, which
     // never calls `eq`, so this only bites on a genuine external reload.
     if (this.table) return false
-    return JSON.stringify(this.current) === JSON.stringify(other.current)
+    return JSON.stringify(trimGrid(this.rows)) === JSON.stringify(trimGrid(other.rows))
   }
 
   override ignoreEvent() {
@@ -195,11 +193,12 @@ export class EditableTableWidget extends WidgetType {
     this.editing = null
   }
 
-  /** The selection as (row, col, anchor offset, head offset) within the editing cell. */
+  /** The selection as (row, col, offset, head) within the editing cell. */
   private readCaret(): { r: number; c: number; offset: number; head: number } | null {
     if (!this.editing) return null
     const { r, c } = this.coords(this.editing)
-    return { r, c, ...caretInCell(this.editing) }
+    const { from, to } = selectionOffsets(this.editing)
+    return { r, c, offset: from, head: to }
   }
 
   private writeCaret(caret: { r: number; c: number; offset: number; head: number }) {
@@ -212,7 +211,6 @@ export class EditableTableWidget extends WidgetType {
     if (!this.table) return
     const caret = this.readCaret()
     const text = serializeGrid({ rows: this.rows, aligns: this.data.aligns })
-    this.current = trimGrid(this.rows)
     const { from, to } = this.bounds(view)
     if (view.state.sliceDoc(from, to) === text) return
 
@@ -235,100 +233,22 @@ export class EditableTableWidget extends WidgetType {
   }
 
   private onKey(event: KeyboardEvent, view: EditorView) {
-    const cell = (event.target as HTMLElement).closest<HTMLTableCellElement>("td, th")
-    if (!cell || !this.table) return
-    // Mod-b / Mod-i / Mod-k never reach CodeMirror's keymap from inside a
-    // widget (`ignoreEvent`), so the widget applies them to the cell itself.
-    if (handleCellShortcut(event, cell)) {
-      event.stopPropagation()
-      return
-    }
-    const { r, c } = this.coords(cell)
-    const lastRow = this.rows.length - 1
-
-    if (event.key === "Tab") {
-      event.preventDefault()
-      event.stopPropagation()
-      const flat = r * this.cols() + c + (event.shiftKey ? -1 : 1)
-      if (flat < 0) return
-      if (flat >= this.rows.length * this.cols()) {
-        if (event.shiftKey) return
-        this.appendRow()
-        this.cellAt(lastRow + 1, 0)?.focus()
-        this.sync(view)
-        return
-      }
-      this.cellAt(Math.floor(flat / this.cols()), flat % this.cols())?.focus()
-      return
-    }
-    if (event.key === "Enter") {
-      event.preventDefault()
-      event.stopPropagation()
-      if (r < lastRow) return this.cellAt(r + 1, c)?.focus()
-      this.appendRow()
-      this.cellAt(lastRow + 1, c)?.focus()
-      this.sync(view)
-      return
-    }
-    const cols = this.cols()
-    const exitBelow = () => {
-      const { to } = this.bounds(view)
-      view.focus()
-      // With the table as the last content in the document, `to` is already
-      // `doc.length` — there is no line after it to land the caret on, and a
-      // selection placed exactly at the atomic table range's own edge can
-      // resolve to the *other* side of it (landing above the table instead of
-      // below). Insert the line that "exit below" needs first, same as a
-      // fresh `insertTable` already gets, then move into it.
-      if (to >= view.state.doc.length) {
-        view.dispatch({ changes: { from: to, insert: "\n" }, selection: { anchor: to + 1 } })
-        return
-      }
-      view.dispatch({ selection: { anchor: to + 1 } })
-    }
-    const exitAbove = () => {
-      const { from } = this.bounds(view)
-      view.focus()
-      view.dispatch({ selection: { anchor: Math.max(from - 1, 0) } })
-    }
-    const enterCell = (flat: number, offset: number) => {
-      const target = this.cellAt(Math.floor(flat / cols), flat % cols)
-      if (!target) return
-      this.pendingOffset = offset
-      target.focus()
-    }
-
-    // Vertical arrows walk the column; past the first / last row they leave the
-    // table. The caret's text offset rides along so a press feels continuous.
-    if (event.key === "ArrowDown") {
-      event.preventDefault()
-      event.stopPropagation()
-      if (r === lastRow) exitBelow()
-      else enterCell((r + 1) * cols + c, this.readCaret()?.offset ?? 0)
-      return
-    }
-    if (event.key === "ArrowUp") {
-      event.preventDefault()
-      event.stopPropagation()
-      if (r === 0) exitAbove()
-      else enterCell((r - 1) * cols + c, this.readCaret()?.offset ?? 0)
-      return
-    }
-    // Left / Right cross into the neighbouring cell only from the text edge —
-    // mid-text (or with a range selected) the browser moves within the cell.
-    if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
-      const back = event.key === "ArrowLeft"
-      const caret = this.readCaret()
-      if (!caret || caret.offset !== caret.head) return
-      if (back ? caret.offset > 0 : caret.offset < (cell.textContent ?? "").length) return
-      event.preventDefault()
-      event.stopPropagation()
-      const flat = r * cols + c + (back ? -1 : 1)
-      if (flat < 0) return exitAbove()
-      if (flat >= this.rows.length * cols) return exitBelow()
-      enterCell(flat, back ? (this.rows[Math.floor(flat / cols)]?.[flat % cols] ?? "").length : 0)
-      return
-    }
+    if (!this.table) return
+    handleTableKey(event, view, {
+      coords: (cell) => this.coords(cell),
+      rows: () => this.rows.length,
+      cols: () => this.cols(),
+      cellAt: (r, c) => this.cellAt(r, c),
+      cellText: (r, c) => this.rows[r]?.[c] ?? "",
+      appendRow: () => this.appendRow(),
+      sync: (v) => this.sync(v),
+      bounds: (v) => this.bounds(v),
+      readCaret: () => this.readCaret(),
+      enterCell: (cell, offset) => {
+        this.pendingOffset = offset
+        cell.focus()
+      },
+    })
   }
 
   /**

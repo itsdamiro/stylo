@@ -16,9 +16,13 @@
  * backspace edits it).
  */
 
-import { Prec, type Extension } from "@codemirror/state"
+import { syntaxTree } from "@codemirror/language"
+import { Prec, type EditorState, type Extension } from "@codemirror/state"
 import { type Command, type EditorView, keymap } from "@codemirror/view"
+import type { SyntaxNode } from "@lezer/common"
 import { activeTableCell } from "../toolbar/cell-inline"
+import { BULLET, LIST_MARKER, ORDERED, QUOTE, TASK } from "../toolbar/command-helpers"
+import { HEADING_PREFIX } from "../toolbar/heading"
 import { markersHidden } from "./wrap-at"
 
 interface PrefixEdit {
@@ -28,27 +32,60 @@ interface PrefixEdit {
   drop: [number, number]
 }
 
-function prefixEditAt(text: string): PrefixEdit | null {
-  const heading = /^#{1,6} /.exec(text)
+// A run of nested blockquote levels, each tolerating CommonMark's 0–3 leading
+// spaces — built from `QUOTE.match` itself (minus its own `^` anchor) rather
+// than a second hand-written pattern, so the two can't drift apart again.
+const QUOTE_RUN = new RegExp(`^(?:${QUOTE.match.source.replace(/^\^/, "")})+`)
+
+/**
+ * Width of the nearest *enclosing* list item's own marker (e.g. 2 for `- `,
+ * 3 for `1. ` / `1) `, 4 for `10. `) — the number of columns a line nested
+ * under it needs to stay nested, so a Backspace outdent steps out exactly one
+ * level instead of guessing a fixed width. `null` when `linePos`'s line isn't
+ * nested inside another list item.
+ */
+function enclosingMarkerWidth(state: EditorState, linePos: number): number | null {
+  const ownLine = state.doc.lineAt(linePos).number
+  for (
+    let node: SyntaxNode | null = syntaxTree(state).resolveInner(linePos, 1);
+    node;
+    node = node.parent
+  ) {
+    if (node.name !== "ListItem") continue
+    // A `ListItem` starting on this same line is the line's own item, not an
+    // ancestor — keep climbing past it (this also makes the search immune to
+    // which side of a boundary `resolveInner` happened to land on).
+    if (state.doc.lineAt(node.from).number === ownLine) continue
+    const m = LIST_MARKER.exec(state.doc.lineAt(node.from).text)
+    if (m) return m[0].length
+  }
+  return null
+}
+
+function prefixEditAt(state: EditorState, line: { text: string; from: number }): PrefixEdit | null {
+  const text = line.text
+  const heading = HEADING_PREFIX.exec(text)
   if (heading) return { prefixLen: heading[0].length, drop: [0, heading[0].length] }
 
-  const quote = /^(?:> ?)+/.exec(text)
-  if (quote) {
-    const one = /^> ?/.exec(text)![0].length
-    return { prefixLen: quote[0].length, drop: [0, one] }
+  const quoteRun = QUOTE_RUN.exec(text)
+  if (quoteRun) {
+    const one = QUOTE.match.exec(text)![0].length
+    return { prefixLen: quoteRun[0].length, drop: [0, one] }
   }
 
-  const task = /^(\s*)[-*+] \[[ xX]\] /.exec(text)
+  const task = TASK.match.exec(text)
   if (task) return { prefixLen: task[0].length, drop: [0, task[0].length] }
 
-  const list = /^(\s*)([-*+] |\d+[.)] )/.exec(text)
+  const list = BULLET.match.exec(text) ?? ORDERED.match.exec(text)
   if (list) {
-    const indent = list[1]!
+    const indent = list[1] ?? ""
+    const markerLen = list[0].length - indent.length
     if (indent) {
-      const step = indent.startsWith("\t") ? 1 : Math.min(2, indent.length)
+      const parentWidth = enclosingMarkerWidth(state, line.from) ?? 2
+      const step = indent.startsWith("\t") ? 1 : Math.min(parentWidth, indent.length)
       return { prefixLen: list[0].length, drop: [0, step] }
     }
-    return { prefixLen: list[2]!.length, drop: [0, list[2]!.length] }
+    return { prefixLen: markerLen, drop: [0, markerLen] }
   }
   return null
 }
@@ -63,7 +100,7 @@ export const unwrapLinePrefix: Command = (view: EditorView): boolean => {
   const line = state.doc.lineAt(sel.head)
   if (!markersHidden(state, line.number)) return false
 
-  const edit = prefixEditAt(line.text)
+  const edit = prefixEditAt(state, line)
   if (!edit) return false
 
   // Visual column 0: the caret is within the hidden prefix run — atomic ranges

@@ -1,5 +1,6 @@
 import katex from "katex"
 import { WIKILINK_PATTERN } from "../wikilink"
+import { INLINE_MATH } from "./math"
 
 /**
  * Render a single line of inline Markdown to DOM nodes — the subset that can
@@ -37,8 +38,10 @@ const RULES: Rule[] = [
     build: (m) => el("code", "cm-inplace-code", document.createTextNode(m[1]!)),
   },
   {
-    // inline math: no digit/`$` touching the fences, no space just inside them
-    re: /(?<![\d$])\$(?!\s)([^$\n]+?)(?<!\s)\$(?![\d$])/,
+    // Non-global copy — `exec` on the shared, `g`-flagged pattern would carry
+    // its `lastIndex` across calls (the same reason the wikilink rule below
+    // copies its pattern too).
+    re: new RegExp(INLINE_MATH.source),
     build: (m) => {
       const span = el("span", "cm-inplace-math")
       katex.render(m[1]!, span as HTMLElement, { throwOnError: false })

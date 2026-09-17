@@ -1,6 +1,6 @@
 import { type ReactNode, useEffect, useState } from "react"
 import type { EmbedSource, ResolveErrorInfo } from "../types"
-import { peekEmbed, resolveEmbed } from "./embed-cache"
+import { onEmbedInvalidated, peekEmbed, resolveEmbed } from "./embed-cache"
 
 interface EmbedProps {
   /** The raw `![[ref]]` reference, trimmed. */
@@ -33,21 +33,30 @@ export function Embed({ reference, source, onError, inline }: EmbedProps) {
 
   useEffect(() => {
     let live = true
-    const hit = peekEmbed(source, reference)
-    if (hit) {
-      setState({ status: "ready", node: hit.node })
-      return
+    function load() {
+      const hit = peekEmbed(source, reference)
+      if (hit) {
+        setState({ status: "ready", node: hit.node })
+        return
+      }
+      setState({ status: "loading" })
+      resolveEmbed(source, reference).then(
+        (node) => live && setState({ status: "ready", node }),
+        (error) => {
+          if (!live) return
+          onError?.(error, { source: "embedSource", input: reference })
+          setState({ status: "error" })
+        },
+      )
     }
-    setState({ status: "loading" })
-    resolveEmbed(source, reference).then(
-      (node) => live && setState({ status: "ready", node }),
-      (error) => {
-        onError?.(error, { source: "embedSource", input: reference })
-        if (live) setState({ status: "error" })
-      },
-    )
+    load()
+    // Reruns this same load when a host calls `StyloHandle.invalidateEmbed`
+    // for this ref, so a mounted embed updates immediately rather than only
+    // on its next mount.
+    const unsubscribe = onEmbedInvalidated(source, reference, load)
     return () => {
       live = false
+      unsubscribe()
     }
   }, [reference, source, onError])
 

@@ -103,13 +103,36 @@ function buildEmbeds(state: EditorState): DecorationSet {
   return Decoration.set(out, true)
 }
 
+/** An embed is always a single line — its reveal status can only change if a
+ *  line the selection now touches (or just stopped touching) has one. */
+function selectionNearEmbed(state: EditorState, selection: EditorState["selection"]): boolean {
+  for (const range of selection.ranges) {
+    const first = state.doc.lineAt(range.from).number
+    const last = state.doc.lineAt(range.to).number
+    for (let n = first; n <= last; n++) {
+      if (state.doc.line(n).text.includes("![[")) return true
+    }
+  }
+  return false
+}
+
 /**
  * Decorations for the in-place embed slots, plus the atomic ranges that let the
  * caret step over a rendered embed instead of into it.
  */
 export const embedField = StateField.define<DecorationSet>({
   create: buildEmbeds,
-  update: (value, tr) => (tr.docChanged || tr.selection ? buildEmbeds(tr.state) : value),
+  update: (value, tr) => {
+    if (tr.docChanged) return buildEmbeds(tr.state)
+    if (!tr.selection) return value
+    // Same reasoning as `tableField`: most caret moves are nowhere near an
+    // embed, so a per-line text check is far cheaper than rescanning the
+    // whole document just to see whether anything could have changed.
+    const near =
+      selectionNearEmbed(tr.state, tr.startState.selection) ||
+      selectionNearEmbed(tr.state, tr.state.selection)
+    return near ? buildEmbeds(tr.state) : value
+  },
   provide: (field) => [
     EditorView.decorations.from(field),
     EditorView.atomicRanges.of((view) => view.state.field(field)),

@@ -1,6 +1,11 @@
 import { expect, test, vi } from "vitest"
 import type { EmbedSource } from "../src/types"
-import { peekEmbed, resolveEmbed } from "../src/render/embed-cache"
+import {
+  invalidateEmbed,
+  onEmbedInvalidated,
+  peekEmbed,
+  resolveEmbed,
+} from "../src/render/embed-cache"
 
 test("a settled ref resolves once and is then served from cache", async () => {
   const source = vi.fn<EmbedSource>((ref) => `node:${ref}`)
@@ -54,4 +59,56 @@ test("caches are isolated per embedSource identity", async () => {
   expect(await resolveEmbed(b, "same")).toBe("b:same")
   expect(peekEmbed(a, "same")).toEqual({ node: "a:same" })
   expect(peekEmbed(b, "same")).toEqual({ node: "b:same" })
+})
+
+test("invalidateEmbed drops a settled entry so the next resolve re-invokes source", async () => {
+  const source = vi.fn<EmbedSource>((ref) => `node:${ref}`)
+  await resolveEmbed(source, "A")
+  invalidateEmbed(source, "A")
+  expect(peekEmbed(source, "A")).toBeUndefined()
+  expect(await resolveEmbed(source, "A")).toBe("node:A")
+  expect(source).toHaveBeenCalledTimes(2)
+})
+
+test("invalidateEmbed with no ref clears every entry for that source", async () => {
+  const source = vi.fn<EmbedSource>((ref) => `node:${ref}`)
+  await resolveEmbed(source, "A")
+  await resolveEmbed(source, "B")
+  invalidateEmbed(source)
+  expect(peekEmbed(source, "A")).toBeUndefined()
+  expect(peekEmbed(source, "B")).toBeUndefined()
+})
+
+test("invalidateEmbed on an untouched source is a no-op", () => {
+  const source: EmbedSource = (ref) => `node:${ref}`
+  expect(() => invalidateEmbed(source, "never resolved")).not.toThrow()
+})
+
+test("invalidateEmbed notifies a listener registered for that (source, ref)", async () => {
+  const source = vi.fn<EmbedSource>((ref) => `node:${ref}`)
+  await resolveEmbed(source, "A")
+  const listener = vi.fn()
+  onEmbedInvalidated(source, "A", listener)
+  invalidateEmbed(source, "A")
+  expect(listener).toHaveBeenCalledTimes(1)
+})
+
+test("unsubscribing stops further notifications", async () => {
+  const source = vi.fn<EmbedSource>((ref) => `node:${ref}`)
+  await resolveEmbed(source, "A")
+  const listener = vi.fn()
+  const unsubscribe = onEmbedInvalidated(source, "A", listener)
+  unsubscribe()
+  invalidateEmbed(source, "A")
+  expect(listener).not.toHaveBeenCalled()
+})
+
+test("invalidating one ref does not notify a listener on another ref", async () => {
+  const source = vi.fn<EmbedSource>((ref) => `node:${ref}`)
+  await resolveEmbed(source, "A")
+  await resolveEmbed(source, "B")
+  const listener = vi.fn()
+  onEmbedInvalidated(source, "B", listener)
+  invalidateEmbed(source, "A")
+  expect(listener).not.toHaveBeenCalled()
 })

@@ -126,6 +126,10 @@ export const tableKeymap: Extension = keymap.of([
  */
 export const tableRealign: Extension = EditorState.transactionFilter.of((tr) => {
   if (!tr.docChanged) return tr
+  // An IME composition update is tagged "input.type.compose" (or
+  // ".compose.start"); rewriting the document and remapping the selection
+  // mid-composition is a known CodeMirror 6 hazard, so leave those alone.
+  if (tr.isUserEvent("input.type.compose")) return tr
   if (!tr.isUserEvent("input") && !tr.isUserEvent("delete")) return tr
   const head = tr.newSelection.main.head
   const region = findTable(tr.newDoc, head)

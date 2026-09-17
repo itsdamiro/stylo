@@ -13,11 +13,11 @@ export function scanWikilinks(
   view: EditorView,
   from: number,
   to: number,
+  text: string,
   revealed: Set<number>,
   tree: Tree,
   out: Range<Decoration>[],
 ): void {
-  const text = view.state.doc.sliceString(from, to)
   if (!text.includes("[[")) return
 
   // With `embedSource` set, a `![[ref]]` belongs to the embed pass — leave its

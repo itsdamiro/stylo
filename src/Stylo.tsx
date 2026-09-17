@@ -8,6 +8,7 @@ import styles from "./styles/stylo.module.css"
 import { Toolbar } from "./toolbar/Toolbar"
 import { resolveToolbarItems } from "./toolbar/config"
 import { splitFrontmatter } from "./frontmatter"
+import { invalidateEmbed } from "./render/embed-cache"
 import "./styles/tokens.css"
 import type { ResolveErrorInfo, StyloHandle, StyloProps } from "./types"
 
@@ -53,12 +54,11 @@ export const Stylo = forwardRef<StyloHandle, StyloProps>(function Stylo(
 
   const [view, setView] = useState<EditorView | null>(null)
   const toolbarItems = resolved === "preview" ? null : resolveToolbarItems(toolbar)
-  const toolbarRender = toolbar && typeof toolbar === "object" ? toolbar.render : undefined
-  const stickyConfig = toolbar && typeof toolbar === "object" ? toolbar.sticky : undefined
+  const toolbarConfig = toolbar && typeof toolbar === "object" ? toolbar : undefined
+  const toolbarRender = toolbarConfig?.render
   const stickyToolbar: "top" | "bottom" | false =
-    stickyConfig === "top" ? "top" : stickyConfig ? "bottom" : false
-  const stickyVisibility =
-    toolbar && typeof toolbar === "object" ? toolbar.stickyVisibility : undefined
+    toolbarConfig?.sticky === "top" ? "top" : toolbarConfig?.sticky ? "bottom" : false
+  const stickyVisibility = toolbarConfig?.stickyVisibility
 
   // Report the raw frontmatter block on mount and whenever it changes. Stylo
   // does not parse it — the host passes `raw` to its own YAML parser.
@@ -72,6 +72,11 @@ export const Stylo = forwardRef<StyloHandle, StyloProps>(function Stylo(
   const resolveError = useRef((error: unknown, info: ResolveErrorInfo) => {
     onResolveErrorRef.current?.(error, info)
   }).current
+
+  // Read by `invalidateEmbed` below — kept current without needing the
+  // imperative handle itself to be rebuilt when `embedSource` changes.
+  const embedSourceRef = useRef(embedSource)
+  embedSourceRef.current = embedSource
   const lastFrontmatter = useRef<string | null | undefined>(undefined)
   useEffect(() => {
     const raw = splitFrontmatter(value)?.frontmatter ?? null
@@ -107,6 +112,10 @@ export const Stylo = forwardRef<StyloHandle, StyloProps>(function Stylo(
           return true
         }
         return false
+      },
+      invalidateEmbed: (ref) => {
+        const source = embedSourceRef.current
+        if (source) invalidateEmbed(source, ref)
       },
     }),
     [view],

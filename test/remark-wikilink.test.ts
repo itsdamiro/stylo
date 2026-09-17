@@ -44,3 +44,22 @@ test("leaves text without wikilinks untouched", () => {
   expect(nodes).toHaveLength(1)
   expect(nodes[0]).toMatchObject({ type: "text" })
 })
+
+test("a bare ![[embed]] is left untouched, not turned into a dead link", () => {
+  // With no `embedSource`, `remarkEmbed` never runs — this is the one place
+  // in the pipeline that sees the raw `![[…]]` text, and it must leave the
+  // inner `[[…]]` alone rather than rewriting it into a link the `!` then
+  // sits in front of.
+  const nodes = runOn("before ![[Note]] after")
+  expect(nodes).toHaveLength(1)
+  expect(nodes[0]).toMatchObject({ type: "text", value: "before ![[Note]] after" })
+})
+
+test("a real wikilink next to a ![[embed]] on the same line is still rewritten", () => {
+  const nodes = runOn("![[Embed]] and [[Real]]")
+  expect(nodes.map((n) => n.type)).toEqual(["text", "link"])
+  expect(nodes[0]).toMatchObject({ value: "![[Embed]] and " })
+  const link = nodes[1]
+  if (link?.type !== "link") throw new Error("expected a link")
+  expect(link.data?.hProperties?.["data-wikilink"]).toBe("Real")
+})

@@ -51,8 +51,14 @@ export function scanListGuides(
       const guides = depth - 1
 
       const firstLine = doc.lineAt(node.from).number
+      const lastLine = doc.lineAt(Math.min(node.to, doc.length)).number
+      // A nested sublist's own lines get their own (deeper) guide from its own
+      // `ListItem` walk — skip them here so this item's shallower guide doesn't
+      // land on them too and starve the nested one. Any continuation content
+      // *after* the sublist, still part of this item, is included via `lastLine`.
       const nested = node.node.getChild("BulletList") ?? node.node.getChild("OrderedList")
-      const lastLine = doc.lineAt(nested ? nested.from - 1 : Math.min(node.to, doc.length)).number
+      const nestedFirst = nested ? doc.lineAt(nested.from).number : -1
+      const nestedLast = nested ? doc.lineAt(Math.max(nested.from, nested.to - 1)).number : -1
 
       // Not the first item of its own (immediate) list — give its first line a
       // gap. Depth > 1 means it's the first item of a *nested* list, which
@@ -65,6 +71,7 @@ export function scanListGuides(
           : null
 
       for (let n = firstLine; n <= lastLine; n++) {
+        if (nested && n >= nestedFirst && n <= nestedLast) continue
         if (guides >= 1 && !seen.has(n)) {
           seen.add(n)
           out.push(

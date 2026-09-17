@@ -7,6 +7,7 @@
 import type { EditorView } from "@codemirror/view"
 import type { ToolbarCommandId } from "../types"
 import { activeTableCell } from "../toolbar/cell-inline"
+import { resolveForCell } from "../toolbar/command-helpers"
 import { BUILTIN_BY_ID } from "../toolbar/commands"
 import { ICON_PATHS } from "../toolbar/icon-paths"
 import type { MenuAction, MenuRow, MenuSubmenu } from "./context-menu"
@@ -24,10 +25,9 @@ export const INSERT_INLINE_IDS: ToolbarCommandId[] = ["table", "hr"]
 export const INSERT_BLOCK_IDS: ToolbarCommandId[] = ["codeBlock", "mathBlock", "frontmatter"]
 
 /**
- * `inCell`: the selection is a table cell's DOM range, not `state.selection`, so
- * `cmd.disabled` / `cmd.isActive` (which read `state.selection`, collapsed here)
- * would grey every item out. The inline commands route through `runInlineInCell`
- * regardless, so force them live — same call the floating selection bar makes.
+ * `inCell`: the selection is a table cell's DOM range, not `state.selection`
+ * (collapsed here) — `resolveForCell` reads the real DOM focus instead, same
+ * as the toolbar does.
  */
 export const toAction = (
   view: EditorView,
@@ -36,11 +36,12 @@ export const toAction = (
 ): MenuAction | null => {
   const cmd = BUILTIN_BY_ID[id]
   if (!cmd) return null
+  const { disabled, active } = resolveForCell(view.state, cmd, inCell)
   return {
     label: cmd.title,
     icon: iconFor(id),
-    active: inCell ? false : Boolean(cmd.isActive?.(view.state)),
-    disabled: inCell ? false : Boolean(cmd.disabled?.(view.state)),
+    active,
+    disabled,
     onSelect: () => {
       cmd.run(view)
       view.focus()
@@ -84,8 +85,14 @@ export const clipboardRows = (view: EditorView): MenuRow[] => {
       ?.readText()
       .then((text) => {
         if (!text) return
-        if (cell) doc.execCommand("insertText", false, text)
-        else view.dispatch(view.state.replaceSelection(text))
+        // Focus can move during the read (a permission prompt, a click
+        // elsewhere, the view unmounting) — re-check before acting instead of
+        // trusting the cell captured before the await.
+        if (cell) {
+          if (doc.activeElement === cell) doc.execCommand("insertText", false, text)
+        } else if (view.hasFocus) {
+          view.dispatch(view.state.replaceSelection(text))
+        }
       })
       .catch(() => {
         /* clipboard read denied — the keyboard shortcut still works */

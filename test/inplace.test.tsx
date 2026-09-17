@@ -46,7 +46,7 @@ function mathWidgets(view: EditorView): { src: string; block: boolean }[] {
     })
   }
   collect(view.plugin(inPlacePlugin)?.decorations)
-  collect(view.state.field(blockMathField, false))
+  collect(view.state.field(blockMathField, false)?.decorations)
   return found
 }
 

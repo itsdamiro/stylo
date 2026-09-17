@@ -6,6 +6,41 @@ Notable changes to Stylo. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- **`invalidateEmbed(ref?)` on the imperative handle.** The embed cache
+  (`embedSource` resolutions, shared by `preview` and the in-place canvas)
+  never expired an entry on its own — if the content behind a `![[ref]]`
+  changed while the editor stayed open, the stale pre-edit render kept
+  showing indefinitely. Call `handle.invalidateEmbed("SomeNote")` when you
+  know a reference's content changed, or with no argument to clear every
+  cached embed for that `embedSource`; an already-rendered embed for the
+  dropped ref re-resolves immediately rather than waiting for a remount.
+  Works in every mode, including `preview` — it targets the cache, not the
+  editor. A no-op without `embedSource` set. See
+  [ADR-011](./docs/journal/2026-09/2026-09-17_adr-011-embed-cache-invalidation.md).
+
+### Fixed
+
+- **Bolding (or any inline mark) with a bare caret mid-word split the word
+  instead of wrapping it whole.** Caret between "wo" and "rd" in "word" and
+  pressing `Mod-b` produced `wo****rd`; it now expands the caret to its
+  enclosing word first, producing `**word**`.
+- **A fast second edit could be silently overwritten by a stale `value`
+  prop.** If a parent re-rendered with a `value` that was already superseded
+  by a newer local edit — which can happen with a controlled `value` under
+  React's batching — `useCodeMirror` reapplied the stale prop over the newer
+  edit. It now tracks the values it has itself emitted via `onChange` and
+  skips reapplying any incoming prop that echoes one already told to the
+  host.
+- **A bare `![[ref]]` embed (no `embedSource` configured) rendered as a dead
+  link instead of literal text.** With no `embedSource`, the embed pass never
+  runs, so the wikilink pass right after it saw the inner `[[ref]]` and
+  rewrote it into a link — leaving a literal `!` sitting in front of a link
+  to nowhere. A `[[ref]]` immediately preceded by `!` is now left untouched,
+  matching `![[ref]]`'s documented no-`embedSource` fallback (unchanged
+  literal text).
+
 ## [0.15.2] - 2026-09-14
 
 ### Fixed

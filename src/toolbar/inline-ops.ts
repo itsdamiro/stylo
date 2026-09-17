@@ -63,13 +63,41 @@ export interface InlineStr {
   to: number
 }
 
+/** Letters, digits, and underscore — the same notion of "word" used to expand
+ *  a bare caret before wrapping it (below), and to select a word for a
+ *  right-click in a table cell (`table-cell-dom.ts`'s `selectWordAtPoint`). */
+const WORD_CHAR = /[\p{L}\p{N}_]/u
+
+/** The maximal run of {@link WORD_CHAR} touching `pos` in `text`, or `null`
+ *  when `pos` sits on whitespace or punctuation. */
+function wordAt(text: string, pos: number): { from: number; to: number } | null {
+  let from = pos
+  let to = pos
+  while (from > 0 && WORD_CHAR.test(text[from - 1]!)) from--
+  while (to < text.length && WORD_CHAR.test(text[to]!)) to++
+  return to > from ? { from, to } : null
+}
+
 /**
  * Toggle an inline wrapping mark (`**`, `*`, `~~`, `` ` ``, `$`) around `[from,
  * to)` of `text`: unwrap a span already wrapped (marks inside or just around the
  * selection), else wrap it; an empty range gets an empty pair. Applying `*` to
  * `**bold**` (or `**` to `*em*`) nests rather than eating a marker.
+ *
+ * A collapsed `[from, to)` (a bare caret, no selection) sitting inside a word
+ * expands to that whole word first — otherwise the two inserts below would
+ * land at the very same point and split the word in two (`wo****rd` instead
+ * of `**word**`). `nothingToWrap` (`command-helpers.ts`) already disables the
+ * button/shortcut when there is no word to expand to.
  */
 export function wrapOp(text: string, from: number, to: number, mark: string): InlineOp {
+  if (from === to) {
+    const word = wordAt(text, from)
+    if (word) {
+      from = word.from
+      to = word.to
+    }
+  }
   const m = mark.length
   const ch = mark[0]!
   const inner = text.slice(from, to)

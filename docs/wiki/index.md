@@ -52,6 +52,8 @@ under `docs/journal/YYYY-MM/`. The master ADR index is
 
 | ADR     | Title                                                                 | Status   |
 | ------- | --------------------------------------------------------------------- | -------- |
+| ADR-011 | Embed cache invalidation: a host-triggered `invalidateEmbed`          | Accepted |
+| ADR-010 | A canvas header panel, docked under find/replace                      | Accepted |
 | ADR-009 | Rendering host React nodes in the in-place canvas                     | Accepted |
 | ADR-008 | CodeMirror and Lezer as peer dependencies                             | Accepted |
 | ADR-007 | Seamless in-place: Markdown markers never shown                       | Accepted |

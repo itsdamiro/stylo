@@ -4,6 +4,8 @@ import type { EditorState } from "@codemirror/state"
 import type { EditorView } from "@codemirror/view"
 import styles from "../styles/stylo.module.css"
 import type { ToolbarCommandId } from "../types"
+import { activeTableCell } from "./cell-inline"
+import { resolveForCell } from "./command-helpers"
 import { BUILTIN_BY_ID } from "./commands"
 import type { ToolbarItem } from "./config"
 import { useFloatingWatchdog } from "./floating-watchdog"
@@ -120,6 +122,14 @@ export function Toolbar({ view, items, icons, disabled, sticky, stickyVisibility
   // over the content while the caret is elsewhere (e.g. scrolling to read).
   const dynamicHidden = Boolean(sticky) && stickyVisibility === "dynamic" && !focused
 
+  // `state.selection` never follows the caret into an editable table cell's
+  // `contentEditable` DOM (see `extension.ts`'s mousedown handler), so a
+  // built-in command's own `disabled` / `isActive` would otherwise read a
+  // selection that may point anywhere else in the document while the user is
+  // actually typing in a cell. `resolveForCell` below re-derives both from the
+  // real DOM focus in that case instead.
+  const inCell = view ? Boolean(activeTableCell(view)) : false
+
   const className = [
     styles.toolbar,
     sticky && styles.toolbarSticky,
@@ -156,8 +166,20 @@ export function Toolbar({ view, items, icons, disabled, sticky, stickyVisibility
             {group.map((item) => {
               const btn = toButton(item, icons)
               if (!btn) return null
-              const off = disabled || !view || Boolean(btn.disabled?.(view.state))
-              const active = Boolean(!off && view && btn.isActive?.(view.state))
+              // Only a built-in command is cell-aware — a host's own
+              // `ToolbarCustomItem` keeps reading `state` exactly as before;
+              // it has no notion of a table cell to degrade into.
+              const builtin = typeof item === "string" ? BUILTIN_BY_ID[item] : undefined
+              const resolved = view
+                ? builtin
+                  ? resolveForCell(view.state, builtin, inCell)
+                  : {
+                      disabled: Boolean(btn.disabled?.(view.state)),
+                      active: Boolean(btn.isActive?.(view.state)),
+                    }
+                : { disabled: true, active: false }
+              const off = disabled || !view || resolved.disabled
+              const active = !off && resolved.active
               return (
                 <button
                   key={btn.key}

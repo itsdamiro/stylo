@@ -56,6 +56,16 @@ export function useCodeMirror({
   const viewRef = useRef<EditorView | null>(null)
   const onChangeRef = useRef(onChange)
   onChangeRef.current = onChange
+  // Every doc string this hook has itself emitted via `onChange`, oldest
+  // first, capped so it can't grow unbounded. Two keystrokes typed in quick
+  // succession can each fire `onChange` (V1, then V2) before the host's
+  // matching `value` prop updates have both round-tripped back through a
+  // render — the effect below would otherwise see the *live* doc already at
+  // V2 while still reconciling the stale V1 prop, and force-overwrite the
+  // document back to V1, discarding the second keystroke. A value found here
+  // is one we said ourselves, so whatever the live document holds now already
+  // accounts for it (or a newer edit) — skip re-applying it.
+  const selfEmitted = useRef<string[]>([])
   const onSaveRef = useRef(onSave)
   onSaveRef.current = onSave
   // Stable wrapper: the facet holds this, it reads the latest handler. The
@@ -92,7 +102,10 @@ export function useCodeMirror({
           EditorView.updateListener.of((update) => {
             if (!update.docChanged) return
             if (update.transactions.some((t) => Boolean(t.annotation(External)))) return
-            onChangeRef.current(update.state.doc.toString())
+            const text = update.state.doc.toString()
+            selfEmitted.current.push(text)
+            if (selfEmitted.current.length > 20) selfEmitted.current.shift()
+            onChangeRef.current(text)
           }),
         ],
       }),
@@ -113,10 +126,17 @@ export function useCodeMirror({
     if (!view) return
     const current = view.state.doc.toString()
     if (current === value) return
+    // A prop update that merely echoes something this hook already emitted
+    // (see `selfEmitted` above) carries no new information — the live
+    // document already reflects it, or a newer local edit since, either way
+    // correctly. Only a value we never said ourselves is a genuine external
+    // change (a host loading a different document, say) worth applying.
+    if (selfEmitted.current.includes(value)) return
     view.dispatch({
       changes: { from: 0, to: current.length, insert: value },
       annotations: External.of(true),
     })
+    selfEmitted.current = []
   }, [value])
 
   // Reconfigure prop-driven extensions in place.

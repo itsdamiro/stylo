@@ -14,7 +14,7 @@ export function frontmatterRange(doc: Text): { from: number; to: number } | null
   return null
 }
 
-const FRONTMATTER_BLOCK = /^---\r?\n(?:([\s\S]*?)\r?\n)?---[ \t]*(?:\r?\n|$)/
+const FRONTMATTER_BLOCK = /^[ \t]*---[ \t]*\r?\n(?:([\s\S]*?)\r?\n)?[ \t]*---[ \t]*(?:\r?\n|$)/
 
 /**
  * Split a leading `---` … `---` block off a Markdown string. `frontmatter` is

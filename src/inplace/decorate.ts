@@ -53,7 +53,11 @@ export function buildDecorations(view: EditorView): InPlaceDecorations {
       to: range.to,
       enter: (node) => decorateNode(node, ctx),
     })
-    if (toggles.wikilinks) scanWikilinks(view, range.from, range.to, revealed, tree, out)
+    // Sliced once here — `scanWikilinks` and `scanInlineMath` both need the
+    // range's raw text, and re-slicing it independently in each doubled the
+    // string-extraction cost on every keystroke, selection change, and scroll.
+    const text = view.state.doc.sliceString(range.from, range.to)
+    if (toggles.wikilinks) scanWikilinks(view, range.from, range.to, text, revealed, tree, out)
     // `revealed`, not `caretRevealed`: under `reveal: "never"` inline / one-line
     // math no longer shows its `$…$` / `$$…$$` on caret entry — the right-click
     // Math field edits it in place instead (the parallel of the Stage 4 link
@@ -61,7 +65,7 @@ export function buildDecorations(view: EditorView): InPlaceDecorations {
     // unchanged. Multi-line `$$` blocks are unaffected — `blockMathField` keeps
     // its own caret-reveal, the same standing exception fenced code had before
     // ADR-007 item 9a.
-    if (toggles.math) scanInlineMath(view, range.from, range.to, revealed, tree, out)
+    if (toggles.math) scanInlineMath(view, range.from, range.to, text, revealed, tree, out)
     scanListGuides(range.from, range.to, tree, doc, toggles, out)
   }
 

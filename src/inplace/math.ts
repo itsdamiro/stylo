@@ -7,7 +7,7 @@ import { revealedLines } from "./reveal"
 import { inCodeContext, rangeRevealed, type Tree } from "./scan"
 
 // The `\w` / whitespace guards keep "$100 and $200" from reading as math.
-const INLINE_MATH = /(?<![\w$])\$(?!\s)([^\n$]+?)(?<!\s)\$(?![\w$])/g
+export const INLINE_MATH = /(?<![\w$])\$(?!\s)([^\n$]+?)(?<!\s)\$(?![\w$])/g
 const ONE_LINE_BLOCK = /(?<![\w$])\$\$([^\n$]+?)\$\$(?![\w$])/g
 const ANY_BLOCK = /(?<![\w$])\$\$([^]+?)\$\$/g
 
@@ -74,11 +74,11 @@ export function scanInlineMath(
   view: EditorView,
   from: number,
   to: number,
+  text: string,
   revealed: Set<number>,
   tree: Tree,
   out: Range<Decoration>[],
 ): void {
-  const text = view.state.doc.sliceString(from, to)
   if (!text.includes("$")) return
   const { doc } = view.state
   const claimed: Array<[number, number]> = []
@@ -104,28 +104,65 @@ export function scanInlineMath(
   }
 }
 
+interface BlockMathState {
+  decorations: DecorationSet
+  /** Every `$$…$$` block's `[from, to)`, whether or not it's currently
+   *  revealed — a revealed block has no decoration to check against, so this
+   *  is what lets a selection-only transaction tell whether the caret just
+   *  entered or left one without re-scanning the whole document to find out. */
+  ranges: { from: number; to: number }[]
+}
+
+/** Does any line either selection touches fall inside one of `ranges`? */
+function selectionNearRange(
+  state: EditorState,
+  selection: EditorState["selection"],
+  ranges: { from: number; to: number }[],
+): boolean {
+  const lineSpans = ranges.map((r) => ({
+    first: state.doc.lineAt(r.from).number,
+    last: state.doc.lineAt(r.to).number,
+  }))
+  for (const range of selection.ranges) {
+    const first = state.doc.lineAt(range.from).number
+    const last = state.doc.lineAt(range.to).number
+    for (let n = first; n <= last; n++) {
+      if (lineSpans.some((s) => s.first <= n && n <= s.last)) return true
+    }
+  }
+  return false
+}
+
 /**
  * Multi-line `$$…$$` blocks, whose delimiters sit alone on their own lines.
  * A state field (not a plugin) because the replacement spans line breaks. Not
- * viewport-scoped — the whole document is scanned — but `$$` blocks are few.
+ * viewport-scoped — the whole document is scanned on a doc change, but `$$`
+ * blocks are few and a pure caret move reuses the last build's `ranges`
+ * instead of rescanning.
  */
-export const blockMathField = StateField.define<DecorationSet>({
+export const blockMathField = StateField.define<BlockMathState>({
   create: buildBlockMath,
   update(value, tr) {
-    return tr.docChanged || tr.selection ? buildBlockMath(tr.state) : value
+    if (tr.docChanged) return buildBlockMath(tr.state)
+    if (!tr.selection) return value
+    const near =
+      selectionNearRange(tr.state, tr.startState.selection, value.ranges) ||
+      selectionNearRange(tr.state, tr.state.selection, value.ranges)
+    return near ? buildBlockMath(tr.state) : value
   },
   provide: (field) => [
-    EditorView.decorations.from(field),
-    EditorView.atomicRanges.of((view) => view.state.field(field)),
+    EditorView.decorations.from(field, (v) => v.decorations),
+    EditorView.atomicRanges.of((view) => view.state.field(field).decorations),
   ],
 })
 
-function buildBlockMath(state: EditorState): DecorationSet {
-  if (!state.facet(inPlaceConfigFacet).math) return Decoration.none
+function buildBlockMath(state: EditorState): BlockMathState {
+  if (!state.facet(inPlaceConfigFacet).math) return { decorations: Decoration.none, ranges: [] }
   const text = state.doc.toString()
-  if (!text.includes("$$")) return Decoration.none
+  if (!text.includes("$$")) return { decorations: Decoration.none, ranges: [] }
 
   const out: Range<Decoration>[] = []
+  const ranges: { from: number; to: number }[] = []
   const revealed = revealedLines(state)
   const tree = syntaxTree(state)
 
@@ -142,6 +179,7 @@ function buildBlockMath(state: EditorState): DecorationSet {
     const after = state.doc.sliceString(end, endLine.to).trim()
     if (before !== "" || after !== "") continue
     if (inCodeContext(tree, start + 2)) continue
+    ranges.push({ from: start, to: end })
     if (rangeRevealed(revealed, state.doc, start, end)) continue
 
     out.push(
@@ -149,5 +187,5 @@ function buildBlockMath(state: EditorState): DecorationSet {
     )
   }
 
-  return Decoration.set(out, true)
+  return { decorations: Decoration.set(out, true), ranges }
 }

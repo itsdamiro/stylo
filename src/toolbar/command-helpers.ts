@@ -76,8 +76,10 @@ export interface ToolbarCommand {
   keys?: string[]
 }
 
-/** Any list marker — bullet, ordered, or task — with `[1]` capturing the indent. */
-const LIST_MARKER = /^(\s*)(?:[-*+] \[[ xX]\] +|\d+\. +|[-*+] +)/
+/** Any list marker — bullet, ordered, or task — with `[1]` capturing the
+ *  indent. Ordered accepts both `1.` and `1)`, per CommonMark's actual
+ *  grammar — shared with `ORDERED.match` below so the two can't drift again. */
+export const LIST_MARKER = /^(\s*)(?:[-*+] \[[ xX]\] +|\d+[.)] +|[-*+] +)/
 
 export const QUOTE: LinePrefixSpec = { match: /^ {0,3}> ?/, insert: "> " }
 export const BULLET: LinePrefixSpec = {
@@ -86,7 +88,7 @@ export const BULLET: LinePrefixSpec = {
   siblings: LIST_MARKER,
 }
 export const ORDERED: LinePrefixSpec = {
-  match: /^(\s*)\d+\. +/,
+  match: /^(\s*)\d+[.)] +/,
   insert: (n) => `${n + 1}. `,
   siblings: LIST_MARKER,
 }
@@ -134,6 +136,53 @@ export function heading(level: 1 | 2 | 3): ToolbarCommand {
     isActive: (state) => marker.test(state.doc.lineAt(state.selection.main.head).text),
     disabled: disabledWhen(tableActive, inLiteral),
     keys: [`Mod-Alt-${level}`],
+  }
+}
+
+/**
+ * Ids whose `run` already degrades to an inline edit inside a table cell (via
+ * `runInlineInCell`) — the only commands still usable while the DOM caret is
+ * actually focused in one. Shared by the toolbar and the context menu so a
+ * table cell's "what works here" answer can't drift between the two.
+ */
+export const CELL_CAPABLE_IDS: ReadonlySet<ToolbarCommandId> = new Set([
+  "bold",
+  "italic",
+  "strike",
+  "underline",
+  "code",
+  "codeBlock",
+  "link",
+  "wikilink",
+  "math",
+  "mathBlock",
+])
+
+/**
+ * A command's effective `disabled` / `isActive` for the current DOM focus.
+ * `state.selection` never moves into an editable table cell's `contentEditable`
+ * DOM — a click there is deliberately left undispatched (see `extension.ts`) —
+ * so while the caret is actually inside one, checking `cmd.disabled?.(state)` /
+ * `cmd.isActive?.(state)` reads a selection that may point anywhere else in
+ * the document. There: a cell-capable command stays live, always reported as
+ * neither active nor disabled (`run` degrades to an inline edit on the cell
+ * regardless of the model selection, and detecting an existing mark inside the
+ * cell's own text isn't implemented); every other command is disabled outright
+ * rather than acting on that stale selection.
+ */
+export function resolveForCell(
+  state: EditorState,
+  cmd: Pick<ToolbarCommand, "id" | "disabled" | "isActive">,
+  inCell: boolean,
+): { disabled: boolean; active: boolean } {
+  if (inCell) {
+    return CELL_CAPABLE_IDS.has(cmd.id)
+      ? { disabled: false, active: false }
+      : { disabled: true, active: false }
+  }
+  return {
+    disabled: Boolean(cmd.disabled?.(state)),
+    active: Boolean(cmd.isActive?.(state)),
   }
 }
 

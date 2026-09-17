@@ -273,6 +273,30 @@ test("a toolbar inline command wraps the focused cell's selection, in DOM and do
   expect(doc()).toBe(view.state.doc.toString())
 })
 
+test("the toolbar disables block commands, but not inline ones, while a table cell has DOM focus", async () => {
+  const { container, view } = await mount(T, { table: "cells" })
+  await focusCell(view, "tbody td", 0)
+  // Force the toolbar to re-render off the fresh DOM focus, the same way a
+  // real click or keystroke does (it listens for these on `contentDOM`).
+  view.contentDOM.dispatchEvent(new Event("mouseup", { bubbles: true }))
+
+  const disabledOf = (id: string) =>
+    container.querySelector<HTMLButtonElement>(`button[data-command="${id}"]`)?.disabled
+
+  // The inline commands degrade to an edit on the cell itself and stay live —
+  // wait for the toolbar's re-render off the dispatched event to actually land.
+  await vi.waitFor(() => {
+    expect(disabledOf("bold")).toBe(false)
+  })
+  // `state.selection` is still wherever it was before the click into the
+  // cell — without cell-awareness these would read that stale position
+  // instead of noticing the caret is actually in a cell with no valid block
+  // Markdown, and could mutate an unrelated line.
+  expect(disabledOf("h1")).toBe(true)
+  expect(disabledOf("table")).toBe(true)
+  expect(disabledOf("quote")).toBe(true)
+})
+
 test("a second inline toggle removes the mark from the cell", async () => {
   const { view } = await mount(T, { table: "cells" })
   const cell = await focusCell(view, "tbody td", 0)
