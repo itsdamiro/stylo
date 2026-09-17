@@ -1,6 +1,6 @@
 {
   "name": "@damiro/stylo",
-  "version": "0.15.2",
+  "version": "0.16.0",
   "description": "A plain-text-first Markdown editor for React, with first-class LaTeX (KaTeX) support.",
   "type": "module",
   "license": "MIT",

@@ -6,6 +6,8 @@ Notable changes to Stylo. The format follows
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-09-17
+
 ### Added
 
 - **`invalidateEmbed(ref?)` on the imperative handle.** The embed cache
@@ -690,6 +692,7 @@ consumable from git.
 - `inPlace` config is read once at mount; changing it needs a remount. (Now
   documented as an intentional contract — see `[Unreleased]`.)
 
+[0.16.0]: https://github.com/studiodamiro/stylo/releases/tag/v0.16.0
 [0.13.6]: https://github.com/studiodamiro/stylo/releases/tag/v0.13.6
 [0.13.5]: https://github.com/studiodamiro/stylo/releases/tag/v0.13.5
 [0.13.4]: https://github.com/studiodamiro/stylo/releases/tag/v0.13.4
