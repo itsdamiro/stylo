@@ -7,10 +7,10 @@
   "author": "damiro",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/studiodamiro/stylo.git"
+    "url": "git+https://github.com/itsdamiro/stylo.git"
   },
-  "homepage": "https://github.com/studiodamiro/stylo#readme",
-  "bugs": "https://github.com/studiodamiro/stylo/issues",
+  "homepage": "https://github.com/itsdamiro/stylo#readme",
+  "bugs": "https://github.com/itsdamiro/stylo/issues",
   "keywords": [
     "react",
     "markdown",

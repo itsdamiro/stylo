@@ -63,7 +63,7 @@ npm install @damiro/stylo
 ```
 
 To track an unreleased commit, install from git instead
-(`npm install github:studiodamiro/stylo`) — the `prepare` script builds the
+(`npm install github:itsdamiro/stylo`) — the `prepare` script builds the
 bundle during install, so there is nothing else to wire up.
 
 CodeMirror, Lezer, and React are **peer dependencies** — Stylo shares the host's

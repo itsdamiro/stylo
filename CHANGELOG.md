@@ -692,18 +692,18 @@ consumable from git.
 - `inPlace` config is read once at mount; changing it needs a remount. (Now
   documented as an intentional contract — see `[Unreleased]`.)
 
-[0.16.0]: https://github.com/studiodamiro/stylo/releases/tag/v0.16.0
-[0.13.6]: https://github.com/studiodamiro/stylo/releases/tag/v0.13.6
-[0.13.5]: https://github.com/studiodamiro/stylo/releases/tag/v0.13.5
-[0.13.4]: https://github.com/studiodamiro/stylo/releases/tag/v0.13.4
-[0.13.3]: https://github.com/studiodamiro/stylo/releases/tag/v0.13.3
-[0.13.1]: https://github.com/studiodamiro/stylo/releases/tag/v0.13.1
-[0.13.0]: https://github.com/studiodamiro/stylo/releases/tag/v0.13.0
-[0.12.0]: https://github.com/studiodamiro/stylo/releases/tag/v0.12.0
-[0.11.0]: https://github.com/studiodamiro/stylo/releases/tag/v0.11.0
-[0.10.0]: https://github.com/studiodamiro/stylo/releases/tag/v0.10.0
-[0.9.1]: https://github.com/studiodamiro/stylo/releases/tag/v0.9.1
-[0.4.0]: https://github.com/studiodamiro/stylo/releases/tag/v0.4.0
-[0.3.0]: https://github.com/studiodamiro/stylo/releases/tag/v0.3.0
-[0.2.0]: https://github.com/studiodamiro/stylo/releases/tag/v0.2.0
-[0.1.0]: https://github.com/studiodamiro/stylo/releases/tag/v0.1.0
+[0.16.0]: https://github.com/itsdamiro/stylo/releases/tag/v0.16.0
+[0.13.6]: https://github.com/itsdamiro/stylo/releases/tag/v0.13.6
+[0.13.5]: https://github.com/itsdamiro/stylo/releases/tag/v0.13.5
+[0.13.4]: https://github.com/itsdamiro/stylo/releases/tag/v0.13.4
+[0.13.3]: https://github.com/itsdamiro/stylo/releases/tag/v0.13.3
+[0.13.1]: https://github.com/itsdamiro/stylo/releases/tag/v0.13.1
+[0.13.0]: https://github.com/itsdamiro/stylo/releases/tag/v0.13.0
+[0.12.0]: https://github.com/itsdamiro/stylo/releases/tag/v0.12.0
+[0.11.0]: https://github.com/itsdamiro/stylo/releases/tag/v0.11.0
+[0.10.0]: https://github.com/itsdamiro/stylo/releases/tag/v0.10.0
+[0.9.1]: https://github.com/itsdamiro/stylo/releases/tag/v0.9.1
+[0.4.0]: https://github.com/itsdamiro/stylo/releases/tag/v0.4.0
+[0.3.0]: https://github.com/itsdamiro/stylo/releases/tag/v0.3.0
+[0.2.0]: https://github.com/itsdamiro/stylo/releases/tag/v0.2.0
+[0.1.0]: https://github.com/itsdamiro/stylo/releases/tag/v0.1.0
