@@ -235,19 +235,25 @@
   flex: 0 0 auto;
 }
 
-/* Hidden copy of every slot, read by `useToolbarOverflow` for real widths. */
-.toolbarMeasure {
+/* Hidden copy of every slot, read by `useToolbarOverflow` for real widths.
+   The zero-size clip keeps the full-width row from adding scroll to the bar's
+   ancestors. */
+.toolbarMeasureClip {
   position: absolute;
   top: 0;
-  left: 0;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  width: max-content;
+  inset-inline-start: 0;
+  width: 0;
   height: 0;
   overflow: hidden;
   visibility: hidden;
   pointer-events: none;
+}
+
+.toolbarMeasure {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  width: max-content;
 }
 
 .toolbarMenu {
@@ -290,6 +296,10 @@
 .toolbarMenuItem:focus-visible {
   background: color-mix(in srgb, var(--stylo-border) 45%, transparent);
   outline: none;
+}
+
+.toolbarMenuItem[data-active] {
+  background: color-mix(in srgb, var(--stylo-accent) 12%, transparent);
 }
 
 .toolbarMenuItem:disabled {

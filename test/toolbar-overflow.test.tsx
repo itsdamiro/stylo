@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest"
 import { cleanup, fireEvent, render } from "@testing-library/react"
 import { Stylo } from "../src/Stylo"
-import { fitEntries, trimSeps } from "../src/toolbar/overflow-fit"
+import { fitEntries, menuSlots, trimSeps } from "../src/toolbar/overflow-fit"
 import type { ToolbarCustomItem } from "../src/types"
 
 afterEach(cleanup)
@@ -26,23 +26,34 @@ test("fitEntries folds from the end and keeps everything when it fits", () => {
   expect(fitEntries(entries, 60, 30)).toEqual([false, true, false, true, true])
 })
 
+test("fitEntries counts the gap between kept slots and before More once", () => {
+  const entries = [btn(), btn(), btn()]
+  // 3 × 30 + 2 gaps of 2 = 94: fits at 94, not at 93.
+  expect(fitEntries(entries, 94, 30, 2)).toEqual([false, false, false])
+  // One folded: 2 × 30 + 1 gap + (gap + More 30) = 94.
+  expect(fitEntries(entries, 93, 30, 2)).toEqual([false, true, true])
+})
+
+test("menuSlots keeps a divider only between folded groups", () => {
+  const m = (sepFlag: boolean, folded: boolean) => ({ sep: sepFlag, folded })
+  const list = [m(false, false), m(true, false), m(false, true), m(true, false), m(false, true)]
+  // The first divider sits before every folded slot: it stays in the row.
+  expect(menuSlots(list)).toEqual([m(false, true), m(true, false), m(false, true)])
+  expect(menuSlots([m(false, false), m(true, false), m(false, true)])).toEqual([m(false, true)])
+})
+
 test("fitEntries folds a pinned button only after every other one", () => {
   const entries = [btn(), btn(true), btn(), btn()]
   expect(fitEntries(entries, 90, 30)).toEqual([false, false, true, true])
   expect(fitEntries(entries, 50, 30)).toEqual([true, true, true, true])
 })
 
-// jsdom has no layout: give every child of a flex row a 30px box, 32px apart,
-// and the bar a width.
+// jsdom has no layout: every element measures 30px wide, and the bar a width.
 let barWidth = 200
 beforeEach(() => {
-  const nth = (el: HTMLElement) => Array.prototype.indexOf.call(el.parentElement!.children, el)
-  vi.spyOn(HTMLElement.prototype, "offsetLeft", "get").mockImplementation(function (
-    this: HTMLElement,
-  ) {
-    return nth(this) * 32
-  })
-  vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(30)
+  vi.spyOn(Element.prototype, "getBoundingClientRect").mockReturnValue({
+    width: 30,
+  } as DOMRect)
   vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockImplementation(function (
     this: HTMLElement,
   ) {
@@ -78,10 +89,10 @@ test("menu mode folds what does not fit into a More button, pinned last", () => 
   expect(row("save")).not.toBeNull()
   expect(row("h2")).toBeNull()
   fireEvent.click(getByLabelText("More"))
-  const items = [...container.querySelectorAll("[role=menuitem]")].map((e) =>
+  const items = [...container.querySelectorAll("[role^=menuitem]")].map((e) =>
     e.getAttribute("data-command"),
   )
-  expect(items).toEqual(["italic", "h1", "h2"])
+  expect(items).toEqual(["h1", "h2"])
 })
 
 test("wrap mode (default) renders no More button", () => {

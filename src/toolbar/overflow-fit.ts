@@ -2,7 +2,7 @@
 export interface FitEntry {
   sep: boolean
   pinned: boolean
-  /** Measured width, including the gap that follows it. */
+  /** Measured width, margins included, gap excluded. */
   width: number
 }
 
@@ -18,16 +18,33 @@ export function trimSeps<T extends { sep: boolean }>(list: T[]): T[] {
 }
 
 /**
+ * The slots the overflow menu lists: every folded one, plus each separator
+ * with a folded slot on both sides, so the menu keeps the bar's groups.
+ */
+export function menuSlots<T extends { sep: boolean; folded: boolean }>(list: T[]): T[] {
+  const firstAt = list.findIndex((e) => e.folded)
+  const lastAt = list.map((e) => e.folded).lastIndexOf(true)
+  return trimSeps(list.filter((e, i) => e.folded || (e.sep && i > firstAt && i < lastAt)))
+}
+
+/**
  * Which entries fold into the overflow menu so the rest fit in `available`
  * pixels. Folds from the end, unpinned buttons first; pinned ones only once
- * nothing else is left. `moreWidth` is reserved once anything has folded.
+ * nothing else is left. `moreWidth` (and one `gap` before it) is reserved once
+ * anything has folded; `gap` also separates the slots that stay.
  */
-export function fitEntries(entries: FitEntry[], available: number, moreWidth: number): boolean[] {
+export function fitEntries(
+  entries: FitEntry[],
+  available: number,
+  moreWidth: number,
+  gap = 0,
+): boolean[] {
   const folded = entries.map(() => false)
   const fits = () => {
     const kept = trimSeps(entries.filter((_, i) => !folded[i]))
-    const used = kept.reduce((sum, e) => sum + e.width, 0)
-    return used + (folded.some(Boolean) ? moreWidth : 0) <= available
+    const row = kept.reduce((sum, e) => sum + e.width, 0) + gap * Math.max(0, kept.length - 1)
+    const more = folded.some(Boolean) ? moreWidth + (kept.length ? gap : 0) : 0
+    return row + more <= available
   }
   const lastOpen = (pinned: boolean) => {
     for (let i = entries.length - 1; i >= 0; i--) {

@@ -7,6 +7,8 @@ export interface OverflowEntry {
   title: string
   icon: ReactNode
   disabled: boolean
+  /** Pressed state of a toggle command; `undefined` when it is not a toggle. */
+  active?: boolean
   run: () => void
 }
 
@@ -61,7 +63,7 @@ export function OverflowMenu({
 
   const items = () =>
     Array.from(
-      rootRef.current?.querySelectorAll<HTMLButtonElement>("[role=menuitem]:enabled") ?? [],
+      rootRef.current?.querySelectorAll<HTMLButtonElement>("[role^=menuitem]:enabled") ?? [],
     )
 
   const onKeyDown = (e: React.KeyboardEvent) => {
@@ -69,13 +71,25 @@ export function OverflowMenu({
       e.preventDefault()
       const list = items()
       const at = list.indexOf(document.activeElement as HTMLButtonElement)
-      const step = e.key === "ArrowDown" ? 1 : -1
-      list[(at + step + list.length) % list.length]?.focus()
+      const down = e.key === "ArrowDown"
+      // Nothing focused yet: Down starts at the first entry, Up at the last.
+      const next =
+        at < 0 ? (down ? 0 : list.length - 1) : (at + (down ? 1 : -1) + list.length) % list.length
+      list[next]?.focus()
     }
   }
 
   return (
-    <div ref={rootRef} className={styles.toolbarMore} data-stylo-overflow="" onKeyDown={onKeyDown}>
+    <div
+      ref={rootRef}
+      className={styles.toolbarMore}
+      data-stylo-overflow=""
+      onKeyDown={onKeyDown}
+      onBlur={(e) => {
+        // Tabbing out of the open menu closes it.
+        if (open && !rootRef.current?.contains(e.relatedTarget as Node | null)) setOpen(false)
+      }}
+    >
       <button
         ref={moreRef}
         type="button"
@@ -103,12 +117,16 @@ export function OverflowMenu({
               <button
                 key={entry.key}
                 type="button"
-                role="menuitem"
+                role={entry.active === undefined ? "menuitem" : "menuitemcheckbox"}
+                aria-checked={entry.active}
+                data-active={entry.active ? "" : undefined}
                 className={styles.toolbarMenuItem}
                 data-command={entry.key}
                 disabled={entry.disabled}
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => {
+                  // Keyboard users keep their place: the focused entry is about to unmount.
+                  if (rootRef.current?.contains(document.activeElement)) moreRef.current?.focus()
                   setOpen(false)
                   entry.run()
                 }}

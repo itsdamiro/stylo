@@ -22,10 +22,10 @@ test.describe("toolbar overflow menu", () => {
     await page.locator(".cm-content").click()
     const lines = await page.locator(".cm-content .cm-line").count()
     await page.getByLabel("More").click()
-    const items = page.locator("[role=menuitem]")
+    const items = page.locator("[role^=menuitem]")
     expect(await items.count()).toBeGreaterThan(3)
     await expect(items.last()).toContainText(/\w{3,}/) // a word label, not just an icon
-    await page.locator('[role=menuitem][data-command="hr"]').click()
+    await page.locator('[role^=menuitem][data-command="hr"]').click()
     await expect(page.locator("[role=menu]")).toHaveCount(0)
     await expect.poll(() => page.locator(".cm-content .cm-line").count()).toBeGreaterThan(lines)
   })

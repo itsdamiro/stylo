@@ -33,6 +33,7 @@ is unit-testable without layout. The menu is a small dependency-free popover.
   so it can fold single buttons rather than whole groups.
 - Each button is rendered twice in menu mode (visible row and hidden
   measuring row). The measuring copies are `aria-hidden` and not focusable.
-- Widths are read on mount, on `items` change, and on resize. Swapping an icon
-  for a differently sized one without changing the item list is not noticed
-  until the next resize.
+- Widths are read from layout rects (so right-to-left pages measure the same)
+  on mount, on `items` change, and whenever the bar or the measuring row
+  resizes, which also catches a swapped glyph or a late-loading font.
+- A folded toggle (bold, lists) keeps its pressed state in the menu.

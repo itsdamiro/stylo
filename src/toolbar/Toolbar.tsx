@@ -1,6 +1,5 @@
 import { useEffect, useReducer, useRef, useState } from "react"
 import type { ReactNode } from "react"
-import type { EditorState } from "@codemirror/state"
 import type { EditorView } from "@codemirror/view"
 import styles from "../styles/stylo.module.css"
 import type { ToolbarCommandId } from "../types"
@@ -9,12 +8,10 @@ import { resolveForCell } from "./command-helpers"
 import { BUILTIN_BY_ID } from "./commands"
 import type { ToolbarItem } from "./config"
 import { useFloatingWatchdog } from "./floating-watchdog"
-import { DEFAULT_ICONS } from "./icons"
 import { useKeyboardInset } from "./keyboard-inset"
-import { OverflowMenu, moreGlyph } from "./OverflowMenu"
-import type { OverflowEntry } from "./OverflowMenu"
-import { trimSeps } from "./overflow-fit"
-import { useToolbarOverflow } from "./use-toolbar-overflow"
+import { OverflowBar } from "./OverflowBar"
+import { groupItems, toButton } from "./toolbar-model"
+import type { Btn, Resolved } from "./toolbar-model"
 
 export interface ToolbarProps {
   /** The surface the commands act on. `null` while a lazy view is mounting. */
@@ -34,57 +31,6 @@ export interface ToolbarProps {
   overflow?: "wrap" | "menu"
   /** Glyph for the overflow menu's button. */
   overflowIcon?: ReactNode
-}
-
-/** A button to render, normalised from a built-in id or a custom item. */
-interface Btn {
-  key: string
-  icon: ReactNode
-  title: string
-  run: (view: EditorView) => unknown
-  isActive?: (state: EditorState) => boolean
-  disabled?: (state: EditorState) => boolean
-}
-
-/**
- * Splits `items` into the runs a `"|"` already delimits, keeping each
- * separator as its own entry. A run renders as one flex child so wrapping
- * (on narrow hosts) breaks between groups, never in the middle of one — the
- * default bar's `undo, redo | h1, h2, h3 | ...` shape becomes the wrap unit
- * for free, no separate grouping config needed.
- */
-function groupItems(items: ToolbarItem[]): (Exclude<ToolbarItem, "|">[] | "|")[] {
-  const groups: (Exclude<ToolbarItem, "|">[] | "|")[] = []
-  let run: Exclude<ToolbarItem, "|">[] = []
-  for (const item of items) {
-    if (item !== "|") {
-      run.push(item)
-      continue
-    }
-    if (run.length) groups.push(run)
-    run = []
-    groups.push("|")
-  }
-  if (run.length) groups.push(run)
-  return groups
-}
-
-/** Resolve one non-separator item to a renderable button, or `null` to skip it. */
-function toButton(item: Exclude<ToolbarItem, "|">, icons: ToolbarProps["icons"]): Btn | null {
-  if (typeof item !== "string") {
-    const { id, icon, title, run, isActive, disabled } = item
-    return { key: id, icon, title, run, isActive, disabled }
-  }
-  const cmd = BUILTIN_BY_ID[item]
-  if (!cmd) return null
-  return {
-    key: item,
-    icon: icons?.[item] ?? DEFAULT_ICONS[item],
-    title: cmd.title,
-    run: cmd.run,
-    isActive: cmd.isActive,
-    disabled: cmd.disabled,
-  }
 }
 
 /**
@@ -110,7 +56,6 @@ export function Toolbar({
   // screen the way a keyboard eats the bottom.
   const keyboardInset = useKeyboardInset(sticky === "bottom")
   const barRef = useRef<HTMLDivElement>(null)
-  const measureRef = useRef<HTMLDivElement>(null)
   useFloatingWatchdog(barRef, sticky === "top")
 
   useEffect(() => {
@@ -148,16 +93,7 @@ export function Toolbar({
   // real DOM focus in that case instead.
   const inCell = view ? Boolean(activeTableCell(view)) : false
 
-  // Menu mode lays every slot out flat (no group wrappers) so the fit can fold
-  // single buttons; unknown ids are dropped up front so slots match the DOM.
   const menuMode = overflow === "menu"
-  const flat = menuMode ? items.filter((it) => it === "|" || toButton(it, icons) !== null) : []
-  const slots = flat.map((it, i) => ({
-    key: it === "|" ? `sep-${i}` : typeof it === "string" ? it : it.id,
-    sep: it === "|",
-    pinned: typeof it === "object" && Boolean(it.pinned),
-  }))
-  const folded = useToolbarOverflow(barRef, measureRef, menuMode, slots)
 
   const className = [
     styles.toolbar,
@@ -179,7 +115,7 @@ export function Toolbar({
     sticky === "bottom" ? { transform: `translateY(-${keyboardInset}px)` } : undefined
 
   /** A slot's button plus its live disabled / pressed state, or `null` to skip it. */
-  const resolveItem = (item: Exclude<ToolbarItem, "|">) => {
+  const resolveItem = (item: Exclude<ToolbarItem, "|">): Resolved | null => {
     const btn = toButton(item, icons)
     if (!btn) return null
     // Only a built-in command is cell-aware — a host's own `ToolbarCustomItem`
@@ -227,61 +163,26 @@ export function Toolbar({
     )
   }
 
-  const sep = (key: string) => <span key={key} className={styles.toolbarSep} aria-hidden="true" />
-
-  let content: ReactNode
-  if (menuMode) {
-    const slot = flat.map((it, i) => ({ it, sep: it === "|", folded: Boolean(folded[i]) }))
-    const row = trimSeps(slot.filter((s) => !s.folded))
-    const menu = trimSeps(slot.filter((s) => s.folded))
-    const entries = menu.map((s, i): OverflowEntry | "|" => {
-      const r = s.it === "|" ? null : resolveItem(s.it)
-      return r
-        ? {
-            key: r.btn.key,
-            title: r.btn.title,
-            icon: r.btn.icon,
-            disabled: r.off,
-            run: () => run(r.btn),
-          }
-        : "|"
-    })
-    content = (
-      <>
-        {row.map((s, i) => (s.it === "|" ? sep(`sep-${i}`) : renderItem(s.it)))}
-        {menu.length > 0 && <OverflowMenu entries={entries} icon={overflowIcon} />}
-        <div ref={measureRef} className={styles.toolbarMeasure} aria-hidden="true">
-          {flat.map((it, i) =>
-            it === "|" ? (
-              sep(`m-${i}`)
-            ) : (
-              <button
-                key={slots[i]!.key}
-                type="button"
-                tabIndex={-1}
-                className={styles.toolbarButton}
-              >
-                {toButton(it, icons)!.icon}
-              </button>
-            ),
-          )}
-          <button type="button" tabIndex={-1} className={styles.toolbarButton}>
-            {moreGlyph(overflowIcon)}
-          </button>
-        </div>
-      </>
-    )
-  } else {
-    content = groupItems(items).map((group, i) =>
+  const content = menuMode ? (
+    <OverflowBar
+      items={items}
+      icons={icons}
+      overflowIcon={overflowIcon}
+      resolve={resolveItem}
+      run={run}
+      renderItem={renderItem}
+    />
+  ) : (
+    groupItems(items).map((group, i) =>
       group === "|" ? (
-        sep(`sep-${i}`)
+        <span key={`sep-${i}`} className={styles.toolbarSep} aria-hidden="true" />
       ) : (
         <div key={`group-${i}`} className={styles.toolbarGroup}>
           {group.map(renderItem)}
         </div>
       ),
     )
-  }
+  )
 
   return (
     <div
