@@ -6,6 +6,8 @@ Notable changes to Stylo. The format follows
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-10-04
+
 ### Added
 
 - **Toolbar overflow menu.** `toolbar={{ overflow: "menu" }}` keeps the bar on
@@ -721,6 +723,7 @@ consumable from git.
 - `inPlace` config is read once at mount; changing it needs a remount. (Now
   documented as an intentional contract — see `[Unreleased]`.)
 
+[0.18.0]: https://github.com/itsdamiro/stylo/releases/tag/v0.18.0
 [0.17.0]: https://github.com/itsdamiro/stylo/releases/tag/v0.17.0
 [0.16.0]: https://github.com/itsdamiro/stylo/releases/tag/v0.16.0
 [0.13.6]: https://github.com/itsdamiro/stylo/releases/tag/v0.13.6
