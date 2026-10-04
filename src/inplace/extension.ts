@@ -1,7 +1,7 @@
 import { Prec, type Extension } from "@codemirror/state"
 import { EditorView } from "@codemirror/view"
 import { cellSourcePos } from "../toolbar/table-position"
-import type { InPlaceConfig } from "../types"
+import type { ContextMenuItem, InPlaceConfig } from "../types"
 import { offsetFromPoint } from "./table-cell-dom"
 import {
   contextMenuEnabled,
@@ -50,6 +50,12 @@ export interface InPlaceOptions {
    * Its presence turns the `![[ref]]` pass on; see ADR-009.
    */
   embedRegistry?: EmbedRegistry
+  /**
+   * Reads the host's right-click items on every menu open. The canvas passes a
+   * ref-backed getter so a re-render's closures apply; omitted, the items come
+   * from `inPlace.contextMenu` as given at construction.
+   */
+  hostItems?: () => ContextMenuItem[]
 }
 
 /**
@@ -80,7 +86,7 @@ export function inPlaceExtension(opts: InPlaceOptions = {}): Extension {
     linkOpenFacet.of(opts.onLinkClick ?? null),
     contextMenuEnabled.of(menu.enabled),
     menuGroupsFacet.of(menu.groups),
-    hostItemsFacet.of(menu.items),
+    hostItemsFacet.of(opts.hostItems ?? (() => menu.items)),
     selectionUIFacet.of(opts.inPlace?.selectionUI ?? "menu"),
     selectionBarItemsFacet.of(resolveSelectionBarItems(opts.inPlace?.selectionBarItems)),
     inPlaceDecorations(),

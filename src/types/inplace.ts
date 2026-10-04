@@ -102,7 +102,11 @@ export interface ContextMenuConfig {
    * toolbar). A list without `"host"` hides the host items.
    */
   groups?: MenuGroupId[]
-  /** The host's own entries, drawn as the `host` group. */
+  /**
+   * The host's own entries, drawn as the `host` group. Unlike the rest of
+   * `inPlace`, read each time the menu opens, so a re-render's `run` closures
+   * apply.
+   */
   items?: ContextMenuItem[]
 }
 

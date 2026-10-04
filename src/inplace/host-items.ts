@@ -28,8 +28,13 @@ function renderIcon(icon: ContextMenuItem["icon"], key: ContextMenuItem): Node |
   if (iconCache.has(key)) return iconCache.get(key) ?? null
   const host = document.createElement("span")
   const root = createRoot(host)
-  flushSync(() => root.render(icon))
-  const node = host.firstElementChild
+  let node: Node | null = null
+  try {
+    flushSync(() => root.render(icon))
+    node = host.firstElementChild
+  } catch {
+    // A host icon that throws costs the row its glyph, not the whole menu.
+  }
   root.unmount()
   iconCache.set(key, node)
   return node
@@ -40,13 +45,16 @@ const listed = (view: EditorView) => view.state.facet(menuGroupsFacet).includes(
 
 /** Whether a read-only note has anything to offer: a listed, `readOnlySafe` item. */
 export const hasReadOnlyItems = (view: EditorView): boolean =>
-  listed(view) && view.state.facet(hostItemsFacet).some((i) => i.readOnlySafe)
+  listed(view) &&
+  view.state
+    .facet(hostItemsFacet)()
+    .some((i) => i.readOnlySafe)
 
 export function hostRows(view: EditorView, ctx: HostRowsContext): MenuRow[] {
   if (!listed(view)) return []
   const readOnly = view.state.readOnly
   const rows: MenuAction[] = []
-  for (const item of view.state.facet(hostItemsFacet)) {
+  for (const item of view.state.facet(hostItemsFacet)()) {
     if (readOnly && !item.readOnlySafe) continue
     const when = item.when ?? "always"
     if (when === "selection" && !ctx.selected) continue

@@ -52,6 +52,13 @@ custom toolbar button: `id`, `title`, optional `icon`, `run(view)`, optional
 - The row carries `data-menu-item="<id>"` as a styling hook; it is otherwise a
   normal `cm-inplace-menu-item` button.
 
+- **The list is live.** The rest of `inPlace` is read once at mount, but a host
+  `run` usually closes over React state, so the canvas passes the extension a
+  ref-backed getter (as it already does for `onLinkClick`) and the items are
+  read on each menu open.
+- **A throwing icon** loses its glyph, not the menu: the render is wrapped, and
+  React still reports the error to the page.
+
 ## Consequences
 
 - `react-dom/client` is now imported by the in-place chunk. It had to be added

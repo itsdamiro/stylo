@@ -158,15 +158,15 @@ inPlace={{
 }}
 ```
 
-| Field          | Meaning                                                                                                                                      |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`           | Stable identity; the row carries `data-menu-item="<id>"` for styling.                                                                        |
-| `title`        | The label.                                                                                                                                   |
-| `icon`         | A stroke-path string, or any element that renders to an SVG. An element is rendered once and copied as static markup: no state, no handlers. |
-| `run(view)`    | Called with the live view, the selection as it was when the menu opened (a right-click on a word selects it first).                          |
-| `disabled`     | `(state) => boolean`, read each time the menu opens; the row is greyed.                                                                      |
-| `when`         | `"selection"` (non-empty selection only), `"no-selection"`, or `"always"` (default).                                                         |
-| `readOnlySafe` | Offer the item in a read-only note. Without it the item is hidden there, like every built-in row. Use it only for an item that never edits.  |
+| Field          | Meaning                                                                                                                                           |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`           | Stable identity; the row carries `data-menu-item="<id>"` for styling.                                                                             |
+| `title`        | The label.                                                                                                                                        |
+| `icon`         | A stroke-path string, or any element that renders to an SVG. An element is rendered once and copied as static markup: no state, no handlers.      |
+| `run(view)`    | Called with the live view (the latest render's closure), the selection as it was when the menu opened (a right-click on a word selects it first). |
+| `disabled`     | `(state) => boolean`, read each time the menu opens; the row is greyed.                                                                           |
+| `when`         | `"selection"` (non-empty selection only), `"no-selection"`, or `"always"` (default).                                                              |
+| `readOnlySafe` | Offer the item in a read-only note. Without it the item is hidden there, like every built-in row. Use it only for an item that never edits.       |
 
 The group appears in every context the menu has: the canvas, a fenced code
 block, the divider menu and an editable table cell (above **Format**, under the
@@ -289,7 +289,10 @@ single-character typing.
 The **entire `inPlace` object** — `decorations`, `table`, `reveal`,
 `contextMenu`, `selectionUI`, `selectionBarItems` — is read once, when the
 in-place canvas is constructed. Changing it on an already-mounted `<Stylo>` has
-no effect. This is a deliberate contract, not a gap: it is applied through the
+no effect, with one exception: the **`contextMenu.items`** list is read each
+time the menu opens, so a re-render's new `run` / `disabled` closures apply
+(`groups` and the on/off switch are still read once). The rest is a deliberate
+contract, not a gap: it is applied through the
 CodeMirror extension configuration, the same way `codeLanguages` and the
 toolbar shortcuts are, and a live-reconfiguration path was evaluated and
 rejected in the

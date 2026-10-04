@@ -121,9 +121,13 @@ export function resolveContextMenu(c: InPlaceConfig["contextMenu"]): {
   }
 }
 
-/** The host's right-click entries (`contextMenu.items`). Seeded by `inPlaceExtension`. */
-export const hostItemsFacet = Facet.define<ContextMenuItem[], ContextMenuItem[]>({
-  combine: (values) => values[0] ?? [],
+/**
+ * The host's right-click entries (`contextMenu.items`), as a getter so the
+ * canvas can hand it a ref and a re-render's new `run` closures are used.
+ * Seeded by `inPlaceExtension`.
+ */
+export const hostItemsFacet = Facet.define<() => ContextMenuItem[], () => ContextMenuItem[]>({
+  combine: (values) => values[0] ?? (() => []),
 })
 
 /**

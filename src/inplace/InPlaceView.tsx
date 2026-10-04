@@ -89,6 +89,11 @@ export function InPlaceView({
   const linkRef = useRef(onLinkClick)
   linkRef.current = onLinkClick
 
+  // The right-click items are read through this on every menu open, so their
+  // `run` / `disabled` closures are always the latest render's.
+  const hostItemsRef = useRef(inPlace?.contextMenu)
+  hostItemsRef.current = inPlace?.contextMenu
+
   const [registry] = useState(() => new EmbedRegistry())
   const slots = useSyncExternalStore(registry.subscribe, registry.getSnapshot, registry.getSnapshot)
 
@@ -114,6 +119,10 @@ export function InPlaceView({
       onWikiLinkClick: (target) => clickRef.current?.(target),
       onLinkClick: (href) => linkRef.current?.(href),
       inPlace,
+      hostItems: () => {
+        const c = hostItemsRef.current
+        return typeof c === "object" ? (c.items ?? []) : []
+      },
       embedRegistry: embedSource ? registry : undefined,
     }),
     ...(headerHost ? [showPanel.of(headerHost.panel)] : []),

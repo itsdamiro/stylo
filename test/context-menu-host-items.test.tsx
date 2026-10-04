@@ -135,7 +135,7 @@ test("a ReactNode icon renders as a leading svg; a string is a stroke path", asy
   )
 })
 
-test("a fenced code block and a thematic break still get the host group", async () => {
+test("a fenced code block still gets the host group", async () => {
   const fence = await mount("```ts\nconst a = 1\n```", { contextMenu: { items: [item()] } })
   fence.view.dispatch({ selection: { anchor: 8 } })
   rightClick(fence.view.contentDOM)
@@ -211,4 +211,77 @@ test("table cell: host item shows in the cell menu and run sees the selected cel
   expect(labels(view)).toContain("Insert row above") // structural rows still there
   view.dom.querySelector<HTMLButtonElement>('[data-menu-item="comment"]')!.click()
   expect(seen).toEqual(["wo"])
+})
+
+test("a thematic break's menu carries the host group too", async () => {
+  const { view } = await mount("para\n\n---\n\nafter", {
+    reveal: "never",
+    contextMenu: { items: [item({ id: "any", title: "Any" })] },
+  })
+  const hr = await vi.waitFor(() => {
+    const el = view.contentDOM.querySelector(".cm-inplace-hr")
+    if (!el) throw new Error("no rendered rule")
+    return el
+  })
+  rightClick(hr)
+  expect(labels(view)[0]).toBe("Any")
+  expect(labels(view)).toContain("Remove divider")
+})
+
+test("a long-press opens the menu with the host items", async () => {
+  const { view } = await mount("Heading here", { contextMenu: { items: [item()] } })
+  vi.useFakeTimers()
+  view.contentDOM.dispatchEvent(
+    new PointerEvent("pointerdown", {
+      bubbles: true,
+      clientX: 20,
+      clientY: 20,
+      pointerType: "touch",
+    }),
+  )
+  vi.advanceTimersByTime(500)
+  vi.useRealTimers()
+  expect(labels(view)[0]).toBe("Comment")
+})
+
+test("a re-render's new run closure is the one that fires", async () => {
+  const first = vi.fn()
+  const second = vi.fn()
+  const view$ = (run: () => void) => (
+    <Stylo
+      value="Heading here"
+      onChange={() => {}}
+      mode="in-place"
+      inPlace={{ contextMenu: { items: [item({ run })] } }}
+    />
+  )
+  const result = render(view$(first))
+  await vi.waitFor(() => {
+    if (!result.container.querySelector(".cm-editor")) throw new Error("not mounted")
+  })
+  const view = EditorView.findFromDOM(result.container.querySelector(".cm-editor") as HTMLElement)!
+  result.rerender(view$(second))
+  rightClick(view.contentDOM)
+  view.dom.querySelector<HTMLButtonElement>('[data-menu-item="comment"]')!.click()
+  expect(first).not.toHaveBeenCalled()
+  expect(second).toHaveBeenCalledTimes(1)
+})
+
+test("an icon that throws costs the row its glyph, not the menu", async () => {
+  const Boom = () => {
+    throw new Error("bad icon")
+  }
+  // React still reports the failure to the page (the host sees it in its
+  // console); the menu itself must open regardless.
+  const spy = vi.spyOn(console, "error").mockImplementation(() => {})
+  const swallow = (e: ErrorEvent) => e.preventDefault()
+  window.addEventListener("error", swallow)
+  const { view } = await mount("Heading here", {
+    contextMenu: { items: [item({ icon: <Boom /> })] },
+  })
+  rightClick(view.contentDOM)
+  window.removeEventListener("error", swallow)
+  spy.mockRestore()
+  expect(labels(view)[0]).toBe("Comment")
+  expect(view.dom.querySelector('[data-menu-item="comment"] svg')).toBeNull()
 })
