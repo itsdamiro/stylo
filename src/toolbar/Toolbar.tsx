@@ -11,6 +11,10 @@ import type { ToolbarItem } from "./config"
 import { useFloatingWatchdog } from "./floating-watchdog"
 import { DEFAULT_ICONS } from "./icons"
 import { useKeyboardInset } from "./keyboard-inset"
+import { OverflowMenu, moreGlyph } from "./OverflowMenu"
+import type { OverflowEntry } from "./OverflowMenu"
+import { trimSeps } from "./overflow-fit"
+import { useToolbarOverflow } from "./use-toolbar-overflow"
 
 export interface ToolbarProps {
   /** The surface the commands act on. `null` while a lazy view is mounting. */
@@ -26,6 +30,10 @@ export interface ToolbarProps {
   sticky?: "top" | "bottom" | false
   /** Fade the bar out while the editing surface is unfocused (`ToolbarConfig.stickyVisibility`). */
   stickyVisibility?: "consistent" | "dynamic"
+  /** `"menu"` folds buttons that do not fit into a trailing menu instead of wrapping. */
+  overflow?: "wrap" | "menu"
+  /** Glyph for the overflow menu's button. */
+  overflowIcon?: ReactNode
 }
 
 /** A button to render, normalised from a built-in id or a custom item. */
@@ -86,13 +94,23 @@ function toButton(item: Exclude<ToolbarItem, "|">, icons: ToolbarProps["icons"])
  * ids and consumer-supplied {@link ToolbarCustomItem}s render through the same
  * button path.
  */
-export function Toolbar({ view, items, icons, disabled, sticky, stickyVisibility }: ToolbarProps) {
+export function Toolbar({
+  view,
+  items,
+  icons,
+  disabled,
+  sticky,
+  stickyVisibility,
+  overflow,
+  overflowIcon,
+}: ToolbarProps) {
   const [, refresh] = useReducer((n: number) => n + 1, 0)
   const [focused, setFocused] = useState(false)
   // Only "bottom" needs keyboard tracking — nothing eats into the top of the
   // screen the way a keyboard eats the bottom.
   const keyboardInset = useKeyboardInset(sticky === "bottom")
   const barRef = useRef<HTMLDivElement>(null)
+  const measureRef = useRef<HTMLDivElement>(null)
   useFloatingWatchdog(barRef, sticky === "top")
 
   useEffect(() => {
@@ -130,12 +148,24 @@ export function Toolbar({ view, items, icons, disabled, sticky, stickyVisibility
   // real DOM focus in that case instead.
   const inCell = view ? Boolean(activeTableCell(view)) : false
 
+  // Menu mode lays every slot out flat (no group wrappers) so the fit can fold
+  // single buttons; unknown ids are dropped up front so slots match the DOM.
+  const menuMode = overflow === "menu"
+  const flat = menuMode ? items.filter((it) => it === "|" || toButton(it, icons) !== null) : []
+  const slots = flat.map((it, i) => ({
+    key: it === "|" ? `sep-${i}` : typeof it === "string" ? it : it.id,
+    sep: it === "|",
+    pinned: typeof it === "object" && Boolean(it.pinned),
+  }))
+  const folded = useToolbarOverflow(barRef, measureRef, menuMode, slots)
+
   const className = [
     styles.toolbar,
     sticky && styles.toolbarSticky,
     sticky === "top" && styles.toolbarStickyTop,
     sticky === "bottom" && styles.toolbarStickyBottom,
     dynamicHidden && styles.toolbarStickyHidden,
+    menuMode && styles.toolbarOverflow,
   ]
     .filter(Boolean)
     .join(" ")
@@ -148,6 +178,111 @@ export function Toolbar({ view, items, icons, disabled, sticky, stickyVisibility
   const stickyStyle =
     sticky === "bottom" ? { transform: `translateY(-${keyboardInset}px)` } : undefined
 
+  /** A slot's button plus its live disabled / pressed state, or `null` to skip it. */
+  const resolveItem = (item: Exclude<ToolbarItem, "|">) => {
+    const btn = toButton(item, icons)
+    if (!btn) return null
+    // Only a built-in command is cell-aware — a host's own `ToolbarCustomItem`
+    // keeps reading `state` exactly as before; it has no notion of a table
+    // cell to degrade into.
+    const builtin = typeof item === "string" ? BUILTIN_BY_ID[item] : undefined
+    const resolved = view
+      ? builtin
+        ? resolveForCell(view.state, builtin, inCell)
+        : {
+            disabled: Boolean(btn.disabled?.(view.state)),
+            active: Boolean(btn.isActive?.(view.state)),
+          }
+      : { disabled: true, active: false }
+    const off = Boolean(disabled || !view || resolved.disabled)
+    return { btn, off, active: !off && resolved.active }
+  }
+
+  const run = (btn: Btn) => {
+    if (!view) return
+    btn.run(view)
+    refresh()
+  }
+
+  const renderItem = (item: Exclude<ToolbarItem, "|">) => {
+    const r = resolveItem(item)
+    if (!r) return null
+    const { btn, off, active } = r
+    return (
+      <button
+        key={btn.key}
+        type="button"
+        className={styles.toolbarButton}
+        data-command={btn.key}
+        title={btn.title}
+        aria-label={btn.title}
+        aria-pressed={btn.isActive ? active : undefined}
+        data-active={active ? "" : undefined}
+        disabled={off}
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => run(btn)}
+      >
+        {btn.icon}
+      </button>
+    )
+  }
+
+  const sep = (key: string) => <span key={key} className={styles.toolbarSep} aria-hidden="true" />
+
+  let content: ReactNode
+  if (menuMode) {
+    const slot = flat.map((it, i) => ({ it, sep: it === "|", folded: Boolean(folded[i]) }))
+    const row = trimSeps(slot.filter((s) => !s.folded))
+    const menu = trimSeps(slot.filter((s) => s.folded))
+    const entries = menu.map((s, i): OverflowEntry | "|" => {
+      const r = s.it === "|" ? null : resolveItem(s.it)
+      return r
+        ? {
+            key: r.btn.key,
+            title: r.btn.title,
+            icon: r.btn.icon,
+            disabled: r.off,
+            run: () => run(r.btn),
+          }
+        : "|"
+    })
+    content = (
+      <>
+        {row.map((s, i) => (s.it === "|" ? sep(`sep-${i}`) : renderItem(s.it)))}
+        {menu.length > 0 && <OverflowMenu entries={entries} icon={overflowIcon} />}
+        <div ref={measureRef} className={styles.toolbarMeasure} aria-hidden="true">
+          {flat.map((it, i) =>
+            it === "|" ? (
+              sep(`m-${i}`)
+            ) : (
+              <button
+                key={slots[i]!.key}
+                type="button"
+                tabIndex={-1}
+                className={styles.toolbarButton}
+              >
+                {toButton(it, icons)!.icon}
+              </button>
+            ),
+          )}
+          <button type="button" tabIndex={-1} className={styles.toolbarButton}>
+            {moreGlyph(overflowIcon)}
+          </button>
+        </div>
+      </>
+    )
+  } else {
+    content = groupItems(items).map((group, i) =>
+      group === "|" ? (
+        sep(`sep-${i}`)
+      ) : (
+        <div key={`group-${i}`} className={styles.toolbarGroup}>
+          {group.map(renderItem)}
+        </div>
+      ),
+    )
+  }
+
   return (
     <div
       ref={barRef}
@@ -157,54 +292,7 @@ export function Toolbar({ view, items, icons, disabled, sticky, stickyVisibility
       aria-hidden={dynamicHidden || undefined}
       style={stickyStyle}
     >
-      {groupItems(items).map((group, i) => {
-        if (group === "|") {
-          return <span key={`sep-${i}`} className={styles.toolbarSep} aria-hidden="true" />
-        }
-        return (
-          <div key={`group-${i}`} className={styles.toolbarGroup}>
-            {group.map((item) => {
-              const btn = toButton(item, icons)
-              if (!btn) return null
-              // Only a built-in command is cell-aware — a host's own
-              // `ToolbarCustomItem` keeps reading `state` exactly as before;
-              // it has no notion of a table cell to degrade into.
-              const builtin = typeof item === "string" ? BUILTIN_BY_ID[item] : undefined
-              const resolved = view
-                ? builtin
-                  ? resolveForCell(view.state, builtin, inCell)
-                  : {
-                      disabled: Boolean(btn.disabled?.(view.state)),
-                      active: Boolean(btn.isActive?.(view.state)),
-                    }
-                : { disabled: true, active: false }
-              const off = disabled || !view || resolved.disabled
-              const active = !off && resolved.active
-              return (
-                <button
-                  key={btn.key}
-                  type="button"
-                  className={styles.toolbarButton}
-                  data-command={btn.key}
-                  title={btn.title}
-                  aria-label={btn.title}
-                  aria-pressed={btn.isActive ? active : undefined}
-                  data-active={active ? "" : undefined}
-                  disabled={off}
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => {
-                    if (!view) return
-                    btn.run(view)
-                    refresh()
-                  }}
-                >
-                  {btn.icon}
-                </button>
-              )
-            })}
-          </div>
-        )
-      })}
+      {content}
     </div>
   )
 }

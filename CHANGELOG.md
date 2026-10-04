@@ -6,6 +6,15 @@ Notable changes to Stylo. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- **Toolbar overflow menu.** `toolbar={{ overflow: "menu" }}` keeps the bar on
+  one row and folds the buttons that do not fit into a trailing `⋯` button that
+  opens them as a menu (icon, label, disabled state and action kept). The fit
+  is re-measured as the bar resizes. `overflowIcon` replaces the glyph, and
+  `pinned: true` on a custom item makes it the last to fold. The default,
+  `"wrap"`, is unchanged.
+
 ## [0.17.0] - 2026-10-04
 
 ### Added

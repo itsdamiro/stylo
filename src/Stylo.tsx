@@ -144,6 +144,8 @@ export const Stylo = forwardRef<StyloHandle, StyloProps>(function Stylo(
               disabled={readOnly}
               sticky={stickyToolbar}
               stickyVisibility={stickyVisibility}
+              overflow={toolbarConfig?.overflow}
+              overflowIcon={toolbarConfig?.overflowIcon}
             />
           )
           return toolbarRender ? toolbarRender(bar, { view }) : bar

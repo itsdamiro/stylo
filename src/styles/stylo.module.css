@@ -215,6 +215,101 @@
   box-shadow: 0 2px 8px color-mix(in srgb, var(--stylo-text) 10%, transparent);
 }
 
+/* `toolbar={{ overflow: "menu" }}` — one row that never wraps or scrolls;
+   what does not fit folds into `.toolbarMore`. Declared after `.toolbarSticky`
+   so it wins over its horizontal scroll (the menu must not be clipped). */
+.toolbarOverflow {
+  flex-wrap: nowrap;
+  overflow: visible;
+  min-width: 0;
+}
+
+/* The menu and measuring row anchor to the bar; a sticky bar is already
+   `position: fixed`, which anchors them too. */
+.toolbarOverflow:not(.toolbarSticky) {
+  position: relative;
+}
+
+.toolbarMore {
+  margin-inline-start: auto;
+  flex: 0 0 auto;
+}
+
+/* Hidden copy of every slot, read by `useToolbarOverflow` for real widths. */
+.toolbarMeasure {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  width: max-content;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.toolbarMenu {
+  position: absolute;
+  top: 100%;
+  inset-inline-end: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  padding: 4px;
+  border: 1px solid var(--stylo-border);
+  border-radius: var(--stylo-radius);
+  background: var(--stylo-bg);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--stylo-text) 14%, transparent);
+}
+
+/* A bar fixed to the bottom edge opens its menu upward. */
+.toolbarStickyBottom .toolbarMenu {
+  top: auto;
+  bottom: 100%;
+}
+
+.toolbarMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: calc(var(--stylo-radius) - 3px);
+  background: none;
+  color: var(--stylo-text);
+  font: inherit;
+  font-size: 0.8125rem;
+  text-align: start;
+  cursor: pointer;
+}
+
+.toolbarMenuItem:hover:not(:disabled),
+.toolbarMenuItem:focus-visible {
+  background: color-mix(in srgb, var(--stylo-border) 45%, transparent);
+  outline: none;
+}
+
+.toolbarMenuItem:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.toolbarMenuItem svg {
+  display: block;
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+
+.toolbarMenuDivider {
+  height: 1px;
+  margin: 4px 2px;
+  background: var(--stylo-border);
+}
+
 /* `stickyVisibility: "dynamic"` — faded out while nothing is focused. */
 .toolbarStickyHidden {
   opacity: 0;

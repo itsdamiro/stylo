@@ -59,6 +59,12 @@ export interface ToolbarCustomItem {
   isActive?: (state: EditorState) => boolean
   /** When true, the button is rendered `disabled`. */
   disabled?: (state: EditorState) => boolean
+  /**
+   * With `toolbar.overflow: "menu"`, a pinned item is the last to fold into the
+   * overflow menu — for the buttons a user must always reach (Save). Ignored
+   * in the default wrapping mode.
+   */
+  pinned?: boolean
 }
 
 /** One rendered slot: a built-in id, a `"|"` separator, or a custom button. */
@@ -95,4 +101,14 @@ export interface ToolbarConfig {
    * content while the caret is elsewhere. Ignored when `sticky` is off.
    */
   stickyVisibility?: "consistent" | "dynamic"
+  /**
+   * What the bar does when its buttons do not fit. `"wrap"` (the default)
+   * breaks onto further lines between groups. `"menu"` keeps one row: the
+   * buttons that fit stay, the rest fold in order into a trailing "more"
+   * button that opens them as a menu. Re-measured whenever the bar's width or
+   * its items change.
+   */
+  overflow?: "wrap" | "menu"
+  /** The "more" button's glyph when `overflow` is `"menu"`. Defaults to `⋯`. */
+  overflowIcon?: ReactNode
 }

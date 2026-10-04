@@ -132,6 +132,8 @@ const table = (params.get("table") as TableEditing) ?? "source"
 const reveal = (params.get("reveal") as RevealMode) ?? "caret"
 const sticky = params.get("sticky") as "top" | "bottom" | null
 const toolbar = params.get("toolbar") !== "0"
+const overflow = params.get("overflow") === "menu" ? "menu" : undefined
+const width = params.get("width")
 const wikiLinkSource = params.get("wikilinks") === "1" ? cannedWikiLinkSource : undefined
 const tagSource = params.get("tags") === "1" ? cannedTagSource : undefined
 const embedSource = params.get("embed") === "1" ? cannedEmbedSource : undefined
@@ -156,17 +158,19 @@ if (params.get("theme") === "dark") document.documentElement.dataset.theme = "da
 function Fixture() {
   const [value, setValue] = useState(doc)
   return (
-    <Stylo
-      value={value}
-      onChange={setValue}
-      mode={mode}
-      inPlace={{ selectionUI, table, reveal }}
-      toolbar={sticky ? { sticky } : toolbar}
-      wikiLinkSource={wikiLinkSource}
-      tagSource={tagSource}
-      embedSource={embedSource}
-      extensions={hostExtensions}
-    />
+    <div style={width ? { width: `${width}px` } : undefined}>
+      <Stylo
+        value={value}
+        onChange={setValue}
+        mode={mode}
+        inPlace={{ selectionUI, table, reveal }}
+        toolbar={sticky || overflow ? { sticky: sticky ?? false, overflow } : toolbar}
+        wikiLinkSource={wikiLinkSource}
+        tagSource={tagSource}
+        embedSource={embedSource}
+        extensions={hostExtensions}
+      />
+    </div>
   )
 }
 

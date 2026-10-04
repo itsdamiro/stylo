@@ -27,13 +27,14 @@ pressed state is read back from the document around the selection.
 
 ## The `toolbar` prop
 
-| Value               | Result                                                                      |
-| ------------------- | --------------------------------------------------------------------------- |
-| omitted / `true`    | The full default bar, in the built-in order.                                |
-| `false`             | No bar.                                                                     |
-| `{ items: [...] }`  | Exactly those items, in that order.                                         |
-| `{ items, render }` | …with the rendered bar wrapped or replaced.                                 |
-| `{ items, sticky }` | …fixed to the window bottom, above the keyboard. See [On touch](#on-touch). |
+| Value                         | Result                                                                                      |
+| ----------------------------- | ------------------------------------------------------------------------------------------- |
+| omitted / `true`              | The full default bar, in the built-in order.                                                |
+| `false`                       | No bar.                                                                                     |
+| `{ items: [...] }`            | Exactly those items, in that order.                                                         |
+| `{ items, render }`           | …with the rendered bar wrapped or replaced.                                                 |
+| `{ items, sticky }`           | …fixed to the window bottom, above the keyboard. See [On touch](#on-touch).                 |
+| `{ items, overflow: "menu" }` | …one row that folds what does not fit into a `⋯` menu. See [Overflow menu](#overflow-menu). |
 
 `items` is a list of built-in command ids with `"|"` for a separator, and — mixed
 in anywhere — [custom item](#custom-items) objects. Unknown ids are skipped.
@@ -46,8 +47,40 @@ no `overflow` config needed for this part. Each `"|"`-delimited run of items
 · inline text · lists · block structure · code/math) wraps as one unit, so a
 line break lands between two groups, never inside one. A consumer's own
 `items` list gets this for free from however it already places its `"|"`s; no
-separate grouping array to author. A dedicated "collapse into a `…` menu"
-overflow mode instead of wrapping is deferred (ADR-002 §2 follow-ups).
+separate grouping array to author. For a single row that never wraps, opt in to the [overflow menu](#overflow-menu).
+
+## Overflow menu
+
+```tsx
+<Stylo value={doc} onChange={setDoc} toolbar={{ overflow: "menu" }} />
+```
+
+`overflow` is `"wrap"` (the default, the behaviour above) or `"menu"`. In menu
+mode the bar stays on one line: the buttons that fit stay in place, and the
+rest fold, from the end, into a trailing `⋯` button that opens them as a menu.
+Each entry keeps its icon, its `title` (shown as the label), its `disabled`
+state and its action. A separator that would lead or trail what is left in the
+row, or in the menu, is dropped. Replace the glyph with `overflowIcon`.
+
+```tsx
+toolbar={{ overflow: "menu", overflowIcon: <MoreIcon /> }}
+```
+
+Set `pinned: true` on a [custom item](#custom-items) to make it the last to
+fold — for a button the user must always reach, such as Save.
+
+The fit is measured, not guessed: a hidden copy of every button gives its real
+width, and a `ResizeObserver` on the bar re-runs the fit when its width or its
+items change, so widening the panel brings buttons back out. The width used is
+the bar's own content box, so space a host reserves with padding on the bar's
+wrapper is respected. With `sticky`, the menu opens upward from a bottom bar.
+
+The menu closes on Escape, on an outside press, and after a choice. A mouse
+press keeps the editor focused, like the row's buttons; from the keyboard
+(Enter or Space on `⋯`) focus moves into the menu and the arrow keys step
+through it. Style hooks: `[data-stylo-overflow]` (the button's wrapper),
+`[data-stylo-overflow-menu]` (the panel), and each entry carries
+`data-command`.
 
 ## Custom items
 
