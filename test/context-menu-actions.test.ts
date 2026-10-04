@@ -349,6 +349,7 @@ test("menu groups: link and format still yield to selectionUI 'bar'", () => {
 test("resolveContextMenu maps the prop shapes", () => {
   expect(resolveContextMenu(false).enabled).toBe(false)
   expect(resolveContextMenu(true).groups).toEqual([
+    "host",
     "link",
     "format",
     "paragraph",

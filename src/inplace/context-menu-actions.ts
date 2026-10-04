@@ -33,6 +33,8 @@ import {
   toAction,
 } from "./context-menu-helpers"
 import { dividerRow, onHiddenRule } from "./edit-divider"
+import { selectCellRange } from "./host-cell"
+import { hostRows } from "./host-items"
 import { linkRow, wikiLinkRow } from "./link-row"
 import { mathRow } from "./math-edit"
 import { selectionOffsets } from "./table-cell-dom"
@@ -95,14 +97,17 @@ const formatGroup = (view: EditorView, inCell = false): MenuRow[] => [
 ]
 
 /**
- * Rows for a non-empty selection inside an editable table cell: the Format
- * submenu (forced live — see `toAction`) and clipboard, gated by `menuGroups`.
- * Shared by the canvas menu and the table widget's own structural menu, which
- * appends these under its row / column / align actions.
+ * Rows for an editable table cell: the host items, then — for a non-empty
+ * selection — the Format submenu (forced live, see `toAction`) and clipboard,
+ * gated by `menuGroups`. Shared by the canvas menu and the table widget's own
+ * structural menu, which appends these under its row / column / align actions.
  */
 export function cellSelectionRows(view: EditorView): MenuRow[] {
   const groups = view.state.facet(menuGroupsFacet)
+  const selected = cellHasSelection(view)
   const rows: MenuRow[] = []
+  pushGroup(rows, hostRows(view, { selected, prepare: () => selectCellRange(view) }))
+  if (!selected) return rows
   if (groups.includes("format")) {
     pushGroup(rows, [submenu("Format", ICON_PATHS.format, formatGroup(view, true))])
   }
@@ -142,11 +147,14 @@ export function menuRows(view: EditorView): MenuRow[] {
   // (The editable-table widget shows these under its own structural rows; this
   // path stands in for a cell selection reaching the canvas menu directly.)
   if (cellHasSelection(view)) return cellSelectionRows(view)
+  const host = hostRows(view, { selected: !state.selection.main.empty })
 
   // A fenced code block is a literal context — offer only its language and an
   // unwrap, plus clipboard.
   if (fencedCodeActive(state)) {
-    const rows: MenuRow[] = [codeBlockRow(view)]
+    const rows: MenuRow[] = []
+    pushGroup(rows, host)
+    pushGroup(rows, [codeBlockRow(view)])
     if (has("clipboard")) pushGroup(rows, clipboardRows(view))
     return rows
   }
@@ -154,7 +162,9 @@ export function menuRows(view: EditorView): MenuRow[] {
   // A rendered thematic break — nothing to format or insert on it, so offer a
   // plain removal plus clipboard.
   if (onHiddenRule(state)) {
-    const rows: MenuRow[] = [dividerRow(view)]
+    const rows: MenuRow[] = []
+    pushGroup(rows, host)
+    pushGroup(rows, [dividerRow(view)])
     if (has("clipboard")) pushGroup(rows, clipboardRows(view))
     return rows
   }
@@ -173,7 +183,8 @@ export function menuRows(view: EditorView): MenuRow[] {
 
   const rows: MenuRow[] = []
   for (const g of groups) {
-    if (g === "link" && marksHere) pushGroup(rows, [wikiLinkRow(view), linkRow(view)])
+    if (g === "host") pushGroup(rows, host)
+    else if (g === "link" && marksHere) pushGroup(rows, [wikiLinkRow(view), linkRow(view)])
     else if (g === "format" && marksHere)
       pushGroup(rows, [submenu("Format", ICON_PATHS.format, formatGroup(view), !formatOk)])
     else if (g === "paragraph")

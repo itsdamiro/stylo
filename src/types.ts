@@ -28,5 +28,6 @@ export type {
   SelectionUI,
   MenuGroupId,
   ContextMenuConfig,
+  ContextMenuItem,
   InPlaceConfig,
 } from "./types/inplace"

@@ -6,6 +6,18 @@ Notable changes to Stylo. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- **Host items in the right-click menu.** `inPlace.contextMenu.items` adds the
+  host's own entries to the in-place menu, the way `toolbar.items` adds buttons.
+  An item has an `id`, a `title`, an optional `icon` (stroke-path string or an
+  SVG element), `run(view)`, `disabled(state)`, `when` (`"selection"`,
+  `"no-selection"`, `"always"`) and `readOnlySafe`. They are a new `host` group,
+  first by default and placeable in `groups`, and appear on the canvas, in
+  fenced code, the divider menu and table cells (where `run` sees the cell's
+  selected text as the state selection). A read-only note opens the menu only
+  for a `readOnlySafe` item; otherwise the browser menu shows as before.
+
 ## [0.18.0] - 2026-10-04
 
 ### Added

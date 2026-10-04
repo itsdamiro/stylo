@@ -1,5 +1,6 @@
 import { Facet } from "@codemirror/state"
 import type {
+  ContextMenuItem,
   InPlaceConfig,
   InPlaceDecorationToggles,
   MenuGroupId,
@@ -86,6 +87,7 @@ export const contextMenuEnabled = Facet.define<boolean, boolean>({
 
 /** The menu's groups in their default order. */
 export const DEFAULT_MENU_GROUPS: MenuGroupId[] = [
+  "host",
   "link",
   "format",
   "paragraph",
@@ -108,11 +110,21 @@ export const DEFAULT_SELECTION_BAR_ITEMS: ToolbarCommandId[] = [
 export function resolveContextMenu(c: InPlaceConfig["contextMenu"]): {
   enabled: boolean
   groups: MenuGroupId[]
+  items: ContextMenuItem[]
 } {
-  if (c === false) return { enabled: false, groups: [] }
-  if (c == null || c === true) return { enabled: true, groups: DEFAULT_MENU_GROUPS }
-  return { enabled: true, groups: c.groups?.length ? c.groups : DEFAULT_MENU_GROUPS }
+  if (c === false) return { enabled: false, groups: [], items: [] }
+  if (c == null || c === true) return { enabled: true, groups: DEFAULT_MENU_GROUPS, items: [] }
+  return {
+    enabled: true,
+    groups: c.groups?.length ? c.groups : DEFAULT_MENU_GROUPS,
+    items: c.items ?? [],
+  }
 }
+
+/** The host's right-click entries (`contextMenu.items`). Seeded by `inPlaceExtension`. */
+export const hostItemsFacet = Facet.define<ContextMenuItem[], ContextMenuItem[]>({
+  combine: (values) => values[0] ?? [],
+})
 
 /**
  * Ordered right-click menu groups. Seeded once by `inPlaceExtension`; read by

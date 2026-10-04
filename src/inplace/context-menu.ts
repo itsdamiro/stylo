@@ -52,8 +52,9 @@ export function createContextMenu(
       e.stopPropagation()
     })
 
-  const label = (el: HTMLElement, text: string, icon?: string) => {
-    if (icon) el.appendChild(iconSvg(doc, icon))
+  const label = (el: HTMLElement, text: string, icon?: string, node?: Node) => {
+    if (node) el.appendChild(node.cloneNode(true))
+    else if (icon) el.appendChild(iconSvg(doc, icon))
     const span = doc.createElement("span")
     span.textContent = text
     el.appendChild(span)
@@ -63,7 +64,8 @@ export function createContextMenu(
     const b = doc.createElement("button")
     b.type = "button"
     b.className = `${className}-item`
-    label(b, a.label, a.icon)
+    label(b, a.label, a.icon, a.iconNode)
+    if (a.id) b.dataset.menuItem = a.id
     if (a.title) b.title = a.title
     if (a.active) b.dataset.active = ""
     if (a.disabled) {

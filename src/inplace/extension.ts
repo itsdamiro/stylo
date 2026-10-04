@@ -5,6 +5,7 @@ import type { InPlaceConfig } from "../types"
 import { offsetFromPoint } from "./table-cell-dom"
 import {
   contextMenuEnabled,
+  hostItemsFacet,
   embedRegistryFacet,
   inPlaceConfigFacet,
   linkOpenFacet,
@@ -79,6 +80,7 @@ export function inPlaceExtension(opts: InPlaceOptions = {}): Extension {
     linkOpenFacet.of(opts.onLinkClick ?? null),
     contextMenuEnabled.of(menu.enabled),
     menuGroupsFacet.of(menu.groups),
+    hostItemsFacet.of(menu.items),
     selectionUIFacet.of(opts.inPlace?.selectionUI ?? "menu"),
     selectionBarItemsFacet.of(resolveSelectionBarItems(opts.inPlace?.selectionBarItems)),
     inPlaceDecorations(),

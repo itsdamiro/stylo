@@ -1,3 +1,6 @@
+import type { EditorState } from "@codemirror/state"
+import type { EditorView } from "@codemirror/view"
+import type { ReactNode } from "react"
 import type { ToolbarCommandId } from "./toolbar"
 
 /**
@@ -53,17 +56,54 @@ export type SelectionUI = "menu" | "bar" | "none"
 /**
  * The right-click menu's top-level groups. `link` is the internal / external
  * link field rows; `format` the inline-mark submenu; `paragraph` the block-type
- * submenu; `insert` the new-block submenu; `clipboard` cut / copy / paste.
+ * submenu; `insert` the new-block submenu; `clipboard` cut / copy / paste;
+ * `host` the entries the host passes as `contextMenu.items`.
  */
-export type MenuGroupId = "link" | "format" | "paragraph" | "insert" | "clipboard"
+export type MenuGroupId = "host" | "link" | "format" | "paragraph" | "insert" | "clipboard"
+
+/**
+ * A host-supplied right-click entry (`contextMenu.items`), the menu's parallel
+ * of a custom toolbar button. `run` gets the live view with the selection as it
+ * was when the menu opened — inside a table cell too, where the selected text
+ * is mapped back to its range in the document first.
+ */
+export interface ContextMenuItem {
+  /** Stable identity; exposed on the row as `data-menu-item`. */
+  id: string
+  /** The row's label. */
+  title: string
+  /**
+   * A leading glyph: stroke-path data like the built-in rows (`|` separates
+   * paths), or any element that renders to an SVG. An element is rendered once
+   * and copied as static markup, so it cannot hold state or handlers.
+   */
+  icon?: string | ReactNode
+  run: (view: EditorView) => void
+  /** Greyed and not selectable while true. Read each time the menu opens. */
+  disabled?: (state: EditorState) => boolean
+  /**
+   * `"selection"` shows the item only with a non-empty selection, `"no-selection"`
+   * only without one. Defaults to `"always"`.
+   */
+  when?: "selection" | "no-selection" | "always"
+  /**
+   * Offer the item in a read-only note. Without it the item is hidden there,
+   * like every built-in row. Use it only for an item that does not edit the
+   * document (a comment kept apart from the text).
+   */
+  readOnlySafe?: boolean
+}
 
 export interface ContextMenuConfig {
   /**
-   * Which top-level groups the menu shows, in order. Omit for all five in their
-   * default order. `link` and `format` still yield to `selectionUI` when it is
-   * not `"menu"` (they move to the floating bar / toolbar).
+   * Which top-level groups the menu shows, in order. Omit for all six in their
+   * default order (`host` first). `link` and `format` still yield to
+   * `selectionUI` when it is not `"menu"` (they move to the floating bar /
+   * toolbar). A list without `"host"` hides the host items.
    */
   groups?: MenuGroupId[]
+  /** The host's own entries, drawn as the `host` group. */
+  items?: ContextMenuItem[]
 }
 
 export interface InPlaceConfig {

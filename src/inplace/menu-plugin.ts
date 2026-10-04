@@ -7,8 +7,9 @@
 
 import { ViewPlugin, type EditorView, type PluginValue } from "@codemirror/view"
 import { contextMenuEnabled } from "./config"
-import { createContextMenu, type ContextMenu } from "./context-menu"
+import { createContextMenu, type ContextMenu, type MenuRow } from "./context-menu"
 import { menuRows } from "./context-menu-actions"
+import { hasReadOnlyItems, hostRows } from "./host-items"
 import { wrapAt } from "./wrap-at"
 import { attachLongPress, type LongPressHandle } from "./long-press"
 import { setMenuOpen } from "./menu-open"
@@ -53,7 +54,7 @@ class ContextMenuController implements PluginValue {
 
     this.onContextMenu = (e: MouseEvent) => {
       const target = e.target as HTMLElement | null
-      if (!view.state.facet(contextMenuEnabled) || view.state.readOnly) return
+      if (!this.canOpen()) return
 
       // Editable tables run their own context menu (structural rows, plus the
       // format group when a cell has a selection) and stop propagation before
@@ -64,13 +65,13 @@ class ContextMenuController implements PluginValue {
       // Every in-canvas target is handled: even a plain paragraph with no
       // selection has Insert + clipboard to offer, and adding a block is a
       // right-click action. Targets outside `.cm-content` never reach here, so
-      // the browser's own menu still shows there.
-      e.preventDefault()
+      // the browser's own menu still shows there. A read-only note is the one
+      // exception: it takes over only when the menu has a row to show.
       // Cancel any press still counting down, and drop a `contextmenu` that the
       // browser fired off a long-press that already opened the menu.
       this.longPress.cancel()
-      if (Date.now() - this.longPressAt < 700) return
-      this.openMenuAt(e.clientX, e.clientY, target)
+      const repeat = Date.now() - this.longPressAt < 700
+      if (repeat || this.openMenuAt(e.clientX, e.clientY, target)) e.preventDefault()
     }
     this.contentDOM.addEventListener("contextmenu", this.onContextMenu)
 
@@ -82,12 +83,29 @@ class ContextMenuController implements PluginValue {
     })
   }
 
-  /** Open the canvas menu at a screen point, from a right-click or a long-press.
-   *  Reconciles the selection first so the menu offers the right rows. */
-  private openMenuAt(clientX: number, clientY: number, target: HTMLElement | null) {
+  /** Whether the menu may open at all: on, and either writable or holding a
+   *  `readOnlySafe` host item. */
+  private canOpen(): boolean {
+    const { state } = this.view
+    return state.facet(contextMenuEnabled) && (!state.readOnly || hasReadOnlyItems(this.view))
+  }
+
+  /** The rows for the current selection. A read-only note offers only the
+   *  host's safe items — every built-in row edits the document. */
+  private rows(): MenuRow[] {
     const view = this.view
-    if (!view.state.facet(contextMenuEnabled) || view.state.readOnly) return
-    if (target?.closest(".cm-inplace-table-edit")) return
+    return view.state.readOnly
+      ? hostRows(view, { selected: !view.state.selection.main.empty })
+      : menuRows(view)
+  }
+
+  /** Open the canvas menu at a screen point, from a right-click or a long-press.
+   *  Reconciles the selection first so the menu offers the right rows. Returns
+   *  whether a menu opened; `false` leaves the browser's own menu to show. */
+  private openMenuAt(clientX: number, clientY: number, target: HTMLElement | null): boolean {
+    const view = this.view
+    if (!this.canOpen()) return false
+    if (target?.closest(".cm-inplace-table-edit")) return false
 
     // A right-click on a rendered thematic break: `posAtCoords` over a block
     // `<hr>` is unreliable, so place the caret on the rule line explicitly so
@@ -96,8 +114,7 @@ class ContextMenuController implements PluginValue {
     if (hr) {
       const pos = view.posAtDOM(hr as HTMLElement)
       if (pos >= 0) view.dispatch({ selection: { anchor: pos } })
-      this.menu.show(menuRows(view), clientX, clientY)
-      return
+      return this.show(clientX, clientY)
     }
 
     // A press that landed inside a selection may have collapsed it in the DOM
@@ -125,7 +142,14 @@ class ContextMenuController implements PluginValue {
       }
     }
 
-    this.menu.show(menuRows(view), clientX, clientY)
+    return this.show(clientX, clientY)
+  }
+
+  private show(x: number, y: number): boolean {
+    const rows = this.rows()
+    if (!rows.length) return false
+    this.menu.show(rows, x, y)
+    return true
   }
 
   destroy() {

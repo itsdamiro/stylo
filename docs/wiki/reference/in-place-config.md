@@ -128,12 +128,56 @@ in what order:
 inPlace={{ contextMenu: { groups: ["paragraph", "insert", "clipboard"] } }}
 ```
 
-`groups` is any subset of `"link" | "format" | "paragraph" | "insert" |
+`groups` is any subset of `"host" | "link" | "format" | "paragraph" | "insert" |
 "clipboard"`, in the order you want them (separated in the rendered menu). Omit
-it for all five in the default order. `link` and `format` still yield to
+it for all six in the default order (`host` first). `link` and `format` still yield to
 `selectionUI` — listing them has no effect when the marks live on the bar or the
 toolbar. The table-cell and fenced-code contexts honour `format` / `clipboard`
 from the list but are otherwise fixed.
+
+### Host items
+
+`contextMenu.items` adds the host's own entries, the way `toolbar.items` adds
+buttons. They are drawn as the `host` group, which is **first** unless `groups`
+places it elsewhere; a `groups` list without `"host"` hides them.
+
+```tsx
+inPlace={{
+  contextMenu: {
+    items: [
+      {
+        id: "comment",
+        title: "Comment",
+        icon: <CommentIcon />, // or a stroke-path string, like the built-in rows
+        when: "selection",
+        readOnlySafe: true,
+        run: (view) => openCommentBox(view.state.selection.main),
+      },
+    ],
+  },
+}}
+```
+
+| Field          | Meaning                                                                                                                                      |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`           | Stable identity; the row carries `data-menu-item="<id>"` for styling.                                                                        |
+| `title`        | The label.                                                                                                                                   |
+| `icon`         | A stroke-path string, or any element that renders to an SVG. An element is rendered once and copied as static markup: no state, no handlers. |
+| `run(view)`    | Called with the live view, the selection as it was when the menu opened (a right-click on a word selects it first).                          |
+| `disabled`     | `(state) => boolean`, read each time the menu opens; the row is greyed.                                                                      |
+| `when`         | `"selection"` (non-empty selection only), `"no-selection"`, or `"always"` (default).                                                         |
+| `readOnlySafe` | Offer the item in a read-only note. Without it the item is hidden there, like every built-in row. Use it only for an item that never edits.  |
+
+The group appears in every context the menu has: the canvas, a fenced code
+block, the divider menu and an editable table cell (above **Format**, under the
+structural rows). A `when: "selection"` item simply hides where nothing is
+selected, such as on the divider. In a table cell the selection lives in the
+DOM, so just before `run` the selected text is mapped to its range in the
+document and set as the state selection; the cell keeps focus.
+
+A **read-only** note shows no built-in row (they all edit), so its menu opens
+only when a listed `readOnlySafe` item applies to the selection; otherwise the
+browser's own menu is left alone.
 
 ### On touch
 

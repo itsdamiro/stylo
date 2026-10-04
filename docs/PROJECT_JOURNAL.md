@@ -34,6 +34,7 @@ milestones and Architectural Decision Records, newest first.
 
 | Date       | Entry                                                                                                                                                                                   |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-05 | [Host items in the right-click menu: `contextMenu.items` and a `host` group](./journal/2026-10/2026-10-05_host-items-in-the-context-menu.md)                                            |
 | 2026-10-04 | [Toolbar overflow menu: `overflow: "menu"` folds buttons into a `⋯` menu](./journal/2026-10/2026-10-04_toolbar-overflow-menu.md)                                                        |
 | 2026-10-04 | [ADR-012 — a host `extensions` prop, and gutters a host can show](./journal/2026-10/2026-10-04_adr-012-host-extensions-prop.md)                                                         |
 | 2026-09-17 | [Codebase review remediation: all five tiers closed](./journal/2026-09/2026-09-17_full-codebase-review-remediation.md)                                                                  |

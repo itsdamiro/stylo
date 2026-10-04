@@ -2,8 +2,12 @@
 
 export interface MenuAction {
   label: string
+  /** Exposed as `data-menu-item`, a hook for consumer styling. */
+  id?: string
   /** Stroke-path data for a leading glyph (see `toolbar/icon-paths`). */
   icon?: string
+  /** A ready-made glyph, copied into the row. Wins over `icon`. */
+  iconNode?: Node
   /** Rendered with emphasis when true. */
   active?: boolean
   /** Shown greyed and not selectable. */

@@ -29,6 +29,9 @@ import "katex/dist/katex.min.css"
  *   ?wikilinks=1                          (canned wikiLinkSource; default off)
  *   ?tags=1                               (canned tagSource; default off)
  *   ?embed=1                              (canned embedSource; default off)
+ *   ?hostItem=1                           (one right-click "Comment" item, readOnlySafe; its
+ *                                          run writes the selected text to window.__hostRun)
+ *   ?readOnly=1                           (default off)
  */
 
 /** A fixed candidate list, filtered by prefix — enough to exercise the popup. */
@@ -151,6 +154,26 @@ const hostExtensions =
         gutter({ class: "host-gutter", lineMarker: () => new Dot() }),
       ]
     : undefined
+const hostItems =
+  params.get("hostItem") === "1"
+    ? [
+        {
+          id: "comment",
+          title: "Comment",
+          when: "selection" as const,
+          readOnlySafe: true,
+          icon: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M4 5h16v11H9l-5 4z" />
+            </svg>
+          ),
+          run: (view: EditorView) => {
+            const { from, to } = view.state.selection.main
+            ;(window as unknown as { __hostRun?: string }).__hostRun = view.state.sliceDoc(from, to)
+          },
+        },
+      ]
+    : undefined
 const doc = DOCS[params.get("doc") ?? "basic"] ?? DOCS.basic!
 
 if (params.get("theme") === "dark") document.documentElement.dataset.theme = "dark"
@@ -163,7 +186,8 @@ function Fixture() {
         value={value}
         onChange={setValue}
         mode={mode}
-        inPlace={{ selectionUI, table, reveal }}
+        inPlace={{ selectionUI, table, reveal, contextMenu: { items: hostItems } }}
+        readOnly={params.get("readOnly") === "1"}
         toolbar={sticky || overflow ? { sticky: sticky ?? false, overflow } : toolbar}
         wikiLinkSource={wikiLinkSource}
         tagSource={tagSource}
