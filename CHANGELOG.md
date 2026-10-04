@@ -6,6 +6,8 @@ Notable changes to Stylo. The format follows
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-10-05
+
 ### Added
 
 - **Host items in the right-click menu.** `inPlace.contextMenu.items` adds the
@@ -16,7 +18,9 @@ Notable changes to Stylo. The format follows
   first by default and placeable in `groups`, and appear on the canvas, in
   fenced code, the divider menu and table cells (where `run` sees the cell's
   selected text as the state selection). A read-only note opens the menu only
-  for a `readOnlySafe` item; otherwise the browser menu shows as before.
+  for a `readOnlySafe` item; otherwise the browser menu shows as before. Unlike
+  the rest of `inPlace`, the item list is read each time the menu opens, so a
+  re-render's `run` closures apply.
 
 ## [0.18.0] - 2026-10-04
 
@@ -735,6 +739,7 @@ consumable from git.
 - `inPlace` config is read once at mount; changing it needs a remount. (Now
   documented as an intentional contract — see `[Unreleased]`.)
 
+[0.19.0]: https://github.com/itsdamiro/stylo/releases/tag/v0.19.0
 [0.18.0]: https://github.com/itsdamiro/stylo/releases/tag/v0.18.0
 [0.17.0]: https://github.com/itsdamiro/stylo/releases/tag/v0.17.0
 [0.16.0]: https://github.com/itsdamiro/stylo/releases/tag/v0.16.0
