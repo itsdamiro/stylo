@@ -6,6 +6,17 @@ Notable changes to Stylo. The format follows
 
 ## [Unreleased]
 
+## [0.19.1] - 2026-10-05
+
+### Fixed
+
+- **Host right-click items in a table cell you did not focus.** A cell menu
+  opened without focus moving to the cell (a long-press, a synthetic event) ran
+  an item with whatever the editor selection was elsewhere, and counted another
+  cell's selection for `when: "selection"`. The menu now treats only the
+  focused cell's text as selected; for any other cell the item runs with a caret
+  at the start of that cell, and the Format group is not offered.
+
 ## [0.19.0] - 2026-10-05
 
 ### Added
@@ -739,6 +750,7 @@ consumable from git.
 - `inPlace` config is read once at mount; changing it needs a remount. (Now
   documented as an intentional contract — see `[Unreleased]`.)
 
+[0.19.1]: https://github.com/itsdamiro/stylo/releases/tag/v0.19.1
 [0.19.0]: https://github.com/itsdamiro/stylo/releases/tag/v0.19.0
 [0.18.0]: https://github.com/itsdamiro/stylo/releases/tag/v0.18.0
 [0.17.0]: https://github.com/itsdamiro/stylo/releases/tag/v0.17.0
