@@ -38,8 +38,8 @@ built in.
 - **Callouts** — `> [!note]` blockquotes render as tinted admonition blocks
   (`note` / `tip` / `warning` / `danger` / `example`).
 - **Declarative toolbar** — trim, reorder, or extend the command set, supply
-  your own buttons, swap the icons.
-  [Reference](./docs/wiki/reference/toolbar.md).
+  your own buttons, swap the icons, and fold what doesn't fit into a `⋯` menu
+  instead of wrapping. [Reference](./docs/wiki/reference/toolbar.md).
 - **End-user toolbar customizer** — an optional `<StyloToolbarSettings>`
   component: drag- and keyboard-reorderable.
   [Reference](./docs/wiki/reference/toolbar-settings.md).
@@ -170,7 +170,9 @@ function Editor() {
 `insertAtCursor(md)`, and `getView()` for the raw CodeMirror `EditorView`.
 
 `toolbar` trims, reorders, or extends the formatting bar — built-in command ids,
-your own `ToolbarCustomItem` buttons, and a `render` slot to wrap it. See the
+your own `ToolbarCustomItem` buttons, and a `render` slot to wrap it.
+`overflow: "menu"` keeps the bar on one row, folding the buttons that don't fit
+into a trailing menu. See the
 [toolbar reference](./docs/wiki/reference/toolbar.md).
 
 `canvasHeader` docks your own content — a frontmatter card, say — inside the
