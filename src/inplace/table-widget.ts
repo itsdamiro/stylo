@@ -280,7 +280,7 @@ export class EditableTableWidget extends WidgetType {
     if (this.editing === cell && !cellHasSelection(view)) {
       selectWordAtPoint(cell, clientX, clientY)
     }
-    const extra = cellSelectionRows(view)
+    const extra = cellSelectionRows(view, cell)
     this.gizmos?.openFor(cell, clientX, clientY, extra)
   }
 

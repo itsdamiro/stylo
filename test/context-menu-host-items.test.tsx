@@ -285,3 +285,43 @@ test("an icon that throws costs the row its glyph, not the menu", async () => {
   expect(labels(view)[0]).toBe("Comment")
   expect(view.dom.querySelector('[data-menu-item="comment"] svg')).toBeNull()
 })
+
+test("table cell: right-clicking an unfocused cell puts the caret there, not the focused cell's selection", async () => {
+  const T = "| A | B |\n| - | - |\n| one | two |"
+  const seen: { text: string; at: number }[] = []
+  const { view } = await mount(T, {
+    table: "cells",
+    contextMenu: {
+      items: [
+        item({
+          id: "any",
+          title: "Any",
+          run: (v) => seen.push({ text: "", at: v.state.selection.main.head }),
+        }),
+        item({ id: "sel", title: "Sel", when: "selection" }),
+      ],
+    },
+  })
+  const table = await vi.waitFor(() => {
+    const el = view.contentDOM.querySelector<HTMLTableElement>("table.cm-inplace-table-edit")
+    if (!el) throw new Error("editable table not rendered")
+    return el
+  })
+  const [one, two] = [...table.querySelectorAll<HTMLTableCellElement>("tbody td")]
+  one!.focus()
+  one!.dispatchEvent(new FocusEvent("focusin", { bubbles: true }))
+  const range = document.createRange()
+  range.selectNodeContents(one!.firstChild!)
+  const sel = document.getSelection()!
+  sel.removeAllRanges()
+  sel.addRange(range)
+
+  two!.dispatchEvent(
+    new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: 10, clientY: 10 }),
+  )
+  expect(labels(view)).toContain("Any")
+  expect(labels(view)).not.toContain("Sel") // the other cell's selection is not this cell's
+  expect(labels(view)).not.toContain("Format")
+  view.dom.querySelector<HTMLButtonElement>('[data-menu-item="any"]')!.click()
+  expect(seen).toEqual([{ text: "", at: T.indexOf("two") }])
+})

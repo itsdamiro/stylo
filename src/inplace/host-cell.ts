@@ -7,15 +7,17 @@
  */
 
 import type { EditorView } from "@codemirror/view"
-import { activeTableCell } from "../toolbar/cell-inline"
 import { cellSourcePos } from "../toolbar/table-position"
 import { selectionOffsets } from "./table-cell-dom"
 import { tableField } from "./tables"
 
-export function selectCellRange(view: EditorView): void {
-  const cell = activeTableCell(view)
-  const table = cell?.closest("table")
-  if (!cell || !table) return
+/**
+ * Put `cell`'s place in the document into `state.selection`: its selected text
+ * when `selected` (the focused cell), else a caret at the start of its content.
+ */
+export function selectCellRange(view: EditorView, cell: HTMLElement, selected: boolean): void {
+  const table = cell.closest("table")
+  if (!table) return
   const at = view.posAtDOM(table)
   let from = at
   view.state.field(tableField).between(at, at, (f) => {
@@ -24,6 +26,6 @@ export function selectCellRange(view: EditorView): void {
   })
   const base = cellSourcePos(view.state.doc, from, Number(cell.dataset.r), Number(cell.dataset.c))
   if (base == null) return
-  const { from: a, to: b } = selectionOffsets(cell)
+  const { from: a, to: b } = selected ? selectionOffsets(cell) : { from: 0, to: 0 }
   view.dispatch({ selection: { anchor: base + a, head: base + b } })
 }

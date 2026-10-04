@@ -40,7 +40,9 @@ custom toolbar button: `id`, `title`, optional `icon`, `run(view)`, optional
   `run` the selected text is mapped back to its range in the document
   (`cellSourcePos` plus the cell's DOM offsets; the cell shows raw source while
   focused, so the offsets carry over) and dispatched as the state selection.
-  The cell keeps DOM focus.
+  The cell keeps DOM focus. A cell menu opened on a cell that is not the focused
+  one has no selection of its own: the item runs with a caret at the start of
+  that cell, and `when: "selection"` does not count the focused cell's text.
 - **Read-only:** every built-in row edits the document, so none shows. The menu
   opens in a read-only note only when a listed `readOnlySafe` item applies to
   the current selection; otherwise the browser's own menu stays. This changes

@@ -102,11 +102,15 @@ const formatGroup = (view: EditorView, inCell = false): MenuRow[] => [
  * gated by `menuGroups`. Shared by the canvas menu and the table widget's own
  * structural menu, which appends these under its row / column / align actions.
  */
-export function cellSelectionRows(view: EditorView): MenuRow[] {
+export function cellSelectionRows(view: EditorView, clicked?: HTMLElement): MenuRow[] {
   const groups = view.state.facet(menuGroupsFacet)
-  const selected = cellHasSelection(view)
+  // The selection belongs to the focused cell; a right-click on another cell
+  // has none of its own, whatever the focused one holds.
+  const cell = clicked ?? activeTableCell(view)
+  const selected = cellHasSelection(view) && cell === activeTableCell(view)
   const rows: MenuRow[] = []
-  pushGroup(rows, hostRows(view, { selected, prepare: () => selectCellRange(view) }))
+  const prepare = () => cell && selectCellRange(view, cell, selected)
+  pushGroup(rows, hostRows(view, { selected, prepare }))
   if (!selected) return rows
   if (groups.includes("format")) {
     pushGroup(rows, [submenu("Format", ICON_PATHS.format, formatGroup(view, true))])

@@ -39,4 +39,16 @@ test.describe("host items in the right-click menu", () => {
     expect(await ran(page)).toBe("source")
     await expect(cell).toBeFocused()
   })
+
+  test("right-clicking a different cell runs on that cell's word, not the old selection", async ({
+    page,
+  }) => {
+    await openFixture(page, { mode: "in-place", doc: "table", table: "cells", hostItem: "1" })
+    const cells = page.locator(".cm-inplace-table-edit tbody td")
+    await cells.first().click()
+    await cells.first().press("Control+a") // "source" selected in the first cell
+    await cells.nth(1).click({ button: "right" })
+    await page.locator('[data-menu-item="comment"]').click()
+    expect(await ran(page)).toBe("no")
+  })
 })
