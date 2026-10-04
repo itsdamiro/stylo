@@ -45,6 +45,7 @@ import "@damiro/stylo/katex.css" // only if you use math in preview
 | `placeholder`     | `string`                                                                                        | —            | Shown when the document is empty (source surface).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | `className`       | `string`                                                                                        | —            | Added to the root element alongside the internal classes.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `canvasHeader`    | `(ctx: { view: EditorView \| null }) => ReactNode`                                              | —            | Host content docked inside the editing surface (`source`, `in-place`, `split`'s source pane; never `preview`) — after the find / replace panel, before the document body. See [Canvas header](#canvas-header) ([ADR-010](../../journal/2026-09/2026-09-12_adr-010-canvas-header-panel.md)).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `extensions`      | `readonly Extension[]`                                                                          | —            | CodeMirror extensions appended after Stylo's own, on `source`, `in-place`, and `split`'s source pane; ignored in `preview`. Reactive, compared shallowly — pass a stable identity. See [Host extensions](#host-extensions) and [the guide](../guides/host-extensions.md).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 
 ## Config applied at mount
 
@@ -257,6 +258,23 @@ type TaskToggleInfo = { start: number; end: number; checked: boolean }
 
 See [the checkbox-toggle journal entry](../../journal/2026-09/2026-09-13_preview-task-checkboxes.md)
 for the DOM-position mechanism this is built on.
+
+## Host extensions
+
+`extensions` is the supported seam for drawing in the document or its margin —
+decorations, widgets, gutters, tooltips, keymaps, state fields, `@codemirror/lint`.
+It replaces appending to `getView()` after mount.
+
+- Appended **last**, after Stylo's own extensions, on `source`, `in-place`, and
+  the source pane of `split`. A no-op in `preview` (no editor), like `getView()`.
+- **Reactive.** A changed array reconfigures the live view in place — no remount,
+  so the cursor, undo history, and scroll position survive. Elements are compared
+  shallowly; pass a stable identity (`useMemo`) when nothing changed.
+- Present from the first paint, and re-applied on a remount (a `key` change).
+- A host `gutter()` is visible and themed with Stylo's tokens. With none, the
+  editor looks exactly as before.
+
+See [Extending Stylo with CodeMirror extensions](../guides/host-extensions.md).
 
 ## Canvas header
 

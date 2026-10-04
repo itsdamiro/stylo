@@ -6,6 +6,24 @@ Notable changes to Stylo. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- **`extensions` prop: a supported way to add CodeMirror extensions.** Pass a
+  list of `Extension`s and they are appended after Stylo's own on `source`,
+  `in-place`, and `split`'s source pane (ignored in `preview`). Reactive: a
+  changed array reconfigures the live view without a remount, so the cursor,
+  undo history, and scroll position survive. Compared shallowly, so pass a
+  stable identity. Use it for decorations, widgets, gutters, lint, and
+  keymaps instead of appending to `getView()` after mount. See
+  [ADR-012](./docs/journal/2026-10/2026-10-04_adr-012-host-extensions-prop.md).
+
+### Changed
+
+- **A gutter a host adds is now visible.** `.cm-gutters` was hidden
+  unconditionally; Stylo configures no gutter of its own, so the rule could
+  only hide a host's. It is now transparent with muted text and no border.
+  No change when no gutter is added.
+
 ## [0.16.0] - 2026-09-17
 
 ### Added

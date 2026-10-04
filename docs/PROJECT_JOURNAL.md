@@ -17,6 +17,7 @@ milestones and Architectural Decision Records, newest first.
 
 | ADR                                                                                   | Title                                                                 | Status   | Date       |
 | ------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | -------- | ---------- |
+| [ADR-012](./journal/2026-10/2026-10-04_adr-012-host-extensions-prop.md)               | A host `extensions` prop, and gutters a host can show                 | Accepted | 2026-10-04 |
 | [ADR-011](./journal/2026-09/2026-09-17_adr-011-embed-cache-invalidation.md)           | Embed cache invalidation: a host-triggered `invalidateEmbed`          | Accepted | 2026-09-17 |
 | [ADR-010](./journal/2026-09/2026-09-12_adr-010-canvas-header-panel.md)                | A canvas header panel, docked under find/replace                      | Accepted | 2026-09-12 |
 | [ADR-009](./journal/2026-09/2026-09-11_adr-009-react-nodes-in-the-in-place-canvas.md) | Rendering host React nodes in the in-place canvas                     | Accepted | 2026-09-11 |
@@ -33,6 +34,7 @@ milestones and Architectural Decision Records, newest first.
 
 | Date       | Entry                                                                                                                                                                                   |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-04 | [ADR-012 — a host `extensions` prop, and gutters a host can show](./journal/2026-10/2026-10-04_adr-012-host-extensions-prop.md)                                                         |
 | 2026-09-17 | [Codebase review remediation: all five tiers closed](./journal/2026-09/2026-09-17_full-codebase-review-remediation.md)                                                                  |
 | 2026-09-17 | [Full codebase review — findings and remediation order](./journal/2026-09/2026-09-17_full-codebase-review-findings.md)                                                                  |
 | 2026-09-14 | [Audit: is display-overriding-native-layout a recurring footgun beyond the table fixes?](./journal/2026-09/2026-09-14_table-layout-footgun-audit.md)                                    |

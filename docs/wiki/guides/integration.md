@@ -141,9 +141,11 @@ same versions your app uses (or let it resolve to one), and add any
 
 The `ref` handle exposes `focus()`, `scrollToHeading(text)`,
 `insertAtCursor(md)`, and `getView()` — the raw CodeMirror `EditorView`. Use
-`getView()` to dispatch commands or attach your own extensions with a
-`StateEffect.appendConfig`, rather than importing a separate `EditorView`
-elsewhere and expecting shared state (see the peer-dependency note above). Full
+`getView()` to dispatch commands, rather than importing a separate `EditorView`
+elsewhere and expecting shared state (see the peer-dependency note above). To
+add your own CodeMirror extensions, use the supported
+[`extensions` prop](host-extensions.md) instead of a post-mount
+`StateEffect.appendConfig`. Full
 list at [props · ref](../reference/props.md#ref--imperative-handle).
 
 ## Theming: override tokens, cover both modes

@@ -22,6 +22,12 @@ export interface UseCodeMirrorOptions {
    * layer). Captured once — pass a stable, module-level array.
    */
   extensions?: Extension[]
+  /**
+   * Host-supplied extensions, appended after everything else. Unlike
+   * `extensions`, reactive: a changed array (compared shallowly) reconfigures
+   * the live view without a remount.
+   */
+  hostExtensions?: readonly Extension[]
   /** Fenced-code grammars, forwarded to the Markdown language. Read once. */
   codeLanguages?: CodeLanguages
   /** `[[wikilink]]` autocomplete source. Read once. */
@@ -47,6 +53,7 @@ export function useCodeMirror({
   onSave,
   onViewChange,
   extensions,
+  hostExtensions,
   codeLanguages,
   wikiLinkSource,
   tagSource,
@@ -81,6 +88,9 @@ export function useCodeMirror({
   const onViewChangeRef = useRef(onViewChange)
   onViewChangeRef.current = onViewChange
   const dynamic = useRef(new Compartment())
+  const host = useRef(new Compartment())
+  // The array last handed to `host`, so a re-render with an equal one is a no-op.
+  const appliedHost = useRef(hostExtensions)
 
   // Create the view once. `value` / `readOnly` / `placeholder` are reconciled by
   // the effects below; constructing here (not during render) keeps this SSR-safe.
@@ -99,6 +109,7 @@ export function useCodeMirror({
           ),
           Prec.high(keymap.of([{ key: "Mod-s", run: runSave }])),
           ...(extensions ?? []),
+          host.current.of(hostExtensions ?? []),
           EditorView.updateListener.of((update) => {
             if (!update.docChanged) return
             if (update.transactions.some((t) => Boolean(t.annotation(External)))) return
@@ -147,6 +158,22 @@ export function useCodeMirror({
       ),
     })
   }, [readOnly, placeholder, hasSave, saveFn])
+
+  // Reconfigure host extensions in place; the view, its selection, history and
+  // scroll are untouched.
+  useEffect(() => {
+    const prev = appliedHost.current
+    if (prev === hostExtensions) return
+    if (
+      prev &&
+      hostExtensions &&
+      prev.length === hostExtensions.length &&
+      prev.every((ext, i) => ext === hostExtensions[i])
+    )
+      return
+    appliedHost.current = hostExtensions
+    viewRef.current?.dispatch({ effects: host.current.reconfigure(hostExtensions ?? []) })
+  }, [hostExtensions])
 
   return parent
 }

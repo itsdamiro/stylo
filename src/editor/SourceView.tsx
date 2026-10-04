@@ -2,6 +2,7 @@ import { useRef, useState, useSyncExternalStore } from "react"
 import type { ReactNode } from "react"
 import { createPortal } from "react-dom"
 import { showPanel } from "@codemirror/view"
+import type { Extension } from "@codemirror/state"
 import type { EditorView } from "@codemirror/view"
 import styles from "../styles/stylo.module.css"
 import type { CodeLanguages, ResolveErrorInfo, TagSource, WikiLinkSource } from "../types"
@@ -28,6 +29,8 @@ export interface SourceViewProps {
   onSave?: (value: string) => void
   /** Called with the `EditorView` once created, and with `null` on teardown. */
   onViewChange?: (view: EditorView | null) => void
+  /** Host CodeMirror extensions, reconfigured in place when the array changes. */
+  hostExtensions?: readonly Extension[]
   /** Host content docked after the search panel, before the document. Read once. */
   canvasHeader?: (ctx: { view: EditorView | null }) => ReactNode
 }
@@ -45,6 +48,7 @@ export function SourceView({
   onSave,
   onViewChange,
   canvasHeader,
+  hostExtensions,
 }: SourceViewProps) {
   const [editorView, setEditorView] = useState<EditorView | null>(null)
   const onViewChangeRef = useRef(onViewChange)
@@ -77,6 +81,7 @@ export function SourceView({
     onResolveError,
     onSave,
     onViewChange: handleViewChange,
+    hostExtensions,
     extensions,
   })
   return (

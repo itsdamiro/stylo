@@ -10,6 +10,7 @@ import {
   type TagSource,
   type WikiLinkSource,
 } from "../src/index"
+import { Decoration, EditorView, gutter, GutterMarker } from "@codemirror/view"
 import "katex/dist/katex.min.css"
 
 /**
@@ -134,6 +135,20 @@ const toolbar = params.get("toolbar") !== "0"
 const wikiLinkSource = params.get("wikilinks") === "1" ? cannedWikiLinkSource : undefined
 const tagSource = params.get("tags") === "1" ? cannedTagSource : undefined
 const embedSource = params.get("embed") === "1" ? cannedEmbedSource : undefined
+class Dot extends GutterMarker {
+  override toDOM() {
+    return document.createTextNode("•")
+  }
+}
+const hostExtensions =
+  params.get("hostExt") === "1"
+    ? [
+        EditorView.decorations.of(
+          Decoration.set([Decoration.mark({ class: "host-mark" }).range(0, 5)]),
+        ),
+        gutter({ class: "host-gutter", lineMarker: () => new Dot() }),
+      ]
+    : undefined
 const doc = DOCS[params.get("doc") ?? "basic"] ?? DOCS.basic!
 
 if (params.get("theme") === "dark") document.documentElement.dataset.theme = "dark"
@@ -150,6 +165,7 @@ function Fixture() {
       wikiLinkSource={wikiLinkSource}
       tagSource={tagSource}
       embedSource={embedSource}
+      extensions={hostExtensions}
     />
   )
 }

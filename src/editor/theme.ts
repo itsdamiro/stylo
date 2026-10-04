@@ -28,8 +28,12 @@ export const styloTheme = EditorView.theme({
   ".cm-placeholder": {
     color: "var(--stylo-text-muted)",
   },
+  // Stylo configures no gutter of its own, so this only styles one a host adds
+  // through the `extensions` prop.
   ".cm-gutters": {
-    display: "none",
+    backgroundColor: "transparent",
+    color: "var(--stylo-text-muted)",
+    border: "none",
   },
 
   // --- Find / replace panel (@codemirror/search) ---

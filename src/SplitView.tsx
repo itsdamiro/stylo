@@ -1,5 +1,6 @@
 import { Suspense, useEffect, useRef, useState } from "react"
 import type { ReactNode } from "react"
+import type { Extension } from "@codemirror/state"
 import type { EditorView } from "@codemirror/view"
 import { SourceView } from "./editor/SourceView"
 import { LazyPreview } from "./render/lazyPreview"
@@ -32,6 +33,8 @@ export interface SplitViewProps {
   onSave?: (value: string) => void
   /** Forwarded the source pane's `EditorView` for the shared toolbar. */
   onViewChange?: (view: EditorView | null) => void
+  /** Host CodeMirror extensions for the source pane. */
+  hostExtensions?: readonly Extension[]
   /** Host content docked in the source pane, after its search panel. Read once. */
   canvasHeader?: (ctx: { view: EditorView | null }) => ReactNode
 }
@@ -59,6 +62,7 @@ export function SplitView({
   onSave,
   onViewChange,
   canvasHeader,
+  hostExtensions,
 }: SplitViewProps) {
   const [view, setView] = useState<EditorView | null>(null)
   const previewPane = useRef<HTMLDivElement | null>(null)
@@ -110,6 +114,7 @@ export function SplitView({
           onSave={onSave}
           onViewChange={handleView}
           canvasHeader={canvasHeader}
+          hostExtensions={hostExtensions}
         />
       </div>
       <div className={styles.splitPane} ref={previewPane}>

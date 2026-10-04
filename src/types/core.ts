@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import type { Language, LanguageDescription } from "@codemirror/language"
+import type { Extension } from "@codemirror/state"
 import type { EditorView } from "@codemirror/view"
 import type { EmbedSource, ResolveErrorInfo, TagSource, WikiLinkSource } from "./sources"
 import type { InPlaceConfig } from "./inplace"
@@ -154,6 +155,14 @@ export interface StyloProps {
   placeholder?: string
   /** Extra class on the root element, alongside the internal classes. */
   className?: string
+  /**
+   * CodeMirror extensions appended after Stylo's own, on every editing surface
+   * (`source`, `in-place`, and `split`'s source pane). Reactive: a changed array
+   * reconfigures the live view with no remount, so the cursor, undo history and
+   * scroll position survive. Compared shallowly — pass a stable identity
+   * (`useMemo`) when nothing changed. Ignored in `preview`, which has no editor.
+   */
+  extensions?: readonly Extension[]
   /**
    * Host content docked inside the editing surface (`source`, `in-place`,
    * `split`'s source pane; never `preview`) — after the find/replace panel,

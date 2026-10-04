@@ -47,6 +47,7 @@ export const Stylo = forwardRef<StyloHandle, StyloProps>(function Stylo(
     softBreaks,
     onTaskToggle,
     canvasHeader,
+    extensions,
   },
   ref,
 ) {
@@ -161,6 +162,7 @@ export const Stylo = forwardRef<StyloHandle, StyloProps>(function Stylo(
           onSave={onSave}
           onViewChange={setView}
           canvasHeader={canvasHeader}
+          hostExtensions={extensions}
         />
       )}
 
@@ -197,6 +199,7 @@ export const Stylo = forwardRef<StyloHandle, StyloProps>(function Stylo(
           onSave={onSave}
           onViewChange={setView}
           canvasHeader={canvasHeader}
+          hostExtensions={extensions}
         />
       )}
 
@@ -218,6 +221,7 @@ export const Stylo = forwardRef<StyloHandle, StyloProps>(function Stylo(
             onSave={onSave}
             onViewChange={setView}
             canvasHeader={canvasHeader}
+            hostExtensions={extensions}
           />
         </Suspense>
       )}

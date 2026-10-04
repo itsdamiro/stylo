@@ -2,6 +2,7 @@ import { useRef, useState, useSyncExternalStore } from "react"
 import type { ReactNode } from "react"
 import { createPortal } from "react-dom"
 import { showPanel } from "@codemirror/view"
+import type { Extension } from "@codemirror/state"
 import type { EditorView } from "@codemirror/view"
 import { CanvasHeaderHost } from "../editor/canvas-header-panel"
 import { useCodeMirror } from "../editor/useCodeMirror"
@@ -45,6 +46,8 @@ export interface InPlaceViewProps {
   onSave?: (value: string) => void
   /** Called with the `EditorView` once created, and with `null` on teardown. */
   onViewChange?: (view: EditorView | null) => void
+  /** Host CodeMirror extensions, reconfigured in place when the array changes. */
+  hostExtensions?: readonly Extension[]
   /** Host content docked after the search panel, before the document. Read once. */
   canvasHeader?: (ctx: { view: EditorView | null }) => ReactNode
 }
@@ -79,6 +82,7 @@ export function InPlaceView({
   onSave,
   onViewChange,
   canvasHeader,
+  hostExtensions,
 }: InPlaceViewProps) {
   const clickRef = useRef(onWikiLinkClick)
   clickRef.current = onWikiLinkClick
@@ -127,6 +131,7 @@ export function InPlaceView({
     onResolveError,
     onSave,
     onViewChange: handleViewChange,
+    hostExtensions,
   })
   return (
     <div className={styles.inplace} ref={ref}>
