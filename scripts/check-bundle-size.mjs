@@ -14,7 +14,8 @@ const dist = fileURLToPath(new URL("../dist/", import.meta.url))
 
 /** prefix -> max gzipped bytes */
 const BUDGETS = {
-  "stylo.js": 4_000, // entry, always loaded — keep it tiny
+  "stylo.js": 6_000, // entry, always loaded — keep it tiny. Bumped from 4,000: the
+  // toolbar overflow menu (fit, hook, menu) adds ~2,000 B and lives in the bar
   InPlaceView: 23_000, // in-place canvas glue — bumped from 22,000: the readOnly
   // table-cell guard and the exitBelow / insertTable fixes (2026-09-13) left only
   // 27 B of headroom on the old budget
