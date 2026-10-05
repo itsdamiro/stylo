@@ -94,6 +94,9 @@ export function InPlaceView({
   const hostItemsRef = useRef(inPlace?.contextMenu)
   hostItemsRef.current = inPlace?.contextMenu
 
+  const cellMarksRef = useRef(inPlace?.cellMarks)
+  cellMarksRef.current = inPlace?.cellMarks
+
   const [registry] = useState(() => new EmbedRegistry())
   const slots = useSyncExternalStore(registry.subscribe, registry.getSnapshot, registry.getSnapshot)
 
@@ -123,6 +126,7 @@ export function InPlaceView({
         const c = hostItemsRef.current
         return typeof c === "object" ? (c.items ?? []) : []
       },
+      cellMarks: (state) => cellMarksRef.current?.(state) ?? [],
       embedRegistry: embedSource ? registry : undefined,
     }),
     ...(headerHost ? [showPanel.of(headerHost.panel)] : []),

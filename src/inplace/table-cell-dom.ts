@@ -20,27 +20,32 @@ function textBefore(cell: HTMLElement, target: Node): number {
   return offset
 }
 
+/** Char offset of a DOM point within `cell`'s text, whatever node it is in. */
+function offsetAt(cell: HTMLElement, node: Node | null | undefined, off: number): number {
+  if (!node || !cell.contains(node)) return (cell.textContent ?? "").length
+  const range = cell.ownerDocument.createRange()
+  range.setStart(cell, 0)
+  range.setEnd(node, off)
+  return range.toString().length
+}
+
 /** Char offset of the DOM selection within `cell`'s rendered text. */
 export function renderedCaretOffset(cell: HTMLElement): number {
   const sel = cell.ownerDocument.getSelection()
-  const node = sel?.anchorNode
-  if (!node || !cell.contains(node)) return 0
-  if (node.nodeType === Node.TEXT_NODE) return textBefore(cell, node) + (sel?.anchorOffset ?? 0)
-  return (sel?.anchorOffset ?? 0) > 0 ? (cell.textContent ?? "").length : 0
+  return sel?.anchorNode && cell.contains(sel.anchorNode)
+    ? offsetAt(cell, sel.anchorNode, sel.anchorOffset)
+    : 0
 }
 
 /** `[from, to]` char offsets of the DOM selection within `cell`'s text. */
 export function selectionOffsets(cell: HTMLElement): { from: number; to: number } {
   const sel = cell.ownerDocument.getSelection()
-  const end = (cell.textContent ?? "").length
-  const at = (node: Node | null | undefined, off: number): number => {
-    if (!node || !cell.contains(node)) return end
-    if (node.nodeType === Node.TEXT_NODE) return textBefore(cell, node) + off
-    return off > 0 ? end : 0
+  if (!sel || sel.rangeCount === 0) {
+    const end = (cell.textContent ?? "").length
+    return { from: end, to: end }
   }
-  if (!sel || sel.rangeCount === 0) return { from: end, to: end }
-  const a = at(sel.anchorNode, sel.anchorOffset)
-  const b = at(sel.focusNode, sel.focusOffset)
+  const a = offsetAt(cell, sel.anchorNode, sel.anchorOffset)
+  const b = offsetAt(cell, sel.focusNode, sel.focusOffset)
   return { from: Math.min(a, b), to: Math.max(a, b) }
 }
 
@@ -91,21 +96,34 @@ export function selectWordAtPoint(cell: HTMLElement, x: number, y: number): bool
   return true
 }
 
+/** The text node and offset of char `offset` within `cell`'s text (clamped to its end). */
+function pointAt(cell: HTMLElement, offset: number): [Node, number] {
+  const walker = cell.ownerDocument.createTreeWalker(cell, NodeFilter.SHOW_TEXT)
+  let left = offset
+  let last: Text | null = null
+  for (let n = walker.nextNode() as Text | null; n; n = walker.nextNode() as Text | null) {
+    if (left <= n.data.length) return [n, left]
+    left -= n.data.length
+    last = n
+  }
+  return last ? [last, last.data.length] : [cell, 0]
+}
+
 /**
- * Select `cell`'s first text node from char `offset` to char `head` (both
- * clamped). With `head` omitted or equal, the caret is simply parked at `offset`.
+ * Select `cell`'s text from char `offset` to char `head` (both clamped; the
+ * text may be split over several nodes by host marks). With `head` omitted or
+ * equal, the caret is simply parked at `offset`.
  */
 export function placeCaret(cell: HTMLElement, offset: number, head = offset) {
   cell.focus()
   const doc = cell.ownerDocument
   const range = doc.createRange()
-  const text = cell.firstChild
-  if (text && text.nodeType === Node.TEXT_NODE) {
-    const len = text.textContent?.length ?? 0
-    range.setStart(text, Math.min(Math.min(offset, head), len))
-    range.setEnd(text, Math.min(Math.max(offset, head), len))
-  } else {
-    range.selectNodeContents(cell)
+  const [from, to] = [Math.min(offset, head), Math.max(offset, head)]
+  const [a, b] = [pointAt(cell, from), pointAt(cell, to)]
+  if (a[0] === cell) range.selectNodeContents(cell)
+  else {
+    range.setStart(a[0], a[1])
+    range.setEnd(b[0], b[1])
   }
   if (offset === head) range.collapse(true)
   const sel = doc.getSelection()

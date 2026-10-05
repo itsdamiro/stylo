@@ -96,6 +96,6 @@ export function cellSourcePos(
   col: number,
 ): number | null {
   const region = findTable(doc, tableFrom)
-  if (!region) return null
+  if (!region || row > region.lines.length - 2) return null // no such row (yet)
   return resolve(region.lines.join("\n"), region.from, { row, col, offset: 0, onDelimiter: false })
 }

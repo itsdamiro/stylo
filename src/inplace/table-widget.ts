@@ -1,11 +1,12 @@
 import { Annotation } from "@codemirror/state"
 import { EditorView, WidgetType } from "@codemirror/view"
 import { type Align, serializeGrid } from "../toolbar/table-grid"
+import { markPainter } from "./table-cell-marks"
 import { cellHasSelection, cellSelectionRows } from "./context-menu-actions"
 import { attachLongPress, type LongPressHandle } from "./long-press"
 import { createTableGizmos, type StructOp, type TableGizmos } from "./table-gizmos"
 import { handleTableKey } from "./table-widget-keys"
-import { paintCell, renderTableCells } from "./table-widget-render"
+import { isPainted, paintCell, renderTableCells } from "./table-widget-render"
 import {
   gridOf,
   offsetFromPoint,
@@ -28,6 +29,9 @@ import { tableField } from "./tables"
 /** Marks a transaction that came from an editable table widget's own DOM. */
 export const fromTableWidget = Annotation.define<boolean>()
 
+/** The widget that owns each mounted editable `<table>`, for `table-marks-plugin.ts`. */
+export const tableWidgets = new WeakMap<HTMLElement, EditableTableWidget>()
+
 export interface ParsedTable {
   head: string[]
   body: string[][]
@@ -49,6 +53,7 @@ export interface ParsedTable {
  */
 export class EditableTableWidget extends WidgetType {
   private table: HTMLTableElement | null = null
+  private view: EditorView | null = null
   private rows: string[][]
   private editing: HTMLTableCellElement | null = null
   private syncing = false
@@ -118,18 +123,34 @@ export class EditableTableWidget extends WidgetType {
     return { r: Number(cell.dataset.r), c: Number(cell.dataset.c) }
   }
 
+  /** The host's marks on a cell; none until the table is in the document. */
+  private paintOf = markPainter({
+    view: () => this.view,
+    mounted: () => !!this.table?.isConnected,
+    from: (view) => this.bounds(view).from,
+    raw: (r, c) => this.rows[r]?.[c] ?? "",
+  })
+
+  private grid() {
+    return { rows: this.rows, aligns: this.data.aligns, embeds: this.embeds, paintOf: this.paintOf }
+  }
+
   /** Draw `cell` from `rows[r][c]` — raw text when `raw`, rendered otherwise. */
   private paint(cell: HTMLTableCellElement, raw: boolean) {
-    paintCell(cell, { rows: this.rows, aligns: this.data.aligns, embeds: this.embeds }, raw)
+    paintCell(cell, this.grid(), raw)
+  }
+
+  /** Redraw the cells whose host marks changed; the one being edited keeps its caret. */
+  repaintMarks() {
+    for (const cell of this.table?.querySelectorAll<HTMLTableCellElement>("td, th") ?? []) {
+      const { r, c } = this.coords(cell)
+      if (cell !== this.editing && !isPainted(cell, this.paintOf(r, c))) this.paint(cell, false)
+    }
   }
 
   /** Rebuild `<thead>` / `<tbody>` from the current grid model. */
   private renderCells() {
-    renderTableCells(this.table!, {
-      rows: this.rows,
-      aligns: this.data.aligns,
-      embeds: this.embeds,
-    })
+    renderTableCells(this.table!, this.grid())
   }
 
   private appendRow() {
@@ -289,9 +310,13 @@ export class EditableTableWidget extends WidgetType {
     wrap.className = "cm-inplace-table-wrap"
     const table = document.createElement("table")
     this.table = table
+    this.view = view
     this.editing = null
+    tableWidgets.set(table, this)
     table.className = "cm-inplace-table cm-inplace-table-edit"
     this.renderCells()
+    // Marks need the table's place in the document, known once it is mounted.
+    view.requestMeasure({ read: () => null, write: () => this.repaintMarks(), key: this })
 
     // Keep the pointer event away from CodeMirror's delegated handler: it would
     // snap the click to the atomic widget boundary and pull focus back to
@@ -367,6 +392,7 @@ export class EditableTableWidget extends WidgetType {
     this.gizmos?.destroy()
     this.gizmos = null
     this.table = null
+    this.view = null
     this.editing = null
   }
 }

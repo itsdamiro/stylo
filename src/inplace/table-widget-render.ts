@@ -7,13 +7,25 @@
 
 import type { Align } from "../toolbar/table-grid"
 import { renderInline } from "./inline-md"
+import { applyPaint, type CellPaint } from "./table-cell-marks"
 import { unescapePipe } from "./table-cell-dom"
 
 export interface CellGrid {
   rows: string[][]
   aligns: Align[]
   embeds: boolean
+  /** The host marks on cell `(r, c)`, if any. */
+  paintOf?: (r: number, c: number) => CellPaint | null
 }
+
+/** What each cell was last painted with: its marks' signature and its extra classes. */
+const painted = new WeakMap<HTMLElement, { sig: string; cellClass: string[] }>()
+
+export const paintSignature = (paint: CellPaint | null): string => JSON.stringify(paint)
+
+/** Whether `cell` already shows `paint`. */
+export const isPainted = (cell: HTMLElement, paint: CellPaint | null): boolean =>
+  (painted.get(cell)?.sig ?? "null") === paintSignature(paint)
 
 /** Draw `cell` from `grid.rows[r][c]` (read off its own `data-r`/`data-c`) —
  *  raw text when `raw`, rendered otherwise. */
@@ -24,6 +36,14 @@ export function paintCell(cell: HTMLTableCellElement, grid: CellGrid, raw: boole
   cell.replaceChildren(
     raw ? cell.ownerDocument.createTextNode(text) : renderInline(unescapePipe(text), grid.embeds),
   )
+  const was = painted.get(cell)
+  if (was) cell.classList.remove(...was.cellClass)
+  const paint = grid.paintOf?.(r, c) ?? null
+  if (paint) {
+    applyPaint(cell, text, paint, raw)
+    cell.classList.add(...paint.cellClass)
+  }
+  painted.set(cell, { sig: paintSignature(paint), cellClass: paint?.cellClass ?? [] })
 }
 
 function mkCell(grid: CellGrid, r: number, c: number, header: boolean): HTMLTableCellElement {

@@ -1,5 +1,6 @@
-import { Facet } from "@codemirror/state"
+import { type EditorState, Facet } from "@codemirror/state"
 import type {
+  CellMark,
   ContextMenuItem,
   InPlaceConfig,
   InPlaceDecorationToggles,
@@ -127,6 +128,14 @@ export function resolveContextMenu(c: InPlaceConfig["contextMenu"]): {
  * Seeded by `inPlaceExtension`.
  */
 export const hostItemsFacet = Facet.define<() => ContextMenuItem[], () => ContextMenuItem[]>({
+  combine: (values) => values[0] ?? (() => []),
+})
+
+/** The host's `inPlace.cellMarks`, or none. Seeded by `inPlaceExtension`. */
+export const cellMarksFacet = Facet.define<
+  (state: EditorState) => readonly CellMark[],
+  (state: EditorState) => readonly CellMark[]
+>({
   combine: (values) => values[0] ?? (() => []),
 })
 

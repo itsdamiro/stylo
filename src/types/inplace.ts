@@ -65,7 +65,9 @@ export type MenuGroupId = "host" | "link" | "format" | "paragraph" | "insert" | 
  * A host-supplied right-click entry (`contextMenu.items`), the menu's parallel
  * of a custom toolbar button. `run` gets the live view with the selection as it
  * was when the menu opened — inside a table cell too, where the selected text
- * is mapped back to its range in the document first.
+ * is mapped back to its range in the document first. `info.rect` is the screen
+ * rectangle of that selection (a cell's selected text, or the cell itself with
+ * none), to anchor a popover beside it.
  */
 export interface ContextMenuItem {
   /** Stable identity; exposed on the row as `data-menu-item`. */
@@ -78,7 +80,7 @@ export interface ContextMenuItem {
    * and copied as static markup, so it cannot hold state or handlers.
    */
   icon?: string | ReactNode
-  run: (view: EditorView) => void
+  run: (view: EditorView, info: { rect: DOMRect }) => void
   /** Greyed and not selectable while true. Read each time the menu opens. */
   disabled?: (state: EditorState) => boolean
   /**
@@ -110,6 +112,19 @@ export interface ContextMenuConfig {
   items?: ContextMenuItem[]
 }
 
+/**
+ * A host mark in document positions, drawn on the characters of a table cell
+ * that fall inside `from`–`to`: they are wrapped in an element carrying `class`
+ * and `attributes`, and `cellClass` is added to the `<td>` / `<th>` holding them.
+ */
+export interface CellMark {
+  from: number
+  to: number
+  class: string
+  attributes?: Record<string, string>
+  cellClass?: string
+}
+
 export interface InPlaceConfig {
   /** Which decoration types the in-place canvas renders. Read once, at mount. */
   decorations?: InPlaceDecorationToggles
@@ -138,4 +153,12 @@ export interface InPlaceConfig {
    * `math`. Omit for all seven. Read once, at mount.
    */
   selectionBarItems?: ToolbarCommandId[]
+  /**
+   * Marks to draw inside table cells (`table: "cells"`), where a host's
+   * `Decoration.mark` cannot reach. Called with the state whenever the document
+   * or the host's state changes; the affected cells are repainted. Read through
+   * a ref, so a re-render's closure applies; a change outside the editor state
+   * shows on the next editor update (dispatch an empty transaction).
+   */
+  cellMarks?: (state: EditorState) => readonly CellMark[]
 }

@@ -12,10 +12,13 @@ import { createRoot } from "react-dom/client"
 import type { ContextMenuItem } from "../types"
 import type { MenuAction, MenuRow } from "./context-menu"
 import { hostItemsFacet, menuGroupsFacet } from "./config"
+import { selectionRect } from "./selection-rect"
 
 export interface HostRowsContext {
   /** Whether there is a selection to act on; decides `when`. */
   selected: boolean
+  /** The screen rectangle of the selection, read as the menu opens; defaults to the editor's. */
+  rect?: () => DOMRect
   /** Runs right before an item's `run` — e.g. to land a cell selection in the state. */
   prepare?: () => void
 }
@@ -54,6 +57,7 @@ export function hostRows(view: EditorView, ctx: HostRowsContext): MenuRow[] {
   if (!listed(view)) return []
   const readOnly = view.state.readOnly
   const rows: MenuAction[] = []
+  let rect: DOMRect | undefined
   for (const item of view.state.facet(hostItemsFacet)()) {
     if (readOnly && !item.readOnlySafe) continue
     const when = item.when ?? "always"
@@ -68,9 +72,10 @@ export function hostRows(view: EditorView, ctx: HostRowsContext): MenuRow[] {
       disabled: item.disabled?.(view.state) ?? false,
       onSelect: () => {
         ctx.prepare?.()
-        item.run(view)
+        item.run(view, { rect: rect! })
       },
     })
   }
+  if (rows.length) rect = ctx.rect?.() ?? selectionRect(view) // as the menu opens
   return rows
 }

@@ -38,6 +38,7 @@ import { hostRows } from "./host-items"
 import { linkRow, wikiLinkRow } from "./link-row"
 import { mathRow } from "./math-edit"
 import { selectionOffsets } from "./table-cell-dom"
+import { cellRect } from "./selection-rect"
 
 /**
  * A non-empty text selection inside a focused editable table cell. The cell is a
@@ -110,7 +111,7 @@ export function cellSelectionRows(view: EditorView, clicked?: HTMLElement): Menu
   const selected = cellHasSelection(view) && cell === activeTableCell(view)
   const rows: MenuRow[] = []
   const prepare = () => cell && selectCellRange(view, cell, selected)
-  pushGroup(rows, hostRows(view, { selected, prepare }))
+  pushGroup(rows, hostRows(view, { selected, prepare, rect: () => cellRect(cell, selected) }))
   if (!selected) return rows
   if (groups.includes("format")) {
     pushGroup(rows, [submenu("Format", ICON_PATHS.format, formatGroup(view, true))])

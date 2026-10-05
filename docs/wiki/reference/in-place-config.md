@@ -158,26 +158,52 @@ inPlace={{
 }}
 ```
 
-| Field          | Meaning                                                                                                                                           |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`           | Stable identity; the row carries `data-menu-item="<id>"` for styling.                                                                             |
-| `title`        | The label.                                                                                                                                        |
-| `icon`         | A stroke-path string, or any element that renders to an SVG. An element is rendered once and copied as static markup: no state, no handlers.      |
-| `run(view)`    | Called with the live view (the latest render's closure), the selection as it was when the menu opened (a right-click on a word selects it first). |
-| `disabled`     | `(state) => boolean`, read each time the menu opens; the row is greyed.                                                                           |
-| `when`         | `"selection"` (non-empty selection only), `"no-selection"`, or `"always"` (default).                                                              |
-| `readOnlySafe` | Offer the item in a read-only note. Without it the item is hidden there, like every built-in row. Use it only for an item that never edits.       |
+| Field                 | Meaning                                                                                                                                                                                                                              |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `id`                  | Stable identity; the row carries `data-menu-item="<id>"` for styling.                                                                                                                                                                |
+| `title`               | The label.                                                                                                                                                                                                                           |
+| `icon`                | A stroke-path string, or any element that renders to an SVG. An element is rendered once and copied as static markup: no state, no handlers.                                                                                         |
+| `run(view, { rect })` | Called with the live view (the latest render's closure), the selection as it was when the menu opened (a right-click on a word selects it first), and `rect`: the screen `DOMRect` of that selection, to anchor a popover beside it. |
+| `disabled`            | `(state) => boolean`, read each time the menu opens; the row is greyed.                                                                                                                                                              |
+| `when`                | `"selection"` (non-empty selection only), `"no-selection"`, or `"always"` (default).                                                                                                                                                 |
+| `readOnlySafe`        | Offer the item in a read-only note. Without it the item is hidden there, like every built-in row. Use it only for an item that never edits.                                                                                          |
 
 The group appears in every context the menu has: the canvas, a fenced code
 block, the divider menu and an editable table cell (above **Format**, under the
 structural rows). A `when: "selection"` item simply hides where nothing is
 selected, such as on the divider. In a table cell the selection lives in the
 DOM, so just before `run` the selected text is mapped to its range in the
-document and set as the state selection; the cell keeps focus.
+document and set as the state selection; the cell keeps focus. `view.coordsAtPos`
+inside a table lands on the widget's edge, so `rect` there comes from the DOM
+selection (the cell itself when nothing is selected).
 
 A **read-only** note shows no built-in row (they all edit), so its menu opens
 only when a listed `readOnlySafe` item applies to the selection; otherwise the
 browser's own menu is left alone.
+
+### Marks inside table cells
+
+A table cell is DOM outside CodeMirror's decoration system, so a host's
+`Decoration.mark` never reaches it. `inPlace.cellMarks` hands Stylo the marks in
+document positions instead, and Stylo draws them on the cell's characters:
+
+```tsx
+inPlace={{
+  table: "cells",
+  cellMarks: (state) => [
+    { from: 120, to: 127, class: "my-hl", attributes: { "data-comment-id": "c1" }, cellClass: "has-note" },
+  ],
+}}
+```
+
+Each mark wraps the characters of a cell that fall inside `from`–`to` in an
+element with `class` and `attributes`, and adds `cellClass` to the `<td>` / `<th>`
+holding them (draw a dot with `::after`). The function is called with the state
+on each editor update; only cells whose marks
+changed are repainted, and the cell being edited is left alone until it loses
+focus. Syntax (`**`, link targets, `\|`) is skipped when mapping; a mark that
+covers no visible character, or a cell whose text cannot be aligned, marks the
+whole cell instead of nothing. Only `table: "cells"` is affected.
 
 ### On touch
 
@@ -291,7 +317,11 @@ The **entire `inPlace` object** — `decorations`, `table`, `reveal`,
 in-place canvas is constructed. Changing it on an already-mounted `<Stylo>` has
 no effect, with one exception: the **`contextMenu.items`** list is read each
 time the menu opens, so a re-render's new `run` / `disabled` closures apply
-(`groups` and the on/off switch are still read once). The rest is a deliberate
+(`groups` and the on/off switch are still read once). **`cellMarks`** is likewise
+read through a ref and called on each editor update (it is repainted when the
+document or its returned marks change, not on a re-render alone: a host whose
+marks live outside the editor state dispatches an empty transaction after changing
+them). The rest is a deliberate
 contract, not a gap: it is applied through the
 CodeMirror extension configuration, the same way `codeLanguages` and the
 toolbar shortcuts are, and a live-reconfiguration path was evaluated and
