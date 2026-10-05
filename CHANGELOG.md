@@ -6,6 +6,22 @@ Notable changes to Stylo. The format follows
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-10-05
+
+### Added
+
+- **Host widgets inside table cells.** `inPlace.cellWidgets(state)` returns
+  `{ pos, toDOM, key, cellClass? }` in document positions, and Stylo draws each
+  element inside an editable table cell (`table: "cells"`) after the characters
+  that end at `pos`, where a host's `Decoration.widget` cannot reach. The element
+  is `contenteditable="false"` and is left out of the cell's text, so its label
+  never reaches the Markdown. A press on it does not focus the cell, so a button
+  in it receives its `click`. A position in hidden syntax snaps to the nearest
+  visible character. A cell repaints only when its widgets' `pos` or `key`
+  change, so `key` must change whenever what `toDOM` draws changes. A cell being
+  edited shows its raw source with its marks but no widgets; they return when it
+  loses focus. `CellWidget` is exported.
+
 ## [0.20.1] - 2026-10-05
 
 ### Fixed
