@@ -6,6 +6,27 @@ Notable changes to Stylo. The format follows
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-10-05
+
+### Added
+
+- **Host marks inside table cells.** `inPlace.cellMarks(state)` returns
+  `{ from, to, class, attributes?, cellClass? }` in document positions, and
+  Stylo draws them on the characters of an editable table cell (`table:
+"cells"`), where a host's `Decoration.mark` cannot reach. `cellClass` is added
+  to the `<td>` / `<th>` holding them. Syntax (`**`, link targets, `\|`) is
+  skipped when mapping; a mark that covers no visible character marks the whole
+  cell. Cells repaint when the marks or the document change; a cell being
+  edited is repainted when it loses focus. `CellMark` is exported.
+- **A selection rectangle for host menu items.** `run(view, { rect })` gets the
+  screen `DOMRect` of the selection the menu opened on: a cell's selected text
+  (the cell itself with none), or the editor's selection elsewhere.
+
+### Fixed
+
+- The caret and selection offsets of a table cell are read from a DOM range, so
+  a selection point between a cell's child nodes maps to the right character.
+
 ## [0.19.1] - 2026-10-05
 
 ### Fixed
