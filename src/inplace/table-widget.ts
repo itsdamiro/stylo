@@ -59,6 +59,8 @@ export class EditableTableWidget extends WidgetType {
   private syncing = false
   /** Rendered-text offset from the mousedown that is bringing a cell into edit. */
   private pendingOffset: number | null = null
+  /** The press that is focusing a cell landed on a host mark; see `onFocusIn`. */
+  private pressOnMark = false
   private gizmos: TableGizmos | null = null
   private longPress: LongPressHandle | null = null
   /** When a long-press last opened the structural menu; a `contextmenu` the
@@ -196,6 +198,22 @@ export class EditableTableWidget extends WidgetType {
   private onFocusIn(event: FocusEvent) {
     const cell = (event.target as HTMLElement).closest<HTMLTableCellElement>("td, th")
     if (!cell || cell === this.editing) return
+    if (this.pressOnMark) {
+      // Swapping the cell to raw text now would remove the marked element under
+      // the pointer, and the browser sends `click` only when the pressed element
+      // is still there on release. Wait until just after the click.
+      this.pressOnMark = false
+      document.addEventListener("mouseup", () => setTimeout(() => this.enterCell(cell)), {
+        once: true,
+      })
+      return
+    }
+    this.enterCell(cell)
+  }
+
+  /** Bring `cell` into editing: swap it to its raw source and park the caret. */
+  private enterCell(cell: HTMLTableCellElement) {
+    if (!this.table?.contains(cell) || cell === this.editing) return
     // Prefer the offset from the mousedown that started this focus; the DOM
     // selection isn't placed yet when `focusin` fires from a click.
     const offset = this.pendingOffset ?? renderedCaretOffset(cell)
@@ -326,6 +344,7 @@ export class EditableTableWidget extends WidgetType {
       const cell = (e.target as HTMLElement).closest<HTMLTableCellElement>("td, th")
       this.pendingOffset =
         cell && cell !== this.editing ? offsetFromPoint(cell, e.clientX, e.clientY) : null
+      this.pressOnMark = !!(e.target as HTMLElement).closest("[data-stylo-cell-mark]")
     })
     table.addEventListener("focusin", (e) => this.onFocusIn(e))
     table.addEventListener("focusout", (e) => this.onFocusOut(e))

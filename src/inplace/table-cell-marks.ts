@@ -59,6 +59,7 @@ interface Piece {
 function wrapper(m: Mark, child: Node): HTMLElement {
   const el = document.createElement("span")
   el.className = m.class
+  el.dataset.styloCellMark = ""
   for (const [k, v] of Object.entries(m.attributes ?? {})) {
     try {
       el.setAttribute(k, v)

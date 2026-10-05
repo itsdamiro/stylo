@@ -31,6 +31,8 @@ import "katex/dist/katex.min.css"
  *   ?embed=1                              (canned embedSource; default off)
  *   ?hostItem=1                           (one right-click "Comment" item, readOnlySafe; its
  *                                          run writes the selected text to window.__hostRun)
+ *   ?cellMark=1                           (doc=table, table=cells: marks the word "paint" in its
+ *                                          cell; a click on it increments window.__markClicks)
  *   ?readOnly=1                           (default off)
  */
 
@@ -175,6 +177,23 @@ const hostItems =
       ]
     : undefined
 const doc = DOCS[params.get("doc") ?? "basic"] ?? DOCS.basic!
+const cellMarks =
+  params.get("cellMark") === "1"
+    ? () => {
+        const from = doc.indexOf("paint")
+        return [
+          { from, to: from + 5, class: "host-cell-mark", attributes: { "data-mark-id": "1" } },
+        ]
+      }
+    : undefined
+if (cellMarks) {
+  document.addEventListener("click", (e) => {
+    if ((e.target as HTMLElement).closest("[data-mark-id]")) {
+      const w = window as unknown as { __markClicks?: number }
+      w.__markClicks = (w.__markClicks ?? 0) + 1
+    }
+  })
+}
 
 if (params.get("theme") === "dark") document.documentElement.dataset.theme = "dark"
 
@@ -186,7 +205,7 @@ function Fixture() {
         value={value}
         onChange={setValue}
         mode={mode}
-        inPlace={{ selectionUI, table, reveal, contextMenu: { items: hostItems } }}
+        inPlace={{ selectionUI, table, reveal, cellMarks, contextMenu: { items: hostItems } }}
         readOnly={params.get("readOnly") === "1"}
         toolbar={sticky || overflow ? { sticky: sticky ?? false, overflow } : toolbar}
         wikiLinkSource={wikiLinkSource}

@@ -6,6 +6,13 @@ Notable changes to Stylo. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- **A click on a host-marked word in a table cell now arrives.** Pressing on the
+  word focused its cell, which swapped to raw text and removed the pressed
+  element, so the browser never sent `click`. When the press lands on a mark,
+  the swap now waits until just after the release.
+
 ## [0.20.0] - 2026-10-05
 
 ### Added
