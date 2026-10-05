@@ -30,8 +30,8 @@ export const isPainted = (cell: HTMLElement, paint: CellPaint | null): boolean =
 /** Draw `cell` from `grid.rows[r][c]` (read off its own `data-r`/`data-c`) —
  *  raw text when `raw`, rendered otherwise. */
 export function paintCell(cell: HTMLTableCellElement, grid: CellGrid, raw: boolean): void {
-  const r = Number(cell.dataset.r)
-  const c = Number(cell.dataset.c)
+  const r = Number(cell.dataset.r ?? cell.dataset.styloRow)
+  const c = Number(cell.dataset.c ?? cell.dataset.styloCol)
   const text = grid.rows[r]?.[c] ?? ""
   cell.replaceChildren(
     raw ? cell.ownerDocument.createTextNode(text) : renderInline(unescapePipe(text), grid.embeds),

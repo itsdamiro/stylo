@@ -34,6 +34,7 @@ milestones and Architectural Decision Records, newest first.
 
 | Date       | Entry                                                                                                                                                                                   |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-05 | [Host marks and widgets on the rendered table of source mode](./journal/2026-10/2026-10-05_host-marks-and-widgets-in-source-mode-tables.md)                                             |
 | 2026-10-05 | [Host widgets inside table cells: `cellWidgets`](./journal/2026-10/2026-10-05_host-widgets-inside-table-cells.md)                                                                       |
 | 2026-10-05 | [Host marks inside table cells: `cellMarks`, and a selection `rect` for host items](./journal/2026-10/2026-10-05_host-marks-inside-table-cells.md)                                      |
 | 2026-10-05 | [Host items in the right-click menu: `contextMenu.items` and a `host` group](./journal/2026-10/2026-10-05_host-items-in-the-context-menu.md)                                            |

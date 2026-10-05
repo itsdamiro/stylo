@@ -1,5 +1,6 @@
 import { ViewPlugin, type ViewUpdate } from "@codemirror/view"
 import { cellMarksFacet, cellWidgetsFacet } from "./config"
+import { staticTables } from "./table-static-paint"
 import { tableWidgets } from "./table-widget"
 
 const EMPTY = "[[],[]]"
@@ -29,8 +30,9 @@ export const cellMarksPlugin = ViewPlugin.fromClass(
       update.view.requestMeasure({
         read: () => null,
         write: (_, view) => {
-          for (const el of view.dom.querySelectorAll<HTMLElement>(".cm-inplace-table-edit")) {
+          for (const el of view.dom.querySelectorAll<HTMLElement>(".cm-inplace-table")) {
             tableWidgets.get(el)?.repaintMarks()
+            staticTables.get(el)?.()
           }
         },
         key: this,

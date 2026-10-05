@@ -203,7 +203,15 @@ on each editor update; only cells whose marks
 changed are repainted, and the cell being edited is left alone until it loses
 focus. Syntax (`**`, link targets, `\|`) is skipped when mapping; a mark that
 covers no visible character, or a cell whose text cannot be aligned, marks the
-whole cell instead of nothing. Only `table: "cells"` is affected.
+whole cell instead of nothing.
+
+Marks and widgets draw on the rendered table of **either** `table` mode and of a
+`readOnly` document, so they work on Stylo's default (`"source"`), where a table
+is rendered until the caret enters it. There a press on a marked word or a host
+widget stays in the table: it does not reveal the source (which would remove the
+element before its `click` arrives), so a host's handler runs and its popup
+keeps its anchor. While the caret is inside the table its raw rows show, and the
+host's own `Decoration`s apply to them as to any text.
 
 ### Widgets inside table cells
 

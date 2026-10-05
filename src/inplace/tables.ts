@@ -7,6 +7,7 @@ import { embedRegistryFacet, inPlaceConfigFacet, tableEditingFacet } from "./con
 import { frontmatterRange } from "./frontmatter"
 import { renderInline } from "./inline-md"
 import { revealedLines } from "./reveal"
+import { mountStatic } from "./table-static-paint"
 import { EditableTableWidget, fromTableWidget, type ParsedTable } from "./table-widget"
 
 /**
@@ -27,7 +28,7 @@ class TableWidget extends WidgetType {
     return JSON.stringify(this.table) === JSON.stringify(other.table)
   }
 
-  toDOM() {
+  toDOM(view: EditorView) {
     const { head, body, aligns } = this.table
     const el = document.createElement("table")
     el.className = "cm-inplace-table"
@@ -56,6 +57,7 @@ class TableWidget extends WidgetType {
         align(td, aligns[i])
       }
     })
+    mountStatic(el, view, [head, ...body], this.embeds, tableField)
     return el
   }
 

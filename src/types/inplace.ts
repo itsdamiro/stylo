@@ -173,17 +173,19 @@ export interface InPlaceConfig {
    */
   selectionBarItems?: ToolbarCommandId[]
   /**
-   * Marks to draw inside table cells (`table: "cells"`), where a host's
-   * `Decoration.mark` cannot reach. Called with the state whenever the document
+   * Marks to draw inside a rendered table's cells (either `table` mode, and a
+   * read-only document), where a host's `Decoration.mark` cannot reach. Called with the state whenever the document
    * or the host's state changes; the affected cells are repainted. Read through
    * a ref, so a re-render's closure applies; a change outside the editor state
    * shows on the next editor update (dispatch an empty transaction).
    */
   cellMarks?: (state: EditorState) => readonly CellMark[]
   /**
-   * Elements to draw inside table cells (`table: "cells"`), where a host's
-   * `Decoration.widget` cannot reach. Read like `cellMarks`. A cell being edited
-   * shows its raw source and no widgets; they return when it loses focus.
+   * Elements to draw inside a rendered table's cells (either `table` mode, and a
+   * read-only document), where a host's `Decoration.widget` cannot reach. Read
+   * like `cellMarks`. A cell being edited shows its raw source and no widgets;
+   * they return when it loses focus. A press on one does not reveal the source of
+   * a `table: "source"` table.
    */
   cellWidgets?: (state: EditorState) => readonly CellWidget[]
 }

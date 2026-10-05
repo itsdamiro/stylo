@@ -6,6 +6,16 @@ Notable changes to Stylo. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- **Host marks and widgets also draw on the rendered table of `table: "source"`
+  and of a read-only document.** `inPlace.cellMarks` and `inPlace.cellWidgets`
+  were drawn only in `table: "cells"`, so on Stylo's default a table not under the
+  caret showed nothing. They now paint the static table's cells too, and repaint
+  when the host's list changes without a document change. A press on a marked
+  word or a host widget stays in the table instead of revealing its source, so
+  the host's `click` handler runs.
+
 ## [0.21.0] - 2026-10-05
 
 ### Added
