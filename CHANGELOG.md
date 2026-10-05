@@ -6,6 +6,8 @@ Notable changes to Stylo. The format follows
 
 ## [Unreleased]
 
+## [0.20.1] - 2026-10-05
+
 ### Fixed
 
 - **A click on a host-marked word in a table cell now arrives.** Pressing on the
