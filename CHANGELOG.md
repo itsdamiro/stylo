@@ -6,6 +6,8 @@ Notable changes to Stylo. The format follows
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-10-05
+
 ### Changed
 
 - **Host marks and widgets also draw on the rendered table of `table: "source"`
