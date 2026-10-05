@@ -1,21 +1,30 @@
 import { ViewPlugin, type ViewUpdate } from "@codemirror/view"
-import { cellMarksFacet } from "./config"
+import { cellMarksFacet, cellWidgetsFacet } from "./config"
 import { tableWidgets } from "./table-widget"
 
+const EMPTY = "[[],[]]"
+
 /**
- * Repaints the host's marks in table cells when they, or the document that
+ * Repaints the host's marks and widgets in table cells when they, or the document that
  * their positions point into, change. A table widget owns its DOM, so
  * CodeMirror never redraws it for us. The repaint waits for the measure phase:
  * during `update` the widgets' DOM still shows the previous document.
  */
 export const cellMarksPlugin = ViewPlugin.fromClass(
   class {
-    last = "[]"
+    last = EMPTY
 
     update(update: ViewUpdate) {
-      const sig = JSON.stringify(update.state.facet(cellMarksFacet)(update.state))
+      const { state } = update
+      // A widget's `toDOM` is a function: its `pos` and `key` stand for it.
+      const sig = JSON.stringify([
+        state.facet(cellMarksFacet)(state),
+        state
+          .facet(cellWidgetsFacet)(state)
+          .map((w) => [w.pos, w.key, w.cellClass]),
+      ])
       if (sig === this.last && !update.docChanged) return
-      if (sig === "[]" && this.last === "[]") return
+      if (sig === EMPTY && this.last === EMPTY) return
       this.last = sig
       update.view.requestMeasure({
         read: () => null,

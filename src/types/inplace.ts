@@ -125,6 +125,25 @@ export interface CellMark {
   cellClass?: string
 }
 
+/**
+ * A host element placed inside a table cell, after the characters that end at
+ * document position `pos`. Stylo keeps it out of the cell's text and Markdown.
+ * It is shown while the cell is not being edited.
+ */
+export interface CellWidget {
+  pos: number
+  /** Builds the element. Called again whenever the cell is repainted. */
+  toDOM: (view: EditorView) => HTMLElement
+  /**
+   * Identity of what `toDOM` draws. A cell is repainted only when its widgets'
+   * `pos` or `key` change, so the key must change whenever the drawing does,
+   * or a stale element stays in the cell.
+   */
+  key: string
+  /** Added to the `<td>` / `<th>` holding the widget. */
+  cellClass?: string
+}
+
 export interface InPlaceConfig {
   /** Which decoration types the in-place canvas renders. Read once, at mount. */
   decorations?: InPlaceDecorationToggles
@@ -161,4 +180,10 @@ export interface InPlaceConfig {
    * shows on the next editor update (dispatch an empty transaction).
    */
   cellMarks?: (state: EditorState) => readonly CellMark[]
+  /**
+   * Elements to draw inside table cells (`table: "cells"`), where a host's
+   * `Decoration.widget` cannot reach. Read like `cellMarks`. A cell being edited
+   * shows its raw source and no widgets; they return when it loses focus.
+   */
+  cellWidgets?: (state: EditorState) => readonly CellWidget[]
 }

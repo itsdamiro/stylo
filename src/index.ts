@@ -6,6 +6,7 @@ export type {
   EmbedSource,
   FrontmatterDisplay,
   CellMark,
+  CellWidget,
   InPlaceConfig,
   InPlaceDecorationToggles,
   ResolveErrorInfo,

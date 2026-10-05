@@ -1,6 +1,7 @@
 import { type EditorState, Facet } from "@codemirror/state"
 import type {
   CellMark,
+  CellWidget,
   ContextMenuItem,
   InPlaceConfig,
   InPlaceDecorationToggles,
@@ -135,6 +136,14 @@ export const hostItemsFacet = Facet.define<() => ContextMenuItem[], () => Contex
 export const cellMarksFacet = Facet.define<
   (state: EditorState) => readonly CellMark[],
   (state: EditorState) => readonly CellMark[]
+>({
+  combine: (values) => values[0] ?? (() => []),
+})
+
+/** The host's `inPlace.cellWidgets`, or none. Seeded by `inPlaceExtension`. */
+export const cellWidgetsFacet = Facet.define<
+  (state: EditorState) => readonly CellWidget[],
+  (state: EditorState) => readonly CellWidget[]
 >({
   combine: (values) => values[0] ?? (() => []),
 })

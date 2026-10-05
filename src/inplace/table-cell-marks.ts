@@ -13,12 +13,15 @@
 import type { EditorState } from "@codemirror/state"
 import type { EditorView } from "@codemirror/view"
 import { cellSourcePos } from "../toolbar/table-position"
-import type { CellMark } from "../types"
-import { cellMarksFacet } from "./config"
+import type { CellMark, CellWidget } from "../types"
+import { cellMarksFacet, cellWidgetsFacet } from "./config"
+import { align, type Piece } from "./table-cell-align"
+import { placeWidgets, widgetEl, widgetsIn, type PaintWidget } from "./table-cell-widgets"
 
 export interface CellPaint {
   /** `from`/`to` are offsets into the cell's raw string. */
   marks: { from: number; to: number; class: string; attributes?: Record<string, string> }[]
+  widgets: PaintWidget[]
   cellClass: string[]
 }
 
@@ -33,7 +36,7 @@ export function cellPaint(
   lead: number,
   len: number,
 ): CellPaint | null {
-  const out: CellPaint = { marks: [], cellClass: [] }
+  const out: CellPaint = { marks: [], widgets: [], cellClass: [] }
   for (const m of marks) {
     if (m.to <= base || m.from >= base + len || m.to <= m.from) continue
     out.marks.push({
@@ -42,20 +45,19 @@ export function cellPaint(
       class: m.class,
       attributes: m.attributes,
     })
-    for (const c of m.cellClass?.split(/\s+/) ?? []) {
-      if (c && !out.cellClass.includes(c)) out.cellClass.push(c)
-    }
+    addClasses(out, m.cellClass)
   }
   return out.marks.length || out.cellClass.length ? out : null
 }
 
-type Mark = CellPaint["marks"][number]
-interface Piece {
-  node: Text
-  /** Raw-string offset of the node's first character. */
-  start: number
+/** Add `classes` (space-separated) to `paint`'s cell classes. */
+const addClasses = (paint: CellPaint, classes?: string) => {
+  for (const c of classes?.split(/\s+/) ?? []) {
+    if (c && !paint.cellClass.includes(c)) paint.cellClass.push(c)
+  }
 }
 
+type Mark = CellPaint["marks"][number]
 function wrapper(m: Mark, child: Node): HTMLElement {
   const el = document.createElement("span")
   el.className = m.class
@@ -72,58 +74,32 @@ function wrapper(m: Mark, child: Node): HTMLElement {
 }
 
 /** Replace `piece`'s text node by its characters, each run wrapped by the marks covering it. */
-function wrapPiece(piece: Piece, marks: Mark[]): boolean {
+function wrapPiece(piece: Piece, marks: Mark[], widgets: PaintWidget[]): boolean {
   const text = piece.node.data
   const end = piece.start + text.length
   const hit = marks.filter((m) => m.from < end && m.to > piece.start)
-  if (!hit.length) return false
+  if (!hit.length && !widgets.length) return false
   const cuts = new Set([piece.start, end])
+  for (const w of widgets) cuts.add(w.at)
   for (const m of hit) {
     cuts.add(Math.max(m.from, piece.start))
     cuts.add(Math.min(m.to, end))
   }
   const sorted = [...cuts].sort((a, b) => a - b)
   const frag = document.createDocumentFragment()
+  const put = (at: number) => {
+    for (const w of widgets) if (w.at === at) frag.append(widgetEl(w))
+  }
+  put(piece.start)
   for (let i = 0; i < sorted.length - 1; i++) {
     const [a, b] = [sorted[i]!, sorted[i + 1]!]
     let node: Node = document.createTextNode(text.slice(a - piece.start, b - piece.start))
     for (const m of hit) if (m.from <= a && m.to >= b) node = wrapper(m, node)
     frag.append(node)
+    put(b)
   }
   piece.node.replaceWith(frag)
   return true
-}
-
-/** The rendered cell's text nodes with their offsets in `source` (the raw string, unescaped), or `null` when they don't line up. */
-function align(cell: HTMLElement, source: string): Piece[] | null {
-  const pieces: Piece[] = []
-  let at = 0
-  const visit = (parent: Node): boolean => {
-    for (const n of parent.childNodes) {
-      if (n instanceof Text) {
-        const found = source.indexOf(n.data, at)
-        if (found < 0) return false
-        pieces.push({ node: n, start: found })
-        at = found + n.data.length
-      } else if ((n as Element).hasAttribute?.("data-stylo-wikilink")) {
-        // `[[target|alias]]` shows only the alias (or the target): its text is the tail of the body.
-        const open = source.indexOf("[[", at)
-        const close = open < 0 ? -1 : source.indexOf("]]", open)
-        const text = n.firstChild
-        if (close < 0 || !(text instanceof Text)) return false
-        pieces.push({ node: text, start: close - text.data.length })
-        at = close + 2
-      } else if ((n as Element).classList?.contains("cm-inplace-math")) {
-        // KaTeX's own text isn't the source's: step over `$…$` as a whole.
-        const open = source.indexOf("$", at)
-        const close = open < 0 ? -1 : source.indexOf("$", open + 1)
-        if (close < 0) return false
-        at = close + 1
-      } else if (!visit(n)) return false
-    }
-    return true
-  }
-  return visit(cell) ? pieces : null
 }
 
 /** Wrap everything in `cell` in one element per mark. */
@@ -142,6 +118,8 @@ function wrapAll(cell: HTMLElement, marks: Mark[]) {
  */
 export function applyPaint(cell: HTMLElement, raw: string, paint: CellPaint, focused: boolean) {
   let marks = paint.marks
+  // A focused cell shows raw source, which a widget would corrupt: none there.
+  let widgets: PaintWidget[] = []
   const whole: Mark[] = []
   let pieces: Piece[] | null
   if (focused) {
@@ -152,8 +130,14 @@ export function applyPaint(cell: HTMLElement, raw: string, paint: CellPaint, foc
     const toSource = (o: number) => o - escapes.filter((p) => p < o).length
     pieces = align(cell, raw.replace(/\\\|/g, "|"))
     marks = marks.map((m) => ({ ...m, from: toSource(m.from), to: toSource(m.to) }))
+    widgets = paint.widgets.map((w) => ({ ...w, at: toSource(w.at) }))
   }
-  if (!pieces) return wrapAll(cell, marks)
+  const { placed, loose } = placeWidgets(pieces, widgets)
+  const atEnd = () => cell.append(...loose.map(widgetEl))
+  if (!pieces) {
+    wrapAll(cell, marks)
+    return atEnd()
+  }
   const reached = new Set<Mark>()
   for (const p of pieces) {
     for (const m of marks) {
@@ -161,8 +145,9 @@ export function applyPaint(cell: HTMLElement, raw: string, paint: CellPaint, foc
     }
   }
   for (const m of marks) if (!reached.has(m)) whole.push(m)
-  for (const p of pieces) wrapPiece(p, marks)
+  for (const p of pieces) wrapPiece(p, marks, placed.get(p) ?? [])
   wrapAll(cell, whole)
+  atEnd()
 }
 
 /** What the painter needs from its table widget. */
@@ -180,18 +165,37 @@ export interface PainterHost {
  * position are read once per editor state, not once per cell.
  */
 export function markPainter(host: PainterHost): (r: number, c: number) => CellPaint | null {
-  let at: { state: EditorState; marks: readonly CellMark[]; from: number } | null = null
+  let at: {
+    state: EditorState
+    marks: readonly CellMark[]
+    widgets: readonly CellWidget[]
+    from: number
+  } | null = null
   return (r, c) => {
     const view = host.view()
     if (!view || !host.mounted()) return null
     if (at?.state !== view.state) {
       const marks = view.state.facet(cellMarksFacet)(view.state)
-      at = { state: view.state, marks, from: marks.length ? host.from(view) : 0 }
+      const widgets = view.state.facet(cellWidgetsFacet)(view.state)
+      at = {
+        state: view.state,
+        marks,
+        widgets,
+        from: marks.length || widgets.length ? host.from(view) : 0,
+      }
     }
-    if (!at.marks.length) return null
+    if (!at.marks.length && !at.widgets.length) return null
     const base = cellSourcePos(view.state.doc, at.from, r, c)
     const raw = host.raw(r, c)
     if (base == null) return null
-    return cellPaint(at.marks, base, raw.length - raw.trimStart().length, raw.trim().length)
+    const lead = raw.length - raw.trimStart().length
+    const len = raw.trim().length
+    const paint = cellPaint(at.marks, base, lead, len)
+    const widgets = widgetsIn(at.widgets, view, base, lead, len)
+    if (!widgets.length) return paint
+    const out = paint ?? { marks: [], widgets: [], cellClass: [] }
+    out.widgets = widgets
+    for (const w of widgets) addClasses(out, w.cellClass)
+    return out
   }
 }

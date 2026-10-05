@@ -10,6 +10,7 @@ import {
   type TagSource,
   type WikiLinkSource,
 } from "../src/index"
+import type { EditorState } from "@codemirror/state"
 import { Decoration, EditorView, gutter, GutterMarker } from "@codemirror/view"
 import "katex/dist/katex.min.css"
 
@@ -33,6 +34,8 @@ import "katex/dist/katex.min.css"
  *                                          run writes the selected text to window.__hostRun)
  *   ?cellMark=1                           (doc=table, table=cells: marks the word "paint" in its
  *                                          cell; a click on it increments window.__markClicks)
+ *   ?cellWidget=1                         (doc=table, table=cells: a button after the word "paint";
+ *                                          a click on it increments window.__widgetClicks)
  *   ?readOnly=1                           (default off)
  */
 
@@ -195,6 +198,31 @@ if (cellMarks) {
   })
 }
 
+const cellWidgets =
+  params.get("cellWidget") === "1"
+    ? (state: EditorState) => {
+        const pos = state.doc.toString().search(/paint/) + 5
+        return [
+          {
+            pos,
+            key: "w1",
+            cellClass: "host-cell-widget",
+            toDOM: () => {
+              const b = document.createElement("button")
+              b.type = "button"
+              b.textContent = "Accept"
+              b.dataset.widgetId = "1"
+              b.addEventListener("click", () => {
+                const w = window as unknown as { __widgetClicks?: number }
+                w.__widgetClicks = (w.__widgetClicks ?? 0) + 1
+              })
+              return b
+            },
+          },
+        ]
+      }
+    : undefined
+
 if (params.get("theme") === "dark") document.documentElement.dataset.theme = "dark"
 
 function Fixture() {
@@ -203,9 +231,19 @@ function Fixture() {
     <div style={width ? { width: `${width}px` } : undefined}>
       <Stylo
         value={value}
-        onChange={setValue}
+        onChange={(v) => {
+          ;(window as unknown as { __value?: string }).__value = v
+          setValue(v)
+        }}
         mode={mode}
-        inPlace={{ selectionUI, table, reveal, cellMarks, contextMenu: { items: hostItems } }}
+        inPlace={{
+          selectionUI,
+          table,
+          reveal,
+          cellMarks,
+          cellWidgets,
+          contextMenu: { items: hostItems },
+        }}
         readOnly={params.get("readOnly") === "1"}
         toolbar={sticky || overflow ? { sticky: sticky ?? false, overflow } : toolbar}
         wikiLinkSource={wikiLinkSource}

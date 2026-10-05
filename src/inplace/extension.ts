@@ -1,11 +1,12 @@
 import { Prec, type EditorState, type Extension } from "@codemirror/state"
 import { EditorView } from "@codemirror/view"
 import { cellSourcePos } from "../toolbar/table-position"
-import type { CellMark, ContextMenuItem, InPlaceConfig } from "../types"
+import type { CellMark, CellWidget, ContextMenuItem, InPlaceConfig } from "../types"
 import { offsetFromPoint } from "./table-cell-dom"
 import {
   contextMenuEnabled,
   cellMarksFacet,
+  cellWidgetsFacet,
   hostItemsFacet,
   embedRegistryFacet,
   inPlaceConfigFacet,
@@ -60,6 +61,8 @@ export interface InPlaceOptions {
   hostItems?: () => ContextMenuItem[]
   /** Reads the host's table-cell marks; omitted, they come from `inPlace.cellMarks`. */
   cellMarks?: (state: EditorState) => readonly CellMark[]
+  /** Reads the host's table-cell widgets; omitted, they come from `inPlace.cellWidgets`. */
+  cellWidgets?: (state: EditorState) => readonly CellWidget[]
 }
 
 /**
@@ -92,6 +95,7 @@ export function inPlaceExtension(opts: InPlaceOptions = {}): Extension {
     menuGroupsFacet.of(menu.groups),
     hostItemsFacet.of(opts.hostItems ?? (() => menu.items)),
     cellMarksFacet.of(opts.cellMarks ?? opts.inPlace?.cellMarks ?? (() => [])),
+    cellWidgetsFacet.of(opts.cellWidgets ?? opts.inPlace?.cellWidgets ?? (() => [])),
     selectionUIFacet.of(opts.inPlace?.selectionUI ?? "menu"),
     selectionBarItemsFacet.of(resolveSelectionBarItems(opts.inPlace?.selectionBarItems)),
     inPlaceDecorations(),

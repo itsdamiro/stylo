@@ -205,6 +205,32 @@ focus. Syntax (`**`, link targets, `\|`) is skipped when mapping; a mark that
 covers no visible character, or a cell whose text cannot be aligned, marks the
 whole cell instead of nothing. Only `table: "cells"` is affected.
 
+### Widgets inside table cells
+
+A host's `Decoration.widget` is dropped inside a table for the same reason, so
+`inPlace.cellWidgets` takes elements in document positions:
+
+```tsx
+inPlace={{
+  table: "cells",
+  cellWidgets: (state) => [
+    { pos: 127, key: `${id}:${text}`, toDOM: (view) => makeButton(view), cellClass: "has-change" },
+  ],
+}}
+```
+
+The element is inserted after the characters that end at `pos`, is
+`contenteditable="false"`, and is skipped whenever Stylo reads the cell's text, so
+its label never reaches the Markdown. A press on it does not focus the cell (that
+would rebuild the cell and the browser would send no `click`), so a button in it
+works. A position inside hidden syntax snaps to the nearest visible character; one
+that cannot be mapped goes at the end of the cell; one outside any cell is ignored.
+
+A cell is repainted only when its widgets' `pos` or `key` change, so **`key` must
+change whenever what `toDOM` draws changes**; a host that forgets leaves a stale
+element in the cell. A cell being edited shows its raw source, with its marks but
+without widgets; they return when it loses focus.
+
 ### On touch
 
 A right-click has no touch equivalent, so a **long-press** (roughly half a
@@ -317,7 +343,7 @@ The **entire `inPlace` object** — `decorations`, `table`, `reveal`,
 in-place canvas is constructed. Changing it on an already-mounted `<Stylo>` has
 no effect, with one exception: the **`contextMenu.items`** list is read each
 time the menu opens, so a re-render's new `run` / `disabled` closures apply
-(`groups` and the on/off switch are still read once). **`cellMarks`** is likewise
+(`groups` and the on/off switch are still read once). **`cellMarks`** and **`cellWidgets`** are likewise
 read through a ref and called on each editor update (it is repainted when the
 document or its returned marks change, not on a re-render alone: a host whose
 marks live outside the editor state dispatches an empty transaction after changing

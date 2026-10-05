@@ -9,9 +9,27 @@ export const trimGrid = (rows: string[][]): string[][] => rows.map((r) => r.map(
 /** A GFM cell escapes a literal pipe as `\|`; unescape before inline parsing. */
 export const unescapePipe = (s: string): string => s.replace(/\\\|/g, "|")
 
+const WIDGET = "[data-stylo-cell-widget]"
+
+/** The cell's text nodes, leaving out those inside a host widget (not the cell's own text). */
+function textWalker(cell: HTMLElement): TreeWalker {
+  return cell.ownerDocument.createTreeWalker(cell, NodeFilter.SHOW_TEXT, {
+    acceptNode: (n) =>
+      n.parentElement?.closest(WIDGET) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT,
+  })
+}
+
+/** The cell's own text, without any host widget's. */
+export function cellText(cell: HTMLElement): string {
+  const walker = textWalker(cell)
+  let text = ""
+  for (let n = walker.nextNode(); n; n = walker.nextNode()) text += n.textContent
+  return text
+}
+
 /** Total length of the text nodes inside `cell` that precede `target`. */
 function textBefore(cell: HTMLElement, target: Node): number {
-  const walker = cell.ownerDocument.createTreeWalker(cell, NodeFilter.SHOW_TEXT)
+  const walker = textWalker(cell)
   let offset = 0
   for (let n = walker.nextNode(); n; n = walker.nextNode()) {
     if (n === target) return offset
@@ -22,11 +40,13 @@ function textBefore(cell: HTMLElement, target: Node): number {
 
 /** Char offset of a DOM point within `cell`'s text, whatever node it is in. */
 function offsetAt(cell: HTMLElement, node: Node | null | undefined, off: number): number {
-  if (!node || !cell.contains(node)) return (cell.textContent ?? "").length
+  if (!node || !cell.contains(node)) return cellText(cell).length
   const range = cell.ownerDocument.createRange()
   range.setStart(cell, 0)
   range.setEnd(node, off)
-  return range.toString().length
+  const before = range.cloneContents()
+  before.querySelectorAll(WIDGET).forEach((w) => w.remove())
+  return (before.textContent ?? "").length
 }
 
 /** Char offset of the DOM selection within `cell`'s rendered text. */
@@ -41,7 +61,7 @@ export function renderedCaretOffset(cell: HTMLElement): number {
 export function selectionOffsets(cell: HTMLElement): { from: number; to: number } {
   const sel = cell.ownerDocument.getSelection()
   if (!sel || sel.rangeCount === 0) {
-    const end = (cell.textContent ?? "").length
+    const end = cellText(cell).length
     return { from: end, to: end }
   }
   const a = offsetAt(cell, sel.anchorNode, sel.anchorOffset)
@@ -66,6 +86,8 @@ export function offsetFromPoint(cell: HTMLElement, x: number, y: number): number
     if (r) [node, nodeOffset] = [r.startContainer, r.startOffset]
   }
   if (!node || !cell.contains(node)) return 0
+  const widget = node.parentElement?.closest(WIDGET)
+  if (widget) return offsetAt(cell, widget, 0)
   return textBefore(cell, node) + (node.nodeType === Node.TEXT_NODE ? nodeOffset : 0)
 }
 
@@ -80,7 +102,7 @@ const WORD_CHAR = /[\p{L}\p{N}_]/u
  * punctuation, so a menu opened there still has a target.
  */
 export function selectWordAtPoint(cell: HTMLElement, x: number, y: number): boolean {
-  const text = cell.textContent ?? ""
+  const text = cellText(cell)
   const at = offsetFromPoint(cell, x, y)
   const run = markedContentAt(text, at)
   if (run) {
@@ -98,7 +120,7 @@ export function selectWordAtPoint(cell: HTMLElement, x: number, y: number): bool
 
 /** The text node and offset of char `offset` within `cell`'s text (clamped to its end). */
 function pointAt(cell: HTMLElement, offset: number): [Node, number] {
-  const walker = cell.ownerDocument.createTreeWalker(cell, NodeFilter.SHOW_TEXT)
+  const walker = textWalker(cell)
   let left = offset
   let last: Text | null = null
   for (let n = walker.nextNode() as Text | null; n; n = walker.nextNode() as Text | null) {

@@ -196,7 +196,9 @@ export class EditableTableWidget extends WidgetType {
   }
 
   private onFocusIn(event: FocusEvent) {
-    const cell = (event.target as HTMLElement).closest<HTMLTableCellElement>("td, th")
+    const target = event.target as HTMLElement
+    if (target.closest("[data-stylo-cell-widget]")) return // a host's control keeps the focus it took
+    const cell = target.closest<HTMLTableCellElement>("td, th")
     if (!cell || cell === this.editing) return
     if (this.pressOnMark) {
       // Swapping the cell to raw text now would remove the marked element under
@@ -341,6 +343,12 @@ export class EditableTableWidget extends WidgetType {
     // `.cm-content`. Not `preventDefault` — the browser still focuses the cell.
     table.addEventListener("mousedown", (e) => {
       e.stopPropagation()
+      // A press on a host's widget must not focus the cell: that would swap it
+      // to raw source and remove the widget before the browser sends `click`.
+      if ((e.target as HTMLElement).closest("[data-stylo-cell-widget]")) {
+        e.preventDefault()
+        return
+      }
       const cell = (e.target as HTMLElement).closest<HTMLTableCellElement>("td, th")
       this.pendingOffset =
         cell && cell !== this.editing ? offsetFromPoint(cell, e.clientX, e.clientY) : null

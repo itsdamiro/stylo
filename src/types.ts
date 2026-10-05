@@ -29,6 +29,7 @@ export type {
   MenuGroupId,
   ContextMenuConfig,
   CellMark,
+  CellWidget,
   ContextMenuItem,
   InPlaceConfig,
 } from "./types/inplace"

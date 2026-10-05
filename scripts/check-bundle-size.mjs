@@ -16,9 +16,10 @@ const dist = fileURLToPath(new URL("../dist/", import.meta.url))
 const BUDGETS = {
   "stylo.js": 6_000, // entry, always loaded — keep it tiny. Bumped from 4,000: the
   // toolbar overflow menu (fit, hook, menu) adds ~2,000 B and lives in the bar
-  InPlaceView: 24_000, // in-place canvas glue — bumped from 22,000, then 23,000: the readOnly
-  // table-cell guard and the exitBelow / insertTable fixes (2026-09-13) left only
-  // 27 B of headroom; host items in the context menu (2026-10-05) add ~630 B
+  InPlaceView: 26_000, // in-place canvas glue — bumped from 22,000, then 23,000, then 24,000:
+  // the readOnly table-cell guard and the exitBelow / insertTable fixes (2026-09-13) left only
+  // 27 B of headroom; host items in the context menu (2026-10-05) add ~630 B; host cell marks
+  // (0.20.0) took it over 24,000, and host cell widgets (0.21.0) add ~570 B
   Preview: 4_000, // preview glue
   katex: 95_000, // math rendering
   markdown: 70_000, // remark / rehype / react-markdown — preview only
