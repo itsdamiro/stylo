@@ -2,3 +2,11 @@ dist
 coverage
 node_modules
 package-lock.json
+
+# copied from the workflow template, kept byte-for-byte so `adopt.sh --check` can compare
+docs/CLOSING_A_SLICE.md
+docs/CODE_QUALITY_STANDARDS.md
+docs/COLLABORATION_STANDARDS.md
+docs/VAULT_CONVENTIONS.md
+docs/decisions/TEMPLATE.md
+docs/sop

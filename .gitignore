@@ -45,3 +45,14 @@ playground/content/sample.md
 
 # incoming request drafts, not part of the published docs
 docs/requests/
+
+# AI assistant & editor tooling — never committed
+.agents/
+.claude/
+.gemini/
+.cursor/
+CLAUDE.md
+GEMINI.md
+
+# the handoff holds the owner's open questions: local-only
+docs/HANDOFF.md
