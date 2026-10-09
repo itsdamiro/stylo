@@ -9,8 +9,8 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 20
           cache: npm
@@ -22,22 +22,23 @@ jobs:
       - run: npm run build
       - run: npm run check:size
 
-  # The two Markdown gates of scripts/gates.conf, over what a clone holds. Not the whole list: the jobs here already run
+  # The Markdown gates of scripts/gates.conf, over what a clone holds. Not the whole list: the jobs here already run
   # the npm gates, and CLAUDE.md and docs/HANDOFF.md (named in the md-wrap gate) are local-only, so a clone lacks them.
   docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: python3 scripts/md_wrap_check.py README.md CONTRIBUTING.md docs
       - run: python3 scripts/adr_check.py
+      - run: python3 scripts/check_links.py README.md CONTRIBUTING.md docs
 
   # Real-browser coverage the jsdom unit suite can't give: caret-driven marker
   # reveal, floating-popup positioning, the sticky-toolbar watchdog, KaTeX.
   browser:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 20
           cache: npm
@@ -49,8 +50,8 @@ jobs:
   react18:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 20
           cache: npm
@@ -64,8 +65,8 @@ jobs:
   typescript6:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 20
           cache: npm
@@ -81,8 +82,8 @@ jobs:
   package:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 20
           cache: npm
