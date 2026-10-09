@@ -78,7 +78,7 @@ const insertImage: ToolbarCustomItem = {
 
 `isActive` and `disabled` are re-read from the state on every selection, key, and pointer change, exactly like a built-in's context check. `id` must not collide with a built-in id or another custom item — it is used as the React key and rendered as `data-command="<id>"` for styling and test hooks (built-in buttons carry `data-command` too).
 
-Custom items have **no `keys` field**. Built-in shortcuts are compiled into CodeMirror's keymap when the editor is constructed, so a custom binding would need its own keymap — bind it yourself against [`getView()`](./props.md#imperative-handle) for now.
+Custom items have **no `keys` field**. Built-in shortcuts are compiled into CodeMirror's keymap when the editor is constructed, so a custom binding would need its own keymap — bind it yourself against [`getView()`](./props.md#ref--imperative-handle) for now.
 
 ## The render slot
 

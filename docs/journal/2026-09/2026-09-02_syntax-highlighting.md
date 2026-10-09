@@ -20,7 +20,7 @@ tags:
 
 Both `@codemirror/language` and `@lezer/highlight` are already transitive dependencies of `@codemirror/lang-markdown`, so this adds **no package weight** and needs no ADR under the zero-bloat rule.
 
-**`--stylo-syntax-*` tokens** (`src/styles/tokens.css`) — eleven light-mode defaults in the same neutral / blue family as the rest of the palette (`keyword`, `string`, `escape`, `comment`, `number`, `constant`, `function`, `type`, `property`, `tag`, `invalid`). The host overrides them the same way as `--stylo-link` and friends. Documented in [props › Syntax colours](../wiki/reference/props.md#syntax-colours).
+**`--stylo-syntax-*` tokens** (`src/styles/tokens.css`) — eleven light-mode defaults in the same neutral / blue family as the rest of the palette (`keyword`, `string`, `escape`, `comment`, `number`, `constant`, `function`, `type`, `property`, `tag`, `invalid`). The host overrides them the same way as `--stylo-link` and friends. Documented in [props › Syntax colours](../../wiki/reference/props.md#syntax-colours).
 
 **Deliberately narrow.** Rules exist only for tokens a real programming-language grammar emits. Markdown's own structural tags (heading marks, emphasis markers, link brackets) are left undefined, so `source` mode keeps its plain, un-tinted look and the in-place decoration layer is untouched. Variable names, operators, and punctuation are also left as body text — colouring them turns a code block into a rainbow and hurts readability. The result is close to One Light in temperament: keywords, strings, comments, and names carry the colour; the scaffolding stays quiet.
 

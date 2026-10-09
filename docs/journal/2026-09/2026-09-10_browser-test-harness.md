@@ -21,7 +21,7 @@ The cost showed in the journal: the sticky-toolbar fix went through `translateZ(
 Add [`@playwright/test`](https://playwright.dev) as a dev dependency and a `test/browser/` suite, run with `npm run test:browser` and in its own CI job.
 
 - **Playwright, not Vitest browser mode.** The hard cases here are real right-click, real caret movement, and the rAF watchdog under a genuine scroll — Playwright's model fits them, and it is what the manual verification already used. The Vitest + jsdom suite stays the fast first line of defence; the two never overlap (`*.spec.ts` vs `*.test.ts`, and `test/browser/**` is excluded from the Vitest config).
-- **A dedicated fixture, not the playground.** [`playground/fixture.html`](../../playground/fixture.html) is a bare `<Stylo>` mount whose entire config comes from URL query params (`?mode=…&selectionUI=bar&reveal=caret&sticky=top&doc=long`). Deterministic, no control-panel chrome, and it rides the existing Vite dev server — no second build setup. Playwright's `webServer` runs `npm run dev -- --port 5199 --strictPort` and reuses a server already up outside CI.
+- **A dedicated fixture, not the playground.** [`playground/fixture.html`](../../../playground/fixture.html) is a bare `<Stylo>` mount whose entire config comes from URL query params (`?mode=…&selectionUI=bar&reveal=caret&sticky=top&doc=long`). Deterministic, no control-panel chrome, and it rides the existing Vite dev server — no second build setup. Playwright's `webServer` runs `npm run dev -- --port 5199 --strictPort` and reuses a server already up outside CI.
 - **CI now.** A `browser` job installs Chromium (`--with-deps`) and runs the suite. A harness that isn't gated rots.
 
 ## What the first cut covers

@@ -24,7 +24,7 @@ Stylo tracks **no dirty state**. `value` is the consumer's, so `dirty = value !=
 
 A small `saveHandler` **facet** (`src/editor/save.ts`) carries the wrapped handler into editor state, so the keymap and the toolbar's new **`save` command** (glyph + `BUILTIN_COMMANDS` entry) run one `runSave(view)` path. `save` is **opt-in** — not in `DEFAULT_TOOLBAR_ITEMS` — and its `disabled` predicate reads the facet, so the button greys out until `onSave` is wired. The compartment in `useCodeMirror` only reconfigures when the handler's _presence_ flips, not its identity.
 
-The debounced-autosave pattern is written up in the [auto-save guide](../wiki/guides/autosave.md) — a `useAutosave` hook over `onChange` that flushes on `visibilitychange` / `pagehide` — rather than added as a prop.
+The debounced-autosave pattern is written up in the [auto-save guide](../../wiki/guides/autosave.md) — a `useAutosave` hook over `onChange` that flushes on `visibilitychange` / `pagehide` — rather than added as a prop.
 
 ### Imperative handle
 
@@ -61,6 +61,6 @@ The playground grew a light / dark toggle that sets `data-theme` on `<html>`, an
 ## Follow-ups
 
 - CI guard that fails when a `--stylo-*` colour token has no value in the dark block.
-- `autoSave` (debounced, Stylo-owned) — still deferred, now with a [guide](../wiki/guides/autosave.md).
+- `autoSave` (debounced, Stylo-owned) — still deferred, now with a [guide](../../wiki/guides/autosave.md).
 - `saveStatus` pill and a general custom-toolbar-items API — still deferred.
 - `@codemirror/*` as peer dependencies — separate packaging change, still open.
