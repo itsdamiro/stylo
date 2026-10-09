@@ -45,3 +45,7 @@ tags: [type/decision, status/accepted, project/stylo, topic/vault]
 - **Write a journal extractor in the workflow repository.** Adds code to the shared repository for a format no other project uses, and the old records would still lack summaries. Right if several projects had a journal like this.
 - **Migrate the milestones too and retire the journal.** Milestones are history, not decisions, and 60 files of churn in a public repository for no gain in what the tools can read. Right if the journal stops being kept.
 - **Leave redirect stubs at the old paths.** Keeps outside links alive, at the price of 12 near-empty files and a second index. Right if outside links turn out to matter.
+
+## Amendment (2026-10-09): the rest of the documentation is one line per paragraph too
+
+The Context and Consequences above say the journal and the wiki stay hard-wrapped at 80 columns and that `md-wrap` covers only the newer files. That held for a day. The owner chose to finish the job: the journal, the wiki, `CONTRIBUTING.md`, `README.md` and `docs/PROJECT_JOURNAL.md` were joined to one paragraph or list item per line, with the text unchanged once whitespace is set aside, and `md-wrap` now covers every tracked Markdown file. The decision above is unaffected; only those two statements are out of date.
