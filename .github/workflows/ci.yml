@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: python3 scripts/md_wrap_check.py CONTRIBUTING.md docs
+      - run: python3 scripts/md_wrap_check.py README.md CONTRIBUTING.md docs
       - run: python3 scripts/adr_check.py
 
   # Real-browser coverage the jsdom unit suite can't give: caret-driven marker
