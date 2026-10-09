@@ -10,7 +10,7 @@ tags:
 
 # A surface-parity rule for `--stylo-*` tokens
 
-Reviewing [the preview typography + code-highlighting request](../../requests/2026-09-13_preview-typography-and-code-highlighting.md) turned up two tokens — `--stylo-font-size` and the eleven `--stylo-syntax-*` tokens — that the in-place canvas has read since they were introduced, and `preview` never has. Tracing why landed on [ADR-002 §3](../../decisions/002-editor-ux-and-customization.md)'s tenth-token amendment, which claims `--stylo-font-size` "backs that rule on every surface." It doesn't, and never did — only `.cm-editor` reads it. The claim just went unchecked.
+Reviewing the preview typography + code-highlighting request turned up two tokens — `--stylo-font-size` and the eleven `--stylo-syntax-*` tokens — that the in-place canvas has read since they were introduced, and `preview` never has. Tracing why landed on [ADR-002 §3](../../decisions/002-editor-ux-and-customization.md)'s tenth-token amendment, which claims `--stylo-font-size` "backs that rule on every surface." It doesn't, and never did — only `.cm-editor` reads it. The claim just went unchecked.
 
 ## What was already true
 

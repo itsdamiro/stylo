@@ -10,7 +10,7 @@ tags:
 
 # `preview`'s fenced code blocks wrap by default, behind a new override token
 
-Closes [the preview-code-blocks-dont-wrap request](../../requests/2026-09-13_preview-code-blocks-dont-wrap.md), filed after Sympose's read/edit toggle put the same document through both `preview` and in-place back to back: a long unbroken code line scrolled horizontally in `preview` (`.preview pre`'s `scrollWidth` 1784px against a 412px panel) but wrapped cleanly in in-place (`.cm-scroller` at parity, 476px/476px) — the same document reading two different ways depending on which surface happened to have it open.
+Closes the preview-code-blocks-dont-wrap request, filed after Sympose's read/edit toggle put the same document through both `preview` and in-place back to back: a long unbroken code line scrolled horizontally in `preview` (`.preview pre`'s `scrollWidth` 1784px against a 412px panel) but wrapped cleanly in in-place (`.cm-scroller` at parity, 476px/476px) — the same document reading two different ways depending on which surface happened to have it open.
 
 ## Root cause
 
