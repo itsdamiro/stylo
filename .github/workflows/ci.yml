@@ -22,6 +22,15 @@ jobs:
       - run: npm run build
       - run: npm run check:size
 
+  # The two Markdown gates of scripts/gates.conf, over what a clone holds. Not the whole list: the jobs here already run
+  # the npm gates, and CLAUDE.md and docs/HANDOFF.md (named in the md-wrap gate) are local-only, so a clone lacks them.
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/md_wrap_check.py CONTRIBUTING.md docs
+      - run: python3 scripts/adr_check.py
+
   # Real-browser coverage the jsdom unit suite can't give: caret-driven marker
   # reveal, floating-popup positioning, the sticky-toolbar watchdog, KaTeX.
   browser:
