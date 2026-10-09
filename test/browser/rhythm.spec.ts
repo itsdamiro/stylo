@@ -28,8 +28,8 @@ test.use({ permissions: ["clipboard-read", "clipboard-write"] })
 async function pasteInto(page: import("@playwright/test").Page, text: string) {
   await page.evaluate((t) => navigator.clipboard.writeText(t), text)
   await page.click(".cm-content")
-  await page.keyboard.press("Meta+A")
-  await page.keyboard.press("Meta+V")
+  await page.keyboard.press("ControlOrMeta+A")
+  await page.keyboard.press("ControlOrMeta+V")
 }
 
 test("heading sizes match between in-place and preview, h5/h6 included", async ({ page }) => {
