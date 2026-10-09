@@ -29,7 +29,7 @@ The durable half of the handoff: traps that have already cost time, and the exac
 
 ### A browser test that passes on a Mac and times out in CI
 
-- **Symptom:** a Playwright spec is green locally and fails on the CI runner with a 30-second timeout in a `locator` call, waiting for something the page should have rendered. `rhythm.spec.ts` did this for at least 12 runs.
+- **Symptom:** a Playwright spec is green locally and fails on the CI runner with a 30-second timeout in a `locator` call, waiting for something the page should have rendered. `rhythm.spec.ts` did this on every run of `main` for at least 12 commits.
 - **Cause:** a shortcut written for macOS. `Meta+A` and `Meta+V` select all and paste only there; on Linux they do nothing, so the paste never happens and the page never changes.
 - **Do this:** press `ControlOrMeta+…`, which is Control on Linux and Command on macOS. A timeout that names a locator and not an assertion is usually input that never arrived, not a slow runner.
 
