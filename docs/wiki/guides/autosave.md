@@ -10,26 +10,16 @@ tags:
 
 # Auto-save
 
-Stylo has **no `autoSave` prop**, by design. Persistence is a policy — how often
-to write, on a timer or on blur, how to reconcile conflicts, what to do offline —
-and that belongs to the application, not a text-editing component. CodeMirror,
-Monaco, TipTap, and Lexical all take the same line: they expose the change
-stream and stop there. Auto-save in VS Code, Notion, and Google Docs lives in the
-app layer.
+Stylo has **no `autoSave` prop**, by design. Persistence is a policy — how often to write, on a timer or on blur, how to reconcile conflicts, what to do offline — and that belongs to the application, not a text-editing component. CodeMirror, Monaco, TipTap, and Lexical all take the same line: they expose the change stream and stop there. Auto-save in VS Code, Notion, and Google Docs lives in the app layer.
 
 Stylo gives you two hooks to build on:
 
-- **`onChange(value)`** — every edit, synchronously. This is the stream you
-  debounce.
-- **`onSave(value)`** — `Cmd/Ctrl+S`, and the opt-in [`save` toolbar
-  item](../reference/toolbar.md). Wire it to the same "save now" path so a manual
-  save and an auto-save share one code path.
+- **`onChange(value)`** — every edit, synchronously. This is the stream you debounce.
+- **`onSave(value)`** — `Cmd/Ctrl+S`, and the opt-in [`save` toolbar item](../reference/toolbar.md). Wire it to the same "save now" path so a manual save and an auto-save share one code path.
 
 ## A `useAutosave` hook
 
-Debounced, skips a save when nothing changed since the last one, flushes on tab
-hide / navigation / unmount (the case that otherwise loses the last second of
-typing), and reports status.
+Debounced, skips a save when nothing changed since the last one, flushes on tab hide / navigation / unmount (the case that otherwise loses the last second of typing), and reports status.
 
 ```tsx
 import { useEffect, useRef, useState } from "react"
@@ -104,43 +94,22 @@ function Editor() {
 }
 ```
 
-`onSave={() => saveNow()}` makes `Cmd/Ctrl+S` (and the `save` toolbar button)
-flush immediately instead of waiting out the debounce.
+`onSave={() => saveNow()}` makes `Cmd/Ctrl+S` (and the `save` toolbar button) flush immediately instead of waiting out the debounce.
 
 ## Variations
 
-- **Save on blur only.** Drop the timer; call `flush` from the `visibilitychange`
-  / `pagehide` listeners plus the editor's blur. Fewer writes, and nothing is
-  lost as long as the tab closes cleanly.
-- **Fixed interval.** `setInterval(flush, 30_000)` — the Google Docs model.
-  Simple, predictable, less responsive.
-- **Debounce + interval ceiling.** Debounce for responsiveness, but force a
-  flush at least every N seconds so a user who never pauses still gets saved.
+- **Save on blur only.** Drop the timer; call `flush` from the `visibilitychange` / `pagehide` listeners plus the editor's blur. Fewer writes, and nothing is lost as long as the tab closes cleanly.
+- **Fixed interval.** `setInterval(flush, 30_000)` — the Google Docs model. Simple, predictable, less responsive.
+- **Debounce + interval ceiling.** Debounce for responsiveness, but force a flush at least every N seconds so a user who never pauses still gets saved.
 
 ## Conflict detection is not built in
 
-`useAutosave` above is last-write-wins: nothing here notices if the same
-document was written from somewhere else — another tab, another device, a
-backend process — between the load and this save. Stylo has no version or
-timestamp attached to `value`, so it cannot know either.
+`useAutosave` above is last-write-wins: nothing here notices if the same document was written from somewhere else — another tab, another device, a backend process — between the load and this save. Stylo has no version or timestamp attached to `value`, so it cannot know either.
 
-If that risk is real for a given host, the shape that fits without any change
-to Stylo's API is a version stamp kept alongside the persisted content —
-whatever the store already offers: an `updatedAt`, an ETag, a monotonic
-revision. Capture it when `value` is loaded, and check it again in the `save`
-function passed to `useAutosave` (or right before an `onSave` write) against
-the store's current stamp. A mismatch means the note moved underneath this
-session; how to resolve it — warn and overwrite anyway, block the save and
-prompt to reload, attempt a merge — is a product decision, same as every other
-policy in this guide. `value` / `onChange` / `onSave` already give a host
-everything it needs to intercept a save and act on that before it happens.
+If that risk is real for a given host, the shape that fits without any change to Stylo's API is a version stamp kept alongside the persisted content — whatever the store already offers: an `updatedAt`, an ETag, a monotonic revision. Capture it when `value` is loaded, and check it again in the `save` function passed to `useAutosave` (or right before an `onSave` write) against the store's current stamp. A mismatch means the note moved underneath this session; how to resolve it — warn and overwrite anyway, block the save and prompt to reload, attempt a merge — is a product decision, same as every other policy in this guide. `value` / `onChange` / `onSave` already give a host everything it needs to intercept a save and act on that before it happens.
 
 ## Gotchas
 
-- **Don't feed the debounced value back into `value`.** `value` stays driven by
-  `onChange`; the hook only reads it.
-- **Handle the async rejection.** A failed save should surface (`status:
-"error"`) and ideally retry — never swallow it silently.
-- **React StrictMode** mounts effects twice in development; the hook is
-  idempotent (the mount flush is a no-op because nothing changed), so this is
-  safe, but expect the paired console noise.
+- **Don't feed the debounced value back into `value`.** `value` stays driven by `onChange`; the hook only reads it.
+- **Handle the async rejection.** A failed save should surface (`status: "error"`) and ideally retry — never swallow it silently.
+- **React StrictMode** mounts effects twice in development; the hook is idempotent (the mount flush is a no-op because nothing changed), so this is safe, but expect the paired console noise.

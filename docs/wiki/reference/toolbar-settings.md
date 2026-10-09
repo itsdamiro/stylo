@@ -10,14 +10,9 @@ tags:
 
 # `<StyloToolbarSettings />`
 
-An opt-in component that lets the **person using the editor** choose which
-formatting-bar buttons show and in what order. It is separate from the
-[developer toolbar API](./toolbar.md): the developer defines the palette of
-available buttons in code; this component lets the end user arrange a subset of
-it.
+An opt-in component that lets the **person using the editor** choose which formatting-bar buttons show and in what order. It is separate from the [developer toolbar API](./toolbar.md): the developer defines the palette of available buttons in code; this component lets the end user arrange a subset of it.
 
-Imported from its own entry point so it never adds to a plain `@damiro/stylo`
-import:
+Imported from its own entry point so it never adds to a plain `@damiro/stylo` import:
 
 ```tsx
 import { StyloToolbarSettings } from "@damiro/stylo/toolbar-settings"
@@ -27,9 +22,7 @@ import "@damiro/stylo/styles.css"
 
 ### Extra install
 
-The reordering drag is built on `@dnd-kit`. These three are **optional peer
-dependencies** — a plain `@damiro/stylo` install skips them; add them only if
-you render this component:
+The reordering drag is built on `@dnd-kit`. These three are **optional peer dependencies** — a plain `@damiro/stylo` install skips them; add them only if you render this component:
 
 ```bash
 npm install @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
@@ -37,8 +30,7 @@ npm install @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
 
 ## Controlled, like the editor
 
-It edits the same `items` array `<Stylo>` takes. The host holds that array,
-persists it, and passes it to both:
+It edits the same `items` array `<Stylo>` takes. The host holds that array, persists it, and passes it to both:
 
 ```tsx
 import { useState } from "react"
@@ -82,9 +74,7 @@ function Editor() {
 }
 ```
 
-Stylo stores nothing and runs no persistence timer — `save` / `load` above are
-yours. See the [auto-save guide](../guides/autosave.md) for the same pattern
-applied to document content.
+Stylo stores nothing and runs no persistence timer — `save` / `load` above are yours. See the [auto-save guide](../guides/autosave.md) for the same pattern applied to document content.
 
 ## Props
 
@@ -100,19 +90,11 @@ applied to document content.
 
 Two lists:
 
-- **On the bar** — the current `items`. **Reorder** by dragging a row's ⠿
-  handle, or focus the handle and press **Space** then the **Arrow keys** then
-  **Space** to drop (`@dnd-kit`'s keyboard sensor). The ✕ button moves the row to
-  Available. Below the list: **Add separator** appends a `"|"`, **Reset to
-  default** restores the built-in set.
+- **On the bar** — the current `items`. **Reorder** by dragging a row's ⠿ handle, or focus the handle and press **Space** then the **Arrow keys** then **Space** to drop (`@dnd-kit`'s keyboard sensor). The ✕ button moves the row to Available. Below the list: **Add separator** appends a `"|"`, **Reset to default** restores the built-in set.
 - **Available** — every palette entry not already on the bar. **Add** appends it.
 
-Drag moves are announced by `@dnd-kit`'s own live region; the button actions
-(add, remove, reset) announce in a second `aria-live` region. A keyboard-only
-user can do everything.
+Drag moves are announced by `@dnd-kit`'s own live region; the button actions (add, remove, reset) announce in a second `aria-live` region. A keyboard-only user can do everything.
 
 ## Styling
 
-Structural CSS only; it reads the same `--stylo-*` tokens as the editor chrome,
-so it themes with it in light and dark. Override with your own rules on
-`className` or the component's elements.
+Structural CSS only; it reads the same `--stylo-*` tokens as the editor chrome, so it themes with it in light and dark. Override with your own rules on `className` or the component's elements.

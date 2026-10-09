@@ -10,8 +10,7 @@ tags:
 
 # `<Stylo>` props
 
-`<Stylo>` is a **controlled** component. It never holds a parsed document model —
-`value` is the Markdown string and the single source of truth.
+`<Stylo>` is a **controlled** component. It never holds a parsed document model — `value` is the Markdown string and the single source of truth.
 
 ```tsx
 import { Stylo } from "@damiro/stylo"
@@ -49,43 +48,19 @@ import "@damiro/stylo/katex.css" // only if you use math in preview
 
 ## Config applied at mount
 
-Four props feed the CodeMirror extension configuration and are read **once**,
-when the editing surface is constructed: **`inPlace`**, **`codeLanguages`**,
-**`wikiLinkSource`**, and **`tagSource`**. Changing any of them on a live
-`<Stylo>` has no effect. To
-apply a change, give the component a `key` derived from the config so React
-remounts it:
+Four props feed the CodeMirror extension configuration and are read **once**, when the editing surface is constructed: **`inPlace`**, **`codeLanguages`**, **`wikiLinkSource`**, and **`tagSource`**. Changing any of them on a live `<Stylo>` has no effect. To apply a change, give the component a `key` derived from the config so React remounts it:
 
 ```tsx
 <Stylo key={mode + JSON.stringify(inPlace)} value={doc} onChange={setDoc} inPlace={inPlace} />
 ```
 
-Everything else — `value`, `onChange`, every callback, `readOnly`,
-`placeholder`, `toolbar`, `icons`, `className`, `embedSource` — is fully reactive
-and needs no remount. `embedSource` in particular: the preview is a pure function
-of its props, so keep the function identity stable or the render pipeline rebuilds
-each frame. (On the in-place canvas `embedSource` is read once at mount, like
-`wikiLinkSource` — a later change to it is not picked up there without a remount.)
+Everything else — `value`, `onChange`, every callback, `readOnly`, `placeholder`, `toolbar`, `icons`, `className`, `embedSource` — is fully reactive and needs no remount. `embedSource` in particular: the preview is a pure function of its props, so keep the function identity stable or the render pipeline rebuilds each frame. (On the in-place canvas `embedSource` is read once at mount, like `wikiLinkSource` — a later change to it is not picked up there without a remount.)
 
-`codeLanguages` is the same asymmetric story as `embedSource`: mount-once on
-the three CodeMirror surfaces (it feeds `@codemirror/lang-markdown`'s
-extension config, listed above), but fully reactive in `preview` — it has no
-editor extension to reconstruct, so a changed `codeLanguages` colours the very
-next render. Give `<Stylo>` a `key` if a CodeMirror surface needs to pick up a
-different set live; `preview` never needs one.
+`codeLanguages` is the same asymmetric story as `embedSource`: mount-once on the three CodeMirror surfaces (it feeds `@codemirror/lang-markdown`'s extension config, listed above), but fully reactive in `preview` — it has no editor extension to reconstruct, so a changed `codeLanguages` colours the very next render. Give `<Stylo>` a `key` if a CodeMirror surface needs to pick up a different set live; `preview` never needs one.
 
-The rationale for keeping `inPlace` mount-time (rather than a
-live-reconfiguration path) is in the
-[ADR-005 config-lifecycle amendment](../../decisions/005-in-place-decoration-toggles.md).
+The rationale for keeping `inPlace` mount-time (rather than a live-reconfiguration path) is in the [ADR-005 config-lifecycle amendment](../../decisions/005-in-place-decoration-toggles.md).
 
-**A `key` remount is the wrong tool when the backing data changes often.** It
-fits `inPlace` and `codeLanguages` — configuration that rarely changes and is
-cheap to reconstruct. `wikiLinkSource`, `tagSource`, and `embedSource` are usually backed by
-something that changes on every edit or a background refetch (a note index, a
-file tree); keying on it would remount the editor on every change and drop
-cursor position, undo history, and scroll. Keep the resolver's identity stable
-instead — hold the live data in a ref and read through it from a
-`useCallback` with an empty dependency array:
+**A `key` remount is the wrong tool when the backing data changes often.** It fits `inPlace` and `codeLanguages` — configuration that rarely changes and is cheap to reconstruct. `wikiLinkSource`, `tagSource`, and `embedSource` are usually backed by something that changes on every edit or a background refetch (a note index, a file tree); keying on it would remount the editor on every change and drop cursor position, undo history, and scroll. Keep the resolver's identity stable instead — hold the live data in a ref and read through it from a `useCallback` with an empty dependency array:
 
 ```tsx
 const treeRef = useRef(tree)
@@ -98,8 +73,7 @@ return <Stylo value={doc} onChange={setDoc} wikiLinkSource={wikiLinkSource} />
 
 ## Wikilink autocomplete
 
-Pass `wikiLinkSource` to complete `[[wikilinks]]` from your own index. Stylo owns
-the trigger (an unclosed `[[…`) and the insert; the host owns the search.
+Pass `wikiLinkSource` to complete `[[wikilinks]]` from your own index. Stylo owns the trigger (an unclosed `[[…`) and the insert; the host owns the search.
 
 ```tsx
 type WikiLinkCompletion = { target: string; label?: string }
@@ -112,22 +86,15 @@ type WikiLinkCompletion = { target: string; label?: string }
 />
 ```
 
-- Called with the text typed after `[[`, before any `|`. Return matches
-  **already ordered** — `filter: false` is set, so Stylo shows them verbatim.
-  Return `[]` for no matches (the popup closes).
+- Called with the text typed after `[[`, before any `|`. Return matches **already ordered** — `filter: false` is set, so Stylo shows them verbatim. Return `[]` for no matches (the popup closes).
 - May be `async`; debouncing a network source is the host's call.
-- On accept: `[[target]]`, or `[[target|label]]` when `label` is set and differs
-  from `target`. A `]]` the user already typed is reused, not duplicated.
-- Works on `source`, `split`, and the `in-place` canvas. Inert inside fenced code
-  (it is a Markdown-language completion source). `![[embed]]` transclusion is a
-  separate prop — see [Embeds](#embeds).
-- Uses `@codemirror/autocomplete`, a regular dependency that dedupes onto the
-  host's CodeMirror copy.
+- On accept: `[[target]]`, or `[[target|label]]` when `label` is set and differs from `target`. A `]]` the user already typed is reused, not duplicated.
+- Works on `source`, `split`, and the `in-place` canvas. Inert inside fenced code (it is a Markdown-language completion source). `![[embed]]` transclusion is a separate prop — see [Embeds](#embeds).
+- Uses `@codemirror/autocomplete`, a regular dependency that dedupes onto the host's CodeMirror copy.
 
 ## Tag autocomplete
 
-Pass `tagSource` to complete `#tags` from your own index — the same
-trigger-while-typing UX as `wikiLinkSource`, retriggered on `#` instead of `[[`.
+Pass `tagSource` to complete `#tags` from your own index — the same trigger-while-typing UX as `wikiLinkSource`, retriggered on `#` instead of `[[`.
 
 ```tsx
 type TagCompletion = { tag: string }
@@ -138,31 +105,16 @@ type TagCompletion = { tag: string }
 />
 ```
 
-- Called with the text typed after `#`. Return matches **already ordered** —
-  `filter: false` is set, so Stylo shows them verbatim. Return `[]` for no
-  matches (the popup closes).
+- Called with the text typed after `#`. Return matches **already ordered** — `filter: false` is set, so Stylo shows them verbatim. Return `[]` for no matches (the popup closes).
 - May be `async`; debouncing a network source is the host's call.
-- On accept: the query is replaced with `tag` — no closing delimiter, unlike
-  `[[wikilink]]`. No `label`/alias field either: tags have no `#tag|alias`
-  syntax.
-- Never fires on a `# Heading` marker — the space right after `#` breaks the
-  match before any heading text is typed — or mid-word (`word#word`, a URL
-  fragment such as `page.md#section`), since the trigger requires `#` to sit at
-  the start of a line or after whitespace. Also skips a `#` immediately
-  followed by a digit (`#1234`), which reads as an issue or anchor reference,
-  not a tag.
-- Works on `source`, `split`, and the `in-place` canvas. Inert inside fenced
-  code, for the same reason `wikiLinkSource` is.
-- Shares the `autocompletion()` extension and its tooltip styling with
-  `wikiLinkSource` — no separate CSS to theme.
+- On accept: the query is replaced with `tag` — no closing delimiter, unlike `[[wikilink]]`. No `label`/alias field either: tags have no `#tag|alias` syntax.
+- Never fires on a `# Heading` marker — the space right after `#` breaks the match before any heading text is typed — or mid-word (`word#word`, a URL fragment such as `page.md#section`), since the trigger requires `#` to sit at the start of a line or after whitespace. Also skips a `#` immediately followed by a digit (`#1234`), which reads as an issue or anchor reference, not a tag.
+- Works on `source`, `split`, and the `in-place` canvas. Inert inside fenced code, for the same reason `wikiLinkSource` is.
+- Shares the `autocompletion()` extension and its tooltip styling with `wikiLinkSource` — no separate CSS to theme.
 
 ## Embeds
 
-`![[ref]]` is Obsidian's transclusion syntax — pull another note, a heading, a
-block, or an image in where the `![[…]]` sits. Stylo has no vault, so it cannot
-resolve `ref` on its own (the same split as `[[wikilinks]]`: Stylo detects,
-the host resolves). Pass **`embedSource`** and it is called with the raw
-reference; return a React node to render in the embed's place.
+`![[ref]]` is Obsidian's transclusion syntax — pull another note, a heading, a block, or an image in where the `![[…]]` sits. Stylo has no vault, so it cannot resolve `ref` on its own (the same split as `[[wikilinks]]`: Stylo detects, the host resolves). Pass **`embedSource`** and it is called with the raw reference; return a React node to render in the embed's place.
 
 ```tsx
 ;<Stylo
@@ -179,52 +131,17 @@ reference; return a React node to render in the embed's place.
 />
 ```
 
-- The **raw reference** goes to `embedSource` verbatim — `#heading`, `#^blockid`,
-  and `|size` suffixes intact. Stylo does not parse them (in an embed `|` is a
-  size hint, not a label, so `WIKILINK_PATTERN` does not apply). Parse what you
-  need.
-- May be `async` (a vault lookup, a `fetch`). While it resolves — and if it
-  rejects or resolves to `null` — the literal `![[ref]]` text stands in, so a
-  reference is never silently dropped.
-- **Resolutions are cached by `ref`** (per `embedSource` identity), so an embed
-  scrolled out of the canvas and back is not re-fetched and does not flash. The
-  cache has no TTL and never re-checks a settled entry on its own — if the
-  content behind a reference changes while the editor is open, call
-  **`handle.invalidateEmbed(ref)`** (see [Ref — imperative handle](#ref--imperative-handle))
-  to drop the stale entry; any embed for that `ref` currently on screen
-  re-resolves immediately. Rejections are never cached, so those already retry
-  on their own. See
-  [ADR-011](../../decisions/011-embed-cache-invalidation.md).
-- Works on **`preview`, `split`, and the in-place canvas** (ADR-009). On the
-  canvas the resolved node is portalled into the rendered line; put the caret on
-  the line to reveal the raw `![[ref]]` for editing. Interactive host content
-  keeps its own clicks — click the slot's own margin (or a pending / failed
-  embed's literal text) to reveal instead. Toggle it with
-  `inPlace={{ decorations: { embeds: false } }}`.
-- A `![[…]]` **alone on its line** renders as a **block**; one **mid-sentence**
-  renders **inline**, flowing with the surrounding text. Return phrasing content
-  (a `<span>`, an `<img>`, a chip — not a block `<div>`) for the inline case, or
-  the browser nests block inside inline. `![[…]]` inside inline or fenced code
-  stays literal, and — on the **in-place canvas only** — so does a `![[…]]`
-  inside a table cell (that surface is for editing tabular text; `preview` /
-  `split` transclude in cells normally).
-- Block renders into `<div class="stylo-embed"><div class="stylo-embed-content">…`
-  (`preview` / `split`) or `<div class="cm-inplace-embed">…` (canvas); inline
-  into `<span class="stylo-embed"><span class="stylo-embed-content
-stylo-embed-inline">…` (`preview` / `split`) or `<span
-class="cm-inplace-embed-inline">…` (canvas). `.stylo-embed-content`,
-  `.stylo-embed-inline`, and `--stylo-embed-accent` are the shared override
-  points; zero the padding and border to drop the block frame.
-- Off entirely when `embedSource` is omitted — `![[ref]]` then renders as it did
-  before (the leading `!` as text, `[[ref]]` as a wikilink).
+- The **raw reference** goes to `embedSource` verbatim — `#heading`, `#^blockid`, and `|size` suffixes intact. Stylo does not parse them (in an embed `|` is a size hint, not a label, so `WIKILINK_PATTERN` does not apply). Parse what you need.
+- May be `async` (a vault lookup, a `fetch`). While it resolves — and if it rejects or resolves to `null` — the literal `![[ref]]` text stands in, so a reference is never silently dropped.
+- **Resolutions are cached by `ref`** (per `embedSource` identity), so an embed scrolled out of the canvas and back is not re-fetched and does not flash. The cache has no TTL and never re-checks a settled entry on its own — if the content behind a reference changes while the editor is open, call **`handle.invalidateEmbed(ref)`** (see [Ref — imperative handle](#ref--imperative-handle)) to drop the stale entry; any embed for that `ref` currently on screen re-resolves immediately. Rejections are never cached, so those already retry on their own. See [ADR-011](../../decisions/011-embed-cache-invalidation.md).
+- Works on **`preview`, `split`, and the in-place canvas** (ADR-009). On the canvas the resolved node is portalled into the rendered line; put the caret on the line to reveal the raw `![[ref]]` for editing. Interactive host content keeps its own clicks — click the slot's own margin (or a pending / failed embed's literal text) to reveal instead. Toggle it with `inPlace={{ decorations: { embeds: false } }}`.
+- A `![[…]]` **alone on its line** renders as a **block**; one **mid-sentence** renders **inline**, flowing with the surrounding text. Return phrasing content (a `<span>`, an `<img>`, a chip — not a block `<div>`) for the inline case, or the browser nests block inside inline. `![[…]]` inside inline or fenced code stays literal, and — on the **in-place canvas only** — so does a `![[…]]` inside a table cell (that surface is for editing tabular text; `preview` / `split` transclude in cells normally).
+- Block renders into `<div class="stylo-embed"><div class="stylo-embed-content">…` (`preview` / `split`) or `<div class="cm-inplace-embed">…` (canvas); inline into `<span class="stylo-embed"><span class="stylo-embed-content stylo-embed-inline">…` (`preview` / `split`) or `<span class="cm-inplace-embed-inline">…` (canvas). `.stylo-embed-content`, `.stylo-embed-inline`, and `--stylo-embed-accent` are the shared override points; zero the padding and border to drop the block frame.
+- Off entirely when `embedSource` is omitted — `![[ref]]` then renders as it did before (the leading `!` as text, `[[ref]]` as a wikilink).
 
 ## Clickable task checkboxes
 
-`remark-gfm` renders a `- [ ]` / `- [x]` task-list item as an `<input
-type="checkbox" disabled>` — a faithful, read-only render of the source, not
-something a host can click. Pass **`onTaskToggle`** and stylo drops the
-`disabled` attribute for that render pass and reports a click instead of
-silently doing nothing:
+`remark-gfm` renders a `- [ ]` / `- [x]` task-list item as an `<input type="checkbox" disabled>` — a faithful, read-only render of the source, not something a host can click. Pass **`onTaskToggle`** and stylo drops the `disabled` attribute for that render pass and reports a click instead of silently doing nothing:
 
 ```tsx
 type TaskToggleInfo = { start: number; end: number; checked: boolean }
@@ -237,82 +154,44 @@ type TaskToggleInfo = { start: number; end: number; checked: boolean }
 />
 ```
 
-- `start` / `end` bracket the marker itself in `value` (`end - start === 3`) —
-  splice in `"[x]"` or `"[ ]"` and hand the result to your own `onChange`, the
-  same division of labour `onWikiLinkClick` and `embedSource` already use.
-  Stylo never touches `value` on its own; it only stops disabling the box and
-  tells you what changed.
-- `checked` is the box's **new** state (what to write), not what it was before
-  the click.
-- The offsets come from `remark-gfm`'s own parse position for that list item,
-  not from counting checkboxes in the rendered DOM against a regex scan of
-  `value` — a DOM-order/regex-order correlation silently desyncs the moment an
-  item's own text could itself be misread as another marker, or a
-  multi-paragraph item shifts the two orderings out of step. Stylo already has
-  the real position; it uses it.
-- **`preview`-only, by construction** — `in-place` and `source` have no
-  rendered checkbox element to click; a task marker there is plain source text
-  under the caret already.
-- Off by default: every checkbox stays `disabled` exactly as before until a
-  host opts in. Fully reactive, like `frontmatter`.
+- `start` / `end` bracket the marker itself in `value` (`end - start === 3`) — splice in `"[x]"` or `"[ ]"` and hand the result to your own `onChange`, the same division of labour `onWikiLinkClick` and `embedSource` already use. Stylo never touches `value` on its own; it only stops disabling the box and tells you what changed.
+- `checked` is the box's **new** state (what to write), not what it was before the click.
+- The offsets come from `remark-gfm`'s own parse position for that list item, not from counting checkboxes in the rendered DOM against a regex scan of `value` — a DOM-order/regex-order correlation silently desyncs the moment an item's own text could itself be misread as another marker, or a multi-paragraph item shifts the two orderings out of step. Stylo already has the real position; it uses it.
+- **`preview`-only, by construction** — `in-place` and `source` have no rendered checkbox element to click; a task marker there is plain source text under the caret already.
+- Off by default: every checkbox stays `disabled` exactly as before until a host opts in. Fully reactive, like `frontmatter`.
 
-See [the checkbox-toggle journal entry](../../journal/2026-09/2026-09-13_preview-task-checkboxes.md)
-for the DOM-position mechanism this is built on.
+See [the checkbox-toggle journal entry](../../journal/2026-09/2026-09-13_preview-task-checkboxes.md) for the DOM-position mechanism this is built on.
 
 ## Host extensions
 
-`extensions` is the supported seam for drawing in the document or its margin —
-decorations, widgets, gutters, tooltips, keymaps, state fields, `@codemirror/lint`.
-It replaces appending to `getView()` after mount.
+`extensions` is the supported seam for drawing in the document or its margin — decorations, widgets, gutters, tooltips, keymaps, state fields, `@codemirror/lint`. It replaces appending to `getView()` after mount.
 
-- Appended **last**, after Stylo's own extensions, on `source`, `in-place`, and
-  the source pane of `split`. A no-op in `preview` (no editor), like `getView()`.
-- **Reactive.** A changed array reconfigures the live view in place — no remount,
-  so the cursor, undo history, and scroll position survive. Elements are compared
-  shallowly; pass a stable identity (`useMemo`) when nothing changed.
+- Appended **last**, after Stylo's own extensions, on `source`, `in-place`, and the source pane of `split`. A no-op in `preview` (no editor), like `getView()`.
+- **Reactive.** A changed array reconfigures the live view in place — no remount, so the cursor, undo history, and scroll position survive. Elements are compared shallowly; pass a stable identity (`useMemo`) when nothing changed.
 - Present from the first paint, and re-applied on a remount (a `key` change).
-- A host `gutter()` is visible and themed with Stylo's tokens. With none, the
-  editor looks exactly as before.
+- A host `gutter()` is visible and themed with Stylo's tokens. With none, the editor looks exactly as before.
 
 See [Extending Stylo with CodeMirror extensions](../guides/host-extensions.md).
 
 ## Canvas header
 
-`toolbar.render` wraps content _before_ the whole editing surface — useful for
-chrome that sits above everything, but there's no way from there to land
-content _inside_ the canvas, below CodeMirror's own top panels (the find /
-replace panel) and above the document body. `canvasHeader` reaches that seam:
+`toolbar.render` wraps content _before_ the whole editing surface — useful for chrome that sits above everything, but there's no way from there to land content _inside_ the canvas, below CodeMirror's own top panels (the find / replace panel) and above the document body. `canvasHeader` reaches that seam:
 
 ```tsx
 <Stylo value={doc} onChange={setDoc} canvasHeader={({ view }) => <FrontmatterCard view={view} />} />
 ```
 
-- Renders on `source`, `in-place`, and the source pane of `split`; never
-  `preview` (there is no CodeMirror surface to dock into).
-- Docks _under_ the find / replace panel, so it never moves when the panel
-  opens or closes — only the document body shifts down to make room. Compare
-  `toolbar`, which always sits above the panel regardless of what a
-  `toolbar.render` wrapper puts around it.
-- Built on the same `showPanel` mechanism as the search panel itself (ordered
-  after it), so host content lives in the same coordinate system, not a
-  separately positioned overlay.
-- `view` is the live `EditorView` once the surface has mounted. Read once, at
-  mount — like `inPlace` and `wikiLinkSource`, a changed function is not
-  picked up without a remount, though the function's own closures (state,
-  props it reads) are of course free to change on every call.
-- No default styling — the panel is a plain, unstyled container. Style
-  whatever `canvasHeader` returns yourself.
+- Renders on `source`, `in-place`, and the source pane of `split`; never `preview` (there is no CodeMirror surface to dock into).
+- Docks _under_ the find / replace panel, so it never moves when the panel opens or closes — only the document body shifts down to make room. Compare `toolbar`, which always sits above the panel regardless of what a `toolbar.render` wrapper puts around it.
+- Built on the same `showPanel` mechanism as the search panel itself (ordered after it), so host content lives in the same coordinate system, not a separately positioned overlay.
+- `view` is the live `EditorView` once the surface has mounted. Read once, at mount — like `inPlace` and `wikiLinkSource`, a changed function is not picked up without a remount, though the function's own closures (state, props it reads) are of course free to change on every call.
+- No default styling — the panel is a plain, unstyled container. Style whatever `canvasHeader` returns yourself.
 
-See [ADR-010](../../decisions/010-canvas-header-panel.md)
-for the reasoning behind the seam and how it composes with `toolbar.render`.
+See [ADR-010](../../decisions/010-canvas-header-panel.md) for the reasoning behind the seam and how it composes with `toolbar.render`.
 
 ## Resolver errors
 
-`embedSource`, `wikiLinkSource`, and `tagSource` fail quietly by design — a
-rejected `embedSource` leaves the literal `![[ref]]`, a rejected
-`wikiLinkSource` or `tagSource` shows no completions. Pass
-**`onResolveError(error, info)`** to observe those failures (log them, show a
-toast) without changing the fallback:
+`embedSource`, `wikiLinkSource`, and `tagSource` fail quietly by design — a rejected `embedSource` leaves the literal `![[ref]]`, a rejected `wikiLinkSource` or `tagSource` shows no completions. Pass **`onResolveError(error, info)`** to observe those failures (log them, show a toast) without changing the fallback:
 
 ```tsx
 <Stylo
@@ -326,16 +205,11 @@ toast) without changing the fallback:
 />
 ```
 
-`info.source` is `"embedSource"`, `"wikiLinkSource"`, or `"tagSource"`;
-`info.input` is the reference or query it was called with. A resolver that
-returns `null` has not failed — that is the "keep it literal" result — and
-does not fire this. The callback is reactive; swap it freely.
+`info.source` is `"embedSource"`, `"wikiLinkSource"`, or `"tagSource"`; `info.input` is the reference or query it was called with. A resolver that returns `null` has not failed — that is the "keep it literal" result — and does not fire this. The callback is reactive; swap it freely.
 
 ## Ref — imperative handle
 
-`<Stylo>` forwards a `ref` to a small imperative handle (`StyloHandle`, exported)
-for the things a controlled `value` cannot express — focus, navigation, and
-inserting at the caret:
+`<Stylo>` forwards a `ref` to a small imperative handle (`StyloHandle`, exported) for the things a controlled `value` cannot express — focus, navigation, and inserting at the caret:
 
 ```tsx
 import { Stylo, type StyloHandle } from "@damiro/stylo"
@@ -356,15 +230,11 @@ editor.current?.insertAtCursor("![](…)") //     drop text in at the caret
 | `getView()`             | `EditorView \| null` | The underlying CodeMirror view. An escape hatch — **not** covered by semver; the other four are.                                                                                       |
 | `invalidateEmbed(ref?)` | `void`               | Drop the cached `embedSource` result for `ref` — or, with no argument, every cached embed — so the next render re-resolves it. See [Embeds](#embeds). No-op without `embedSource` set. |
 
-`focus()`, `scrollToHeading()`, `insertAtCursor()`, and `getView()` are inert
-(`null` / `false` / no-op) in `preview` mode and before the surface has mounted —
-there is no editor then. `invalidateEmbed()` is the exception: it targets the
-embed cache, not the editor, so it works in every mode, `preview` included.
+`focus()`, `scrollToHeading()`, `insertAtCursor()`, and `getView()` are inert (`null` / `false` / no-op) in `preview` mode and before the surface has mounted — there is no editor then. `invalidateEmbed()` is the exception: it targets the embed cache, not the editor, so it works in every mode, `preview` included.
 
 ## Styling tokens
 
-Stylo ships structural CSS only. The palette comes from twelve CSS custom
-properties you can set on `.stylo` or any ancestor:
+Stylo ships structural CSS only. The palette comes from twelve CSS custom properties you can set on `.stylo` or any ancestor:
 
 | Token                      | Default           | Role                                             |
 | -------------------------- | ----------------- | ------------------------------------------------ |
@@ -381,51 +251,21 @@ properties you can set on `.stylo` or any ancestor:
 | `--stylo-font-family`      | system sans stack | prose font — in-place canvas, sticky toolbar     |
 | `--stylo-font-family-mono` | `ui-monospace, …` | code font — source mode, code spans, `pre`       |
 
-Defaults follow shadcn/ui's neutral conventions as a visual reference; no
-Tailwind or shadcn code is bundled.
+Defaults follow shadcn/ui's neutral conventions as a visual reference; no Tailwind or shadcn code is bundled.
 
-`--stylo-preview-code-white-space` (default `pre-wrap`) controls only
-`preview`'s fenced code blocks, wrapping long lines the same way the in-place
-canvas already does. Set it to `pre` to restore the horizontal-scroll
-convention most other markdown renderers use instead. It is `preview`-only by
-necessity, not by choice: in-place's wrapping comes from one document-wide
-CodeMirror extension with no per-construct control, so there is no matching
-token to expose there — see ADR-002 §3's surface-parity amendment.
+`--stylo-preview-code-white-space` (default `pre-wrap`) controls only `preview`'s fenced code blocks, wrapping long lines the same way the in-place canvas already does. Set it to `pre` to restore the horizontal-scroll convention most other markdown renderers use instead. It is `preview`-only by necessity, not by choice: in-place's wrapping comes from one document-wide CodeMirror extension with no per-construct control, so there is no matching token to expose there — see ADR-002 §3's surface-parity amendment.
 
-`--stylo-surface-floating` is a concrete colour, not an alias of `--stylo-bg`:
-setting `--stylo-bg: transparent` to embed the editor in an existing card leaves
-the context menu, selection bar, URL input, and link-hover tooltip opaque. Set
-it too when you theme `--stylo-bg` to a non-default colour. `--stylo-ring` is the
-focus ring only — the in-place menu's active row follows `--stylo-accent`.
+`--stylo-surface-floating` is a concrete colour, not an alias of `--stylo-bg`: setting `--stylo-bg: transparent` to embed the editor in an existing card leaves the context menu, selection bar, URL input, and link-hover tooltip opaque. Set it too when you theme `--stylo-bg` to a non-default colour. `--stylo-ring` is the focus ring only — the in-place menu's active row follows `--stylo-accent`.
 
-`--stylo-radius`, `--stylo-font-size`, `--stylo-font-family`, and
-`--stylo-font-family-mono` are not colours: one value each serves both themes, so
-they live only in the light block. `--stylo-font-size` sizes every surface — the
-in-place canvas, `source`, and `preview`'s whole reading scale all derive from it
-(`preview`'s own scale is `em`-based off it, so headings, lists, and spacing
-follow automatically — see ADR-002 §3's 2026-09-13 amendment). `--stylo-font-family`
-is narrower: it covers the editing prose surface and the fixed-position sticky
-toolbar only — `preview` deliberately keeps inheriting its prose font from
-wherever you mount `<Stylo>`, so a rendered document still reads in the page's
-own typography. The two tokens diverge on purpose; don't assume one implies the
-other's reach.
+`--stylo-radius`, `--stylo-font-size`, `--stylo-font-family`, and `--stylo-font-family-mono` are not colours: one value each serves both themes, so they live only in the light block. `--stylo-font-size` sizes every surface — the in-place canvas, `source`, and `preview`'s whole reading scale all derive from it (`preview`'s own scale is `em`-based off it, so headings, lists, and spacing follow automatically — see ADR-002 §3's 2026-09-13 amendment). `--stylo-font-family` is narrower: it covers the editing prose surface and the fixed-position sticky toolbar only — `preview` deliberately keeps inheriting its prose font from wherever you mount `<Stylo>`, so a rendered document still reads in the page's own typography. The two tokens diverge on purpose; don't assume one implies the other's reach.
 
 ### Dark mode
 
-Every colour token above (and the table, callout, and syntax tokens below) ships
-a **dark value as well as a light one**. The dark set activates under a `.dark`
-or `[data-theme="dark"]` ancestor — or the same marker on `.stylo` itself — the
-convention `next-themes` and shadcn use; Stylo does not switch on
-`prefers-color-scheme`, so your theme layer toggles the class. The dark rule is
-`:where(...)`-wrapped, so your own override on `.stylo` still wins at equal
-specificity. `color-scheme` is set for both themes. Override a token and you are
-responsible for both states.
+Every colour token above (and the table, callout, and syntax tokens below) ships a **dark value as well as a light one**. The dark set activates under a `.dark` or `[data-theme="dark"]` ancestor — or the same marker on `.stylo` itself — the convention `next-themes` and shadcn use; Stylo does not switch on `prefers-color-scheme`, so your theme layer toggles the class. The dark rule is `:where(...)`-wrapped, so your own override on `.stylo` still wins at equal specificity. `color-scheme` is set for both themes. Override a token and you are responsible for both states.
 
 ### Table and guide tokens
 
-Rendered tables (in-place **and** preview) and the in-place nested-list indent
-guides read a few extra tokens. Each defaults to a value derived from the palette
-above, so tables look the same until you override one.
+Rendered tables (in-place **and** preview) and the in-place nested-list indent guides read a few extra tokens. Each defaults to a value derived from the palette above, so tables look the same until you override one.
 
 | Token                     | Default                         | Role                                             |
 | ------------------------- | ------------------------------- | ------------------------------------------------ |
@@ -439,18 +279,11 @@ above, so tables look the same until you override one.
 | `--stylo-callout-danger`  | `#ef4444`                       | callout accent — `failure` / `danger` bucket     |
 | `--stylo-callout-example` | `#a855f7`                       | callout accent — `example` / `quote` bucket      |
 
-Each callout bucket sets `--stylo-callout-accent` from its token above; override
-that per type instead (`.stylo-callout-note { --stylo-callout-accent: … }`) for
-finer control.
+Each callout bucket sets `--stylo-callout-accent` from its token above; override that per type instead (`.stylo-callout-note { --stylo-callout-accent: … }`) for finer control.
 
 ### Syntax colours
 
-Fenced code is highlighted through a token palette in the same style — set these
-on `.stylo` or any ancestor. They only take effect where a real language grammar
-runs, on every surface that has `codeLanguages` set — the CodeMirror surfaces and
-`preview` alike, via the same grammars and the same colour mapping (see
-[Fenced-code highlighting](./code-languages.md)); Markdown structure is styled
-separately.
+Fenced code is highlighted through a token palette in the same style — set these on `.stylo` or any ancestor. They only take effect where a real language grammar runs, on every surface that has `codeLanguages` set — the CodeMirror surfaces and `preview` alike, via the same grammars and the same colour mapping (see [Fenced-code highlighting](./code-languages.md)); Markdown structure is styled separately.
 
 | Token                     | Default   | Role                               |
 | ------------------------- | --------- | ---------------------------------- |
@@ -466,15 +299,11 @@ separately.
 | `--stylo-syntax-tag`      | `#cf222e` | markup tag names                   |
 | `--stylo-syntax-invalid`  | `#dc2626` | parse errors                       |
 
-Variable names, operators, and punctuation are left as body text on purpose, to
-keep the block calm.
+Variable names, operators, and punctuation are left as body text on purpose, to keep the block calm.
 
 ## Frontmatter in preview
 
-With `frontmatter="code"`, the raw `---` block renders as
-`<div class="stylo-frontmatter">` above the body. That class is plain (not
-scoped), so your own stylesheet — imported after `@damiro/stylo/styles.css` —
-overrides it at equal specificity:
+With `frontmatter="code"`, the raw `---` block renders as `<div class="stylo-frontmatter">` above the body. That class is plain (not scoped), so your own stylesheet — imported after `@damiro/stylo/styles.css` — overrides it at equal specificity:
 
 ```css
 /* restyle the block */
@@ -492,18 +321,14 @@ overrides it at equal specificity:
 }
 ```
 
-The default is a recessed, monospace block with an uppercase `Frontmatter`
-label.
+The default is a recessed, monospace block with an uppercase `Frontmatter` label.
 
 ## Parsing frontmatter
 
-Stylo bundles no YAML parser — parsing is a policy (schema, dates, tags,
-multi-document) that belongs to your app. It gives you the raw block two ways:
+Stylo bundles no YAML parser — parsing is a policy (schema, dates, tags, multi-document) that belongs to your app. It gives you the raw block two ways:
 
-- **`onFrontmatter(raw)`** — fired on mount and on every change to the block,
-  with the text between the fences or `null`. Best for a live "properties" panel.
-- **`splitFrontmatter(md)`** — exported from the package; returns
-  `{ frontmatter, body } | null` synchronously from any string.
+- **`onFrontmatter(raw)`** — fired on mount and on every change to the block, with the text between the fences or `null`. Best for a live "properties" panel.
+- **`splitFrontmatter(md)`** — exported from the package; returns `{ frontmatter, body } | null` synchronously from any string.
 
 ```tsx
 import { Stylo, splitFrontmatter } from "@damiro/stylo"
@@ -521,17 +346,14 @@ const [meta, setMeta] = useState<Record<string, unknown>>({})
 const { frontmatter } = splitFrontmatter(doc) ?? { frontmatter: "" }
 ```
 
-A rendered key/value panel and a built-in parser stay deferred — see the
-[ADR-001 amendment](../../journal/2026-09/2026-09-04_frontmatter-callback.md).
+A rendered key/value panel and a built-in parser stay deferred — see the [ADR-001 amendment](../../journal/2026-09/2026-09-04_frontmatter-callback.md).
 
 ## Math (preview)
 
-`$…$` and `$$…$$` are rendered with KaTeX. KaTeX's stylesheet and fonts are
-**not** in `@damiro/stylo/styles.css` — import them once yourself:
+`$…$` and `$$…$$` are rendered with KaTeX. KaTeX's stylesheet and fonts are **not** in `@damiro/stylo/styles.css` — import them once yourself:
 
 ```ts
 import "@damiro/stylo/katex.css" // a re-export of katex/dist/katex.min.css
 ```
 
-The rationale (engine choice, why the stylesheet is separate) is in
-[ADR-003](../../decisions/003-katex-math-rendering.md).
+The rationale (engine choice, why the stylesheet is separate) is in [ADR-003](../../decisions/003-katex-math-rendering.md).

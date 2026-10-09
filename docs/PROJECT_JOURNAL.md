@@ -10,8 +10,7 @@ tags:
 
 # Stylo — Project Journal
 
-Master index for the engineering journal (`docs/journal/YYYY-MM/`). Chronological
-milestones, newest first. Decision records live in `docs/decisions/`.
+Master index for the engineering journal (`docs/journal/YYYY-MM/`). Chronological milestones, newest first. Decision records live in `docs/decisions/`.
 
 ## Architectural Decision Records
 
