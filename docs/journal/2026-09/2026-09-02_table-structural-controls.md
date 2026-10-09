@@ -15,7 +15,7 @@ tags:
 `inPlace.table: "cells"` could edit cell text and append a row with Tab / Enter,
 but not restructure: no add / remove column, no remove row, no alignment. That
 was the last deferred item in
-[ADR-006](./2026-09-02_adr-006-interactive-table-editing.md); this closes it, so
+[ADR-006](../../decisions/006-interactive-table-editing.md); this closes it, so
 `"cells"` mode is now a complete table editor.
 
 ## What was built

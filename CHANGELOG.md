@@ -113,7 +113,7 @@ Notable changes to Stylo. The format follows
   undo history, and scroll position survive. Compared shallowly, so pass a
   stable identity. Use it for decorations, widgets, gutters, lint, and
   keymaps instead of appending to `getView()` after mount. See
-  [ADR-012](./docs/journal/2026-10/2026-10-04_adr-012-host-extensions-prop.md).
+  [ADR-012](./docs/decisions/012-host-extensions-prop.md).
 
 ### Changed
 
@@ -136,7 +136,7 @@ Notable changes to Stylo. The format follows
   dropped ref re-resolves immediately rather than waiting for a remount.
   Works in every mode, including `preview` — it targets the cache, not the
   editor. A no-op without `embedSource` set. See
-  [ADR-011](./docs/journal/2026-09/2026-09-17_adr-011-embed-cache-invalidation.md).
+  [ADR-011](./docs/decisions/011-embed-cache-invalidation.md).
 
 ### Fixed
 
@@ -466,7 +466,7 @@ No code changes — docs and test coverage only.
   caret on the line to reveal the raw source; interactive host content keeps its
   own clicks. New `inPlace={{ decorations: { embeds: false } }}` toggle. On the
   canvas `embedSource` is read once at mount, like `wikiLinkSource`. See
-  [ADR-009](docs/journal/2026-09/2026-09-11_adr-009-react-nodes-in-the-in-place-canvas.md).
+  [ADR-009](./docs/decisions/009-react-nodes-in-the-in-place-canvas.md).
 - New style hook `.cm-inplace-embed` (the canvas slot); `.stylo-embed-content`
   and `--stylo-embed-accent` are shared with the `preview` embed.
 

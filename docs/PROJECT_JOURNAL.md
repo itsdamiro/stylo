@@ -1,5 +1,5 @@
 ---
-title: "Stylo — Project Journal & ADR Index"
+title: "Stylo — Project Journal"
 created: 2026-09-01
 type: journal
 parent: index
@@ -8,27 +8,14 @@ tags:
   - engineering/standard
 ---
 
-# Stylo — Project Journal & ADR Index
+# Stylo — Project Journal
 
 Master index for the engineering journal (`docs/journal/YYYY-MM/`). Chronological
-milestones and Architectural Decision Records, newest first.
+milestones, newest first. Decision records live in `docs/decisions/`.
 
 ## Architectural Decision Records
 
-| ADR                                                                                   | Title                                                                 | Status   | Date       |
-| ------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | -------- | ---------- |
-| [ADR-012](./journal/2026-10/2026-10-04_adr-012-host-extensions-prop.md)               | A host `extensions` prop, and gutters a host can show                 | Accepted | 2026-10-04 |
-| [ADR-011](./journal/2026-09/2026-09-17_adr-011-embed-cache-invalidation.md)           | Embed cache invalidation: a host-triggered `invalidateEmbed`          | Accepted | 2026-09-17 |
-| [ADR-010](./journal/2026-09/2026-09-12_adr-010-canvas-header-panel.md)                | A canvas header panel, docked under find/replace                      | Accepted | 2026-09-12 |
-| [ADR-009](./journal/2026-09/2026-09-11_adr-009-react-nodes-in-the-in-place-canvas.md) | Rendering host React nodes in the in-place canvas                     | Accepted | 2026-09-11 |
-| [ADR-008](./journal/2026-09/2026-09-04_adr-008-codemirror-peer-dependency.md)         | CodeMirror and Lezer as peer dependencies                             | Accepted | 2026-09-04 |
-| [ADR-007](./journal/2026-09/2026-09-03_adr-007-seamless-in-place.md)                  | Seamless in-place: Markdown markers never shown                       | Accepted | 2026-09-03 |
-| [ADR-006](./journal/2026-09/2026-09-02_adr-006-interactive-table-editing.md)          | Interactive rendered-table editing                                    | Accepted | 2026-09-02 |
-| [ADR-005](./journal/2026-09/2026-09-01_adr-005-in-place-decoration-toggles.md)        | In-place decoration toggles                                           | Accepted | 2026-09-01 |
-| [ADR-004](./journal/2026-09/2026-09-01_adr-004-in-place-decoration-canvas.md)         | In-place decoration canvas                                            | Accepted | 2026-09-01 |
-| [ADR-003](./journal/2026-09/2026-09-01_adr-003-katex-math-rendering.md)               | Math rendering engine and KaTeX asset delivery                        | Accepted | 2026-09-01 |
-| [ADR-002](./journal/2026-09/2026-09-01_adr-002-editor-ux-and-customization.md)        | Editor UX, Customization API, and Design System                       | Accepted | 2026-09-01 |
-| [ADR-001](./journal/2026-09/2026-09-01_adr-001-editor-architecture.md)                | Editor architecture: compose from primitives, plain text is canonical | Accepted | 2026-09-01 |
+The records moved to [`docs/decisions/`](./decisions/README.md) (ADR-013, 2026-10-09), which holds the index. New decisions are written there.
 
 ## Milestones
 
@@ -39,7 +26,7 @@ milestones and Architectural Decision Records, newest first.
 | 2026-10-05 | [Host marks inside table cells: `cellMarks`, and a selection `rect` for host items](./journal/2026-10/2026-10-05_host-marks-inside-table-cells.md)                                      |
 | 2026-10-05 | [Host items in the right-click menu: `contextMenu.items` and a `host` group](./journal/2026-10/2026-10-05_host-items-in-the-context-menu.md)                                            |
 | 2026-10-04 | [Toolbar overflow menu: `overflow: "menu"` folds buttons into a `⋯` menu](./journal/2026-10/2026-10-04_toolbar-overflow-menu.md)                                                        |
-| 2026-10-04 | [ADR-012 — a host `extensions` prop, and gutters a host can show](./journal/2026-10/2026-10-04_adr-012-host-extensions-prop.md)                                                         |
+| 2026-10-04 | [ADR-012 — a host `extensions` prop, and gutters a host can show](./decisions/012-host-extensions-prop.md)                                                                              |
 | 2026-09-17 | [Codebase review remediation: all five tiers closed](./journal/2026-09/2026-09-17_full-codebase-review-remediation.md)                                                                  |
 | 2026-09-17 | [Full codebase review — findings and remediation order](./journal/2026-09/2026-09-17_full-codebase-review-findings.md)                                                                  |
 | 2026-09-14 | [Audit: is display-overriding-native-layout a recurring footgun beyond the table fixes?](./journal/2026-09/2026-09-14_table-layout-footgun-audit.md)                                    |

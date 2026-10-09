@@ -12,7 +12,7 @@ tags:
 
 ## Context
 
-[ADR-001](./2026-09-01_adr-001-editor-architecture.md) named `@codemirror/lang-markdown`
+[ADR-001](../../decisions/001-editor-architecture.md) named `@codemirror/lang-markdown`
 **with `@codemirror/language-data`** as the editing surface, "for fenced-code
 sub-highlighting" — passing the full `languages` array to `markdown({ codeLanguages })`
 so a fenced block like ` ```python ` is tokenised with the Python grammar.

@@ -12,7 +12,7 @@ tags:
 
 Two fixes to the [in-place canvas](./2026-09-01_in-place-canvas.md), both about
 the caret landing where the pointer actually was. Follows the customization API
-pass ([ADR-005](./2026-09-01_adr-005-in-place-decoration-toggles.md)); no scope
+pass ([ADR-005](../../decisions/005-in-place-decoration-toggles.md)); no scope
 change and no new prop.
 
 ## Symptom

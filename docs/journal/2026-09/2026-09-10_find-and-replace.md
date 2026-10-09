@@ -99,7 +99,7 @@ the finished panel shipped as `v0.10.1` instead.
 ## Dependency
 
 `@codemirror/search` is a regular `dependency`, not a tenth peer — see the
-[ADR-002 §2 amendment](./2026-09-01_adr-002-editor-ux-and-customization.md) for
+[ADR-002 §2 amendment](../../decisions/002-editor-ux-and-customization.md) for
 the reasoning (ADR-008's peer rule is about the CodeMirror core's weight and
 shared `EditorState` identity; neither applies here). The build's
 `/^@codemirror\//` external rule still catches it, so the bundle is unchanged

@@ -10,7 +10,7 @@ tags:
 
 # Toolbar groups wrap as a unit; the search button shows pressed
 
-Two small fixes made alongside [ADR-010](./2026-09-12_adr-010-canvas-header-panel.md),
+Two small fixes made alongside [ADR-010](../../decisions/010-canvas-header-panel.md),
 in the same area of the toolbar for unrelated reasons — bundled here rather
 than as two separate notes.
 

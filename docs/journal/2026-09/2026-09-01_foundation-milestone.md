@@ -67,7 +67,7 @@ and block math, plain and labelled wikilinks, a code fence, and a blockquote.
   chunks into the package. Fenced blocks now get Markdown-level styling only;
   per-language highlighting will return as an opt-in `codeLanguages` pass-through
   prop. Recorded in the
-  [ADR-001](./2026-09-01_adr-001-editor-architecture.md) amendment and a
+  [ADR-001](../../decisions/001-editor-architecture.md) amendment and a
   [dedicated note](./2026-09-01_drop-codemirror-language-data.md).
 - **`Preview` is lazy-loaded** — recorded in the ADR-003 "Bundle placement"
   section, which also captures the deferred option of splitting the render

@@ -51,7 +51,7 @@ font tokens, table/callout colours), so this follows that convention rather
 than inventing a new one: `--stylo-preview-code-white-space: pre;` on any
 ancestor restores the old behaviour, no new prop, no JS API surface.
 
-Recorded in [ADR-002 §3](../2026-09-01_adr-002-editor-ux-and-customization.md)
+Recorded in [ADR-002 §3](../../decisions/002-editor-ux-and-customization.md)
 as a surface-parity amendment, in the direction the rule hadn't seen yet: the
 token is `preview`-only, permanently, not as an oversight. In-place has no
 whole-document `white-space` toggle to parameterize the same way — its wrap

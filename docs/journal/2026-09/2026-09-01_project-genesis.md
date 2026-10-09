@@ -37,7 +37,7 @@ started as a standalone, reusable React component library.
 - Wrote the initial `README.md`: description, rationale, planned stack table, and
   a `<Stylo value onChange mode onWikiLinkClick />` API sketch.
 - Added a Node/Vite `.gitignore`.
-- Recorded [ADR-001](./2026-09-01_adr-001-editor-architecture.md): compose from
+- Recorded [ADR-001](../../decisions/001-editor-architecture.md): compose from
   primitives (CodeMirror 6 + `remark`/`rehype` + KaTeX), plain text is canonical,
   no WYSIWYG editor framework.
 - Wrote `docs/wiki/index.md` and `docs/wiki/architecture/overview.md` (with a
@@ -47,7 +47,7 @@ started as a standalone, reusable React component library.
 
 Scaffold only — no build tooling, no `package.json`, no source. `main` tracks
 `origin/main`. A follow-up session added
-[ADR-002](./2026-09-01_adr-002-editor-ux-and-customization.md) (editor UX,
+[ADR-002](../../decisions/002-editor-ux-and-customization.md) (editor UX,
 customization API, design system), which amends ADR-001 to make the `in-place`
 live-preview canvas the default view; the "Next" list below reflects that.
 
@@ -62,7 +62,7 @@ live-preview canvas the default view; the "Next" list below reflects that.
 - Custom `remark` wikilink plugin.
 - KaTeX asset delivery: ship `@damiro/stylo/katex.css` as an opt-in re-export of
   `katex/dist/katex.min.css`; keep Stylo's own stylesheet KaTeX-font-free.
-  Recorded in [ADR-003](./2026-09-01_adr-003-katex-math-rendering.md), which also
+  Recorded in [ADR-003](../../decisions/003-katex-math-rendering.md), which also
   confirms KaTeX over MathJax for the live-preview loop and flags Temml/MathML as
   a future revisit.
 - `split` and `preview` modes; shared scroll for `split`.

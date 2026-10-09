@@ -68,7 +68,7 @@ bundle during install, so there is nothing else to wire up.
 
 CodeMirror, Lezer, and React are **peer dependencies** — Stylo shares the host's
 copy rather than bundling its own, so editor state, facets, and the syntax tree
-have a single identity (see [ADR-008](docs/journal/2026-09/2026-09-04_adr-008-codemirror-peer-dependency.md)).
+have a single identity (see [ADR-008](./docs/decisions/008-codemirror-peer-dependency.md)).
 Add them alongside Stylo if they are not already in your app:
 
 ```bash
@@ -137,9 +137,9 @@ truth.** The editor is a thin, composable surface over it.
 | Icons            | inline SVG, swappable via the `icons` prop — no icon-package dependency                      |
 
 Styling and icon decisions are recorded in
-[ADR-002](./docs/journal/2026-09/2026-09-01_adr-002-editor-ux-and-customization.md);
+[ADR-002](./docs/decisions/002-editor-ux-and-customization.md);
 the math engine and KaTeX asset delivery in
-[ADR-003](./docs/journal/2026-09/2026-09-01_adr-003-katex-math-rendering.md).
+[ADR-003](./docs/decisions/003-katex-math-rendering.md).
 
 ## Usage
 
@@ -251,8 +251,8 @@ Full documentation lives in the [wiki](./docs/wiki/index.md).
 - [Fenced-code highlighting](./docs/wiki/reference/code-languages.md) — the
   `codeLanguages` prop and how to opt into language grammars.
 
-Engineering journal and Architectural Decision Records:
-[`docs/PROJECT_JOURNAL.md`](./docs/PROJECT_JOURNAL.md).
+Engineering journal: [`docs/PROJECT_JOURNAL.md`](./docs/PROJECT_JOURNAL.md).
+Architectural Decision Records: [`docs/decisions/`](./docs/decisions/README.md).
 
 ## Development
 

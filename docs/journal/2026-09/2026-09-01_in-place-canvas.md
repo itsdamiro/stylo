@@ -66,7 +66,7 @@ so a fenced block is grammar-highlighted when the consumer opts in._
 
 | #   | Increment                                                                         | Status | Commit | Notes                                                                                                                                                                                    |
 | --- | --------------------------------------------------------------------------------- | ------ | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0   | ADR-004 — decoration architecture + v1 scope                                      | ✅     | —      | Merged into this tracker; see [ADR-004](./2026-09-01_adr-004-in-place-decoration-canvas.md).                                                                                             |
+| 0   | ADR-004 — decoration architecture + v1 scope                                      | ✅     | —      | Merged into this tracker; see [ADR-004](../../decisions/004-in-place-decoration-canvas.md).                                                                                              |
 | 1   | Plugin skeleton, viewport decoration builder, cursor-reveal mechanism, headings   | ✅     | —      | `src/inplace/*`; lazy `InPlaceView`; ATX headings at display size, `#` hidden off the caret line.                                                                                        |
 | 2   | Emphasis — bold / italic / strikethrough / inline code                            | ✅     | —      | Inline rule table in `decorate.ts`; canvas switched to a proportional font (code stays monospace).                                                                                       |
 | 3   | Links + wikilinks                                                                 | ✅     | —      | `Link` case + regex `[[…]]` scan with a code-context guard; shared pattern in `src/wikilink.ts`; delegated click → `onWikiLinkClick`.                                                    |
@@ -189,7 +189,7 @@ onChange />` with no `mode` now lazy-loads the in-place chunk (and the shared
 ## After in-place
 
 - **In-place customization API** — per-type on/off toggles landed as
-  [ADR-005](./2026-09-01_adr-005-in-place-decoration-toggles.md) (the `inPlace`
+  [ADR-005](../../decisions/005-in-place-decoration-toggles.md) (the `inPlace`
   prop). Still open: cursor-reveal granularity, a frontmatter display mode,
   image previews, and any hook for consumer-supplied decorators — each its own
   future decision. _Nested-list indent guides landed 2026-09-03_
@@ -200,7 +200,7 @@ onChange />` with no `mode` now lazy-loads the in-place chunk (and the shared
   text verbatim. _Table **editing** landed 2026-09-02_ — a `table` toolbar
   command, Tab/Shift-Tab/Enter cell navigation, and live pipe alignment on the
   raw source ([note](./2026-09-02_table-editing.md)); the interactive
-  rendered-table editor is [ADR-006](./2026-09-02_adr-006-interactive-table-editing.md).
+  rendered-table editor is [ADR-006](../../decisions/006-interactive-table-editing.md).
   Still open for the customization pass: inline formatting inside rendered cells
   (`**bold**`, `` `code` ``, links, math). _Consumer-facing table style hooks
   landed 2026-09-03_ — `--stylo-table-border` / `--stylo-table-header-bg` /

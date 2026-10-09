@@ -12,7 +12,7 @@ tags:
 
 ## Context
 
-The [sticky-toolbar rollout](./2026-09-01_adr-002-editor-ux-and-customization.md)
+The [sticky-toolbar rollout](../../decisions/002-editor-ux-and-customization.md)
 ended by documenting that a window-pinned toolbar can vanish during an active
 scroll gesture on iOS Safari and pointing hosts at `inPlace.selectionUI: "bar"`
 instead. It also flagged, without resolving, that `toolbar.sticky` only tracks

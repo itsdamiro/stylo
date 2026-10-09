@@ -11,7 +11,7 @@ tags:
 # Design — the `<StyloToolbarSettings />` toolbar customizer
 
 A pre-implementation spec for the last deferred item in
-[ADR-002 §2](./2026-09-01_adr-002-editor-ux-and-customization.md) — the visual
+[ADR-002 §2](../../decisions/002-editor-ux-and-customization.md) — the visual
 customizer that lets an **end user** (not the integrating developer) rearrange
 the formatting bar. Nothing here is built yet. The point of writing it down first
 is the dependency decision: any drag-and-drop worth shipping is either a new

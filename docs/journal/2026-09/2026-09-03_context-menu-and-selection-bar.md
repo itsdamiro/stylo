@@ -13,7 +13,7 @@ tags:
 Two context-aware editing affordances for the in-place canvas, in the Notion
 shape: a formatting bar that follows the selection, and a right-click menu for
 everything structural. Pulls forward the "context-aware selection tooltip" that
-[ADR-002](./2026-09-01_adr-002-editor-ux-and-customization.md) deferred to
+[ADR-002](../../decisions/002-editor-ux-and-customization.md) deferred to
 post-v1; see its dated amendment.
 
 ## Context
@@ -114,7 +114,7 @@ Both read once, at mount. Stable class names (`.cm-inplace-menu*`,
 - ~~**Clipboard "Paste" in a plain document** silently no-ops when
   `navigator.clipboard` read is denied.~~ Addressed 2026-09-03 — the row is now
   disabled with a keyboard-shortcut hint when the async read is unavailable
-  ([ADR-007 rollout log](./2026-09-03_adr-007-seamless-in-place.md)).
+  ([ADR-007 rollout log](../../decisions/007-seamless-in-place.md)).
 
 ## Log
 

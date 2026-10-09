@@ -22,7 +22,7 @@ alike. But it can only colour tokens a language grammar has identified, and
 full `@codemirror/language-data` set compiles to ~110 lazy chunks in the package
 tarball, which is the zero-bloat mandate inverted for a notes editor (see the
 [2026-09-01 note](../../journal/2026-09/2026-09-01_drop-codemirror-language-data.md)
-and the [ADR-001](../../journal/2026-09/2026-09-01_adr-001-editor-architecture.md)
+and the [ADR-001](../../decisions/001-editor-architecture.md)
 amendment).
 
 So without `codeLanguages` a fenced block gets Markdown-level styling only — a

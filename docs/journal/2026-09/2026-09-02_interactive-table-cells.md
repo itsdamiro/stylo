@@ -13,7 +13,7 @@ tags:
 ## Context
 
 The [aligned-source table editor](./2026-09-02_table-editing.md) shipped first:
-the caret in a table reveals clean pipe source. [ADR-006](./2026-09-02_adr-006-interactive-table-editing.md)
+the caret in a table reveals clean pipe source. [ADR-006](../../decisions/006-interactive-table-editing.md)
 records the second tier — keep the rendered `<table>` on screen and edit its
 cells in place, Obsidian's _Live Preview_ table. This lands it behind an opt-in
 flag; `"source"` stays the default so nothing changes for existing consumers.

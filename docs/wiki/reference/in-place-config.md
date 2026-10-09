@@ -13,7 +13,7 @@ tags:
 The `inPlace` prop turns individual [in-place canvas](../architecture/overview.md)
 decoration types off, leaving that construct rendered exactly as it appears in
 `mode="source"` — plain text, no cursor-reveal behaviour, nothing atomic.
-Specified in [ADR-005](../../journal/2026-09/2026-09-01_adr-005-in-place-decoration-toggles.md).
+Specified in [ADR-005](../../decisions/005-in-place-decoration-toggles.md).
 
 ```tsx
 <Stylo
@@ -71,7 +71,7 @@ re-renders on blur, so you edit the source in place. With a cell focused the
 toolbar's inline buttons and their shortcuts (`Mod-b`, `Mod-i`, `Mod-k`,
 `Mod-Shift-k`) wrap the cell's selection; `codeBlock` / `mathBlock` degrade to
 inline `` `code` `` / `$math$` there. Specified in
-[ADR-006](../../journal/2026-09/2026-09-02_adr-006-interactive-table-editing.md).
+[ADR-006](../../decisions/006-interactive-table-editing.md).
 
 ## `inPlace.contextMenu`
 
@@ -291,7 +291,7 @@ Both surfaces are styled through stable class names — `.cm-inplace-menu`,
 `.cm-inplace-menu-item`, `.cm-inplace-selbar`, `.cm-inplace-selbar-btn` — and
 inherit the `--stylo-*` tokens. Specified in the
 [right-click menu and selection bar note](../../journal/2026-09/2026-09-03_context-menu-and-selection-bar.md)
-and the [ADR-002 §Deferred amendment](../../journal/2026-09/2026-09-01_adr-002-editor-ux-and-customization.md).
+and the [ADR-002 §Deferred amendment](../../decisions/002-editor-ux-and-customization.md).
 
 ## Callouts
 
@@ -330,7 +330,7 @@ On the canvas, a few Markdown shorthands expand as you finish typing them, so
 the seamless surface never leaves you looking at a raw marker. Each expansion is
 folded into the triggering keystroke's own transaction, so a single undo returns
 the literal text. Specified in
-[ADR-007](../../journal/2026-09/2026-09-03_adr-007-seamless-in-place.md) (Stage 5).
+[ADR-007](../../decisions/007-seamless-in-place.md) (Stage 5).
 
 | You type                                | You get                                                                                                                                                                                                                         |
 | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -360,7 +360,7 @@ contract, not a gap: it is applied through the
 CodeMirror extension configuration, the same way `codeLanguages` and the
 toolbar shortcuts are, and a live-reconfiguration path was evaluated and
 rejected in the
-[ADR-005 config-lifecycle amendment](../../journal/2026-09/2026-09-01_adr-005-in-place-decoration-toggles.md).
+[ADR-005 config-lifecycle amendment](../../decisions/005-in-place-decoration-toggles.md).
 
 To apply a change, remount the component with a `key` derived from the config:
 

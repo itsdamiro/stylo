@@ -19,7 +19,7 @@ construct it renders is built with imperative DOM (`MathWidget` calls
 **no React inside a CodeMirror widget anywhere in the codebase** — by design,
 per ADR-001 and ADR-004. But `embedSource` returns arbitrary host React, so
 closing the gap meant mounting host React inside a widget. That earned its own
-ADR — [ADR-009](./2026-09-11_adr-009-react-nodes-in-the-in-place-canvas.md).
+ADR — [ADR-009](../../decisions/009-react-nodes-in-the-in-place-canvas.md).
 
 ## Decision
 

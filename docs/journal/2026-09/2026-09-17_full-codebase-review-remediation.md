@@ -91,7 +91,7 @@ now a 32-line re-export barrel, so none of the ~30 files importing from
 Needed a design decision first, per the review. Discussed three options
 (host-triggered `invalidate`, a TTL, a version-stamped cache key) and picked
 the host-triggered call as the simplest fit — recorded as
-[ADR-011](./2026-09-17_adr-011-embed-cache-invalidation.md), including the
+[ADR-011](../../decisions/011-embed-cache-invalidation.md), including the
 alternatives considered and their trade-offs, and the bundle-size cost of
 `embed-cache.ts` no longer being purely lazy-loaded.
 

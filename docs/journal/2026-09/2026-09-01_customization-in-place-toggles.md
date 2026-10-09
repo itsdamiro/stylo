@@ -11,8 +11,8 @@ tags:
 # Customization API — in-place decoration toggles
 
 First slice of the developer customization API from
-[ADR-002](./2026-09-01_adr-002-editor-ux-and-customization.md), specified in
-[ADR-005](./2026-09-01_adr-005-in-place-decoration-toggles.md): a single `inPlace`
+[ADR-002](../../decisions/002-editor-ux-and-customization.md), specified in
+[ADR-005](../../decisions/005-in-place-decoration-toggles.md): a single `inPlace`
 prop whose `decorations` record turns individual in-place decoration types off,
 leaving that construct as plain source.
 

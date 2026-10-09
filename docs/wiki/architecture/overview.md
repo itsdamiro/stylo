@@ -21,7 +21,7 @@ This is the Obsidian stance, and it is a deliberate rejection of the
 ProseMirror / Lexical / TipTap model, where the source of truth is a tree and
 Markdown is an import/export format. That model is lossy for YAML frontmatter,
 wikilinks, and math, and it fights any other tool that edits the same files. See
-[ADR-001](../../journal/2026-09/2026-09-01_adr-001-editor-architecture.md) for the
+[ADR-001](../../decisions/001-editor-architecture.md) for the
 full argument.
 
 ## Composed, not adopted
@@ -39,7 +39,7 @@ framework:
 Every dependency is modular, tree-shakeable, and MIT.
 
 **The bundle boundary.** CodeMirror and Lezer are _peer_ dependencies
-([ADR-008](../../journal/2026-09/2026-09-04_adr-008-codemirror-peer-dependency.md)),
+([ADR-008](../../decisions/008-codemirror-peer-dependency.md)),
 externalised from `dist/`: the host installs one copy and Stylo shares it, so
 `EditorState`, facets, and the syntax tree have one module identity across the
 host app and the editor — which is what makes `getView()` and host-supplied
@@ -74,7 +74,7 @@ same string; the host owns that string.
 ## View modes & UI Surfaces
 
 The UX layer, customization API, and design-token system are specified in
-[ADR-002](../../journal/2026-09/2026-09-01_adr-002-editor-ux-and-customization.md).
+[ADR-002](../../decisions/002-editor-ux-and-customization.md).
 
 `<Stylo mode>` selects the interaction layout:
 
@@ -86,7 +86,7 @@ The UX layer, customization API, and design-token system are specified in
   rendered table cells show inline formatting (`**bold**`, `` `code` ``, links,
   wikilinks, `$math$`) but the caret entering a table line reveals the source.
   Architecture and node set in
-  [ADR-004](../../journal/2026-09/2026-09-01_adr-004-in-place-decoration-canvas.md).
+  [ADR-004](../../decisions/004-in-place-decoration-canvas.md).
 - `source` — raw CodeMirror Markdown text surface; loads no render chunk.
 - `preview` — rendered HTML/KaTeX preview pane.
 - `split` — side-by-side editing and preview with synchronized scroll.
@@ -130,4 +130,4 @@ consumers import it once and need no build-time CSS tooling.
   palette is inherited from the host.
 - **KaTeX stylesheet.** Stylo's CSS is KaTeX-font-free; the consumer imports
   `@damiro/stylo/katex.css` (or KaTeX's own CSS) once. See
-  [ADR-003](../../journal/2026-09/2026-09-01_adr-003-katex-math-rendering.md).
+  [ADR-003](../../decisions/003-katex-math-rendering.md).

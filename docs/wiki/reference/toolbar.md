@@ -375,7 +375,7 @@ surface, `toolbar={false}` or not:
 
 Outside a table, Tab and Enter behave normally. Editing happens on the raw
 pipe source (kept tidy); an interactive rendered-table editor is
-[ADR-006](../../journal/2026-09/2026-09-02_adr-006-interactive-table-editing.md).
+[ADR-006](../../decisions/006-interactive-table-editing.md).
 
 ## Replacing icons
 
@@ -420,7 +420,7 @@ The bar is structural CSS driven by the `--stylo-*` tokens (see
 ## Background
 
 The declarative-toolbar decision is
-[ADR-002 §2](../../journal/2026-09/2026-09-01_adr-002-editor-ux-and-customization.md),
+[ADR-002 §2](../../decisions/002-editor-ux-and-customization.md),
 amended 2026-09-02 to the single-`items`-list shape, 2026-09-04 to allow custom
 item objects in that list plus a `render` slot, and 2026-09-04 again for the
 `sticky` touch mode. Build notes:

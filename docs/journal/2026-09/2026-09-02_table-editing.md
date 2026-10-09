@@ -18,7 +18,7 @@ pipes, the worst part of writing Markdown by hand. The toolbar had no table
 command. This lands the "aligned source" tier: you still see pipes while
 editing, but they stay a clean grid. The **interactive rendered table**
 (editing cells inside the live `<table>`) is deferred to
-[ADR-006](./2026-09-02_adr-006-interactive-table-editing.md).
+[ADR-006](../../decisions/006-interactive-table-editing.md).
 
 ## What was built
 
@@ -79,6 +79,6 @@ new dependency.
 
 - Add/remove column, set column alignment — no binding yet; part of the
   structural-controls tier.
-- Interactive rendered-table editing — [ADR-006](./2026-09-02_adr-006-interactive-table-editing.md).
+- Interactive rendered-table editing — [ADR-006](../../decisions/006-interactive-table-editing.md).
 - Inline formatting inside rendered in-place cells — still the tracker's
   standing follow-up.

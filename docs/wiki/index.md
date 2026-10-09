@@ -46,22 +46,9 @@ React with first-class LaTeX (KaTeX) support.
 - [[reference/code-languages|Fenced-code highlighting]] — the `codeLanguages`
   prop and how to opt into language grammars.
 
-## Engineering journal
+## Engineering journal and decisions
 
-Chronological milestones and Architectural Decision Records live outside the wiki,
-under `docs/journal/YYYY-MM/`. The master ADR index is
-[`docs/PROJECT_JOURNAL.md`](../PROJECT_JOURNAL.md).
-
-| ADR     | Title                                                                 | Status   |
-| ------- | --------------------------------------------------------------------- | -------- |
-| ADR-011 | Embed cache invalidation: a host-triggered `invalidateEmbed`          | Accepted |
-| ADR-010 | A canvas header panel, docked under find/replace                      | Accepted |
-| ADR-009 | Rendering host React nodes in the in-place canvas                     | Accepted |
-| ADR-008 | CodeMirror and Lezer as peer dependencies                             | Accepted |
-| ADR-007 | Seamless in-place: Markdown markers never shown                       | Accepted |
-| ADR-006 | Interactive rendered-table editing                                    | Accepted |
-| ADR-005 | In-place decoration toggles                                           | Accepted |
-| ADR-004 | In-place decoration canvas                                            | Accepted |
-| ADR-003 | Math rendering engine and KaTeX asset delivery                        | Accepted |
-| ADR-002 | Editor UX, Customization API, and Design System                       | Accepted |
-| ADR-001 | Editor architecture: compose from primitives, plain text is canonical | Accepted |
+Chronological milestones live outside the wiki, under `docs/journal/YYYY-MM/`;
+the index is [`docs/PROJECT_JOURNAL.md`](../PROJECT_JOURNAL.md). The Architectural
+Decision Records, with their index, are in
+[`docs/decisions/`](../decisions/README.md).

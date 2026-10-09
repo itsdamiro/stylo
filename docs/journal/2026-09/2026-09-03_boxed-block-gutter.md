@@ -79,7 +79,7 @@ reads identically in both modes.
   and the base `.cm-line` gutter still applies there.
 - Selection highlight now ends at the text edge instead of running `0.75rem` into
   the gutter — a minor, arguably cleaner cosmetic shift.
-- No public API change. [ADR-004](./2026-09-01_adr-004-in-place-decoration-canvas.md)
+- No public API change. [ADR-004](../../decisions/004-in-place-decoration-canvas.md)
   gains a dated amendment.
 
 ## Log

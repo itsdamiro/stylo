@@ -130,7 +130,7 @@ second copy of `@codemirror/state` in the tree breaks `getView()`, custom
 extensions, and command dispatch in ways that are hard to trace. Install the
 same versions your app uses (or let it resolve to one), and add any
 `@codemirror/*` / `@lezer/*` packages that are not already there. See
-[ADR-008](../../journal/2026-09/2026-09-04_adr-008-codemirror-peer-dependency.md).
+[ADR-008](../../decisions/008-codemirror-peer-dependency.md).
 
 `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities` are **optional** peers
 — needed only if you render

@@ -25,7 +25,7 @@ install, so every change is weighed against the cost it imposes on consumers.
 
 - **Plain text is canonical.** `<Stylo>`'s value is a Markdown string. There is
   no intermediate document model that must be serialized back. See
-  [ADR-001](./docs/journal/2026-09/2026-09-01_adr-001-editor-architecture.md).
+  [ADR-001](./docs/decisions/001-editor-architecture.md).
 - **Lossless round-trip.** YAML frontmatter, `[[wikilinks]]`, and `$…$` / `$$…$$`
   math must survive a full edit cycle unchanged and stay editable by Obsidian and
   other plain-Markdown tools.
@@ -36,7 +36,7 @@ install, so every change is weighed against the cost it imposes on consumers.
   the bundle so the host's copy is the only copy — a new `@codemirror/*` or
   `@lezer/*` import must be added to both `peerDependencies` and
   `devDependencies`, never to `dependencies`. See
-  [ADR-008](./docs/journal/2026-09/2026-09-04_adr-008-codemirror-peer-dependency.md).
+  [ADR-008](./docs/decisions/008-codemirror-peer-dependency.md).
 - **Design tokens are introduced against the in-place canvas, and `preview`'s
   reach is decided in the same change.** A new `--stylo-*` token targets the
   in-place canvas first. Before it ships, its applicability to `preview` (and
@@ -83,20 +83,32 @@ Publish). Subfolders: `architecture/`, `guides/`, `reference/`, with
 decision was made, benchmarks, gotchas — and Mermaid diagrams for data flow. The
 wiki is present-tense: it always describes how the system works now.
 
-### Engineering journal & ADRs (`docs/journal/YYYY-MM/`)
+### Engineering journal (`docs/journal/YYYY-MM/`)
 
-Chronological log of milestones and formal Architectural Decision Records.
+Chronological log of milestones.
 
 - Monthly date folders: `docs/journal/YYYY-MM/`.
-- Filename format `YYYY-MM-DD_topic-slug.md`; ADRs use
-  `YYYY-MM-DD_adr-NNN-topic-slug.md`.
-- The master ADR index lives in `docs/PROJECT_JOURNAL.md`, newest first.
+- Filename format `YYYY-MM-DD_topic-slug.md`.
+- The master index lives in `docs/PROJECT_JOURNAL.md`, newest first.
 
-**ADR content standard.** Every ADR carries, in order: **Status**, **Date**,
-**Deciders**, **Context**, **Decision**, **Consequences** (both positive and
-negative / costs), and **Alternatives rejected**. The rejected-alternatives
-section is mandatory — name each option that was genuinely on the table and why
-it lost. An ADR without it is a proposal, not a decision record.
+### Decision records (`docs/decisions/`)
+
+Formal Architectural Decision Records, one file per decision, written before
+the code (steps: `docs/sop/write-an-adr.md`).
+
+- Filename `NNN-short-slug.md`, numbered on from the last record, written from
+  `docs/decisions/TEMPLATE.md`. The index is `docs/decisions/README.md`, and
+  `scripts/adr_check.py` (a gate) checks the shape.
+- Records 001 to 012 were journal entries until
+  [ADR-013](./docs/decisions/013-adr-records-live-in-docs-decisions.md) moved
+  them here.
+
+**ADR content standard.** Every ADR carries, in order: a **Summary**,
+**Context**, **Decision**, **Consequences** (both positive and negative /
+costs), and **Alternatives rejected**; the **Status** and **Date** live in the
+frontmatter. The rejected-alternatives section is mandatory — name each option
+that was genuinely on the table and why it lost. An ADR without it is a
+proposal, not a decision record.
 
 **Scope discipline.** When an ADR covers a feature set, split it into _"Accepted
 for the first release"_ and _"Deferred (post-v1, additive)"_. Deferred items must
@@ -104,19 +116,17 @@ not gate the first release. If a decision is time-boxed for re-evaluation (a
 browser capability maturing, an ecosystem stabilising), record the revisit
 trigger explicitly.
 
-**Amendment & supersession.** An ADR is immutable once its decisions have been
-implemented; a later change of course is a **new** ADR. An
-Accepted-but-not-yet-implemented ADR may still be revised in place. A new ADR
-that changes an earlier one says so in its **Status** line
-(`Accepted — amends ADR-NNN …` / `… supersedes ADR-NNN`), and the earlier ADR
-gets a pointer forward: a note in its **Status** line and an inline blockquote at
-the specific decision that moved. Never silently edit the earlier ADR's body to
-match.
+**Amendment & supersession.** A change to an implemented decision is a dated
+`## Amendment (YYYY-MM-DD): title` section at the end of the same record; the
+decision text stays current. A change of course that reverses a record is a
+**new** record with `supersedes: [NNN]`, and the old record's status becomes
+`superseded` with a link forward. Never silently edit an earlier record's body
+to match.
 
 **Index & cross-reference sync.** Adding or amending an ADR is not complete
-until, in the same change: the `docs/PROJECT_JOURNAL.md` ADR table is updated;
-the `docs/wiki/index.md` ADR table is updated; and every wiki page whose content
-derives from the decision links to the ADR and reflects its current state.
+until, in the same change: its row in `docs/decisions/README.md` is added or
+updated; and every wiki page whose content derives from the decision links to
+the ADR and reflects its current state.
 
 ### Obsidian YAML frontmatter
 
@@ -141,7 +151,6 @@ Use a controlled tag vocabulary; do not invent per-file variants:
 | -------------------------------- | -------------------------------------------- |
 | Wiki — architecture              | `stylo/architecture`, `engineering/standard` |
 | Wiki — guides / reference / home | `stylo/wiki`, `engineering/standard`         |
-| ADR                              | `stylo/architecture`, `engineering/adr`      |
 | Journal milestone                | `stylo/journal`, `engineering/milestone`     |
 
 ### Portfolio-safe contents

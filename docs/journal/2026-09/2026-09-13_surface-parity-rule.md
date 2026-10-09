@@ -15,7 +15,7 @@ Reviewing
 turned up two tokens — `--stylo-font-size` and the eleven `--stylo-syntax-*`
 tokens — that the in-place canvas has read since they were introduced, and
 `preview` never has. Tracing why landed on
-[ADR-002 §3](../2026-09-01_adr-002-editor-ux-and-customization.md)'s
+[ADR-002 §3](../../decisions/002-editor-ux-and-customization.md)'s
 tenth-token amendment, which claims `--stylo-font-size` "backs that rule on
 every surface." It doesn't, and never did — only `.cm-editor` reads it. The
 claim just went unchecked.
@@ -43,7 +43,7 @@ surface" should have.
 ## The rule
 
 Formalized as a dated amendment to
-[ADR-002 §3](../2026-09-01_adr-002-editor-ux-and-customization.md): the
+[ADR-002 §3](../../decisions/002-editor-ux-and-customization.md): the
 in-place canvas stays the reference surface a new token is introduced
 against — that was already every amendment's actual practice — but a token's
 reach onto `preview` (and `split`, which is just `source` + `preview` side by
