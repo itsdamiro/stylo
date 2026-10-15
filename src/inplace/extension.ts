@@ -42,6 +42,7 @@ import { inPlaceTableEnter } from "./table-enter"
 import { cellMarksPlugin } from "./table-marks-plugin"
 import { tableField } from "./tables"
 import { inPlaceTheme } from "./theme"
+import { inPlaceWidgetLineKeys } from "./widget-line-keys"
 
 export interface InPlaceOptions {
   /** Fired when a collapsed `[[wikilink]]` is clicked in the canvas. */
@@ -113,6 +114,7 @@ export function inPlaceExtension(opts: InPlaceOptions = {}): Extension {
     inPlaceTableEnter,
     inPlaceInsertAssociation,
     inPlaceAutoformat,
+    inPlaceWidgetLineKeys,
     blockMathField,
     embedField,
     imageField,
