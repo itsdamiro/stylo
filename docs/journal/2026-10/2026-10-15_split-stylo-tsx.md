@@ -21,4 +21,4 @@ tags:
 - **`src/toolbar/StyloToolbar.tsx`** resolves the toolbar config and draws the bar, through a host's `render` when given. `stickyEdge` returns the edge for the root's class.
 - **`src/Stylo.tsx`** is now 184 lines: props in, surfaces out. No behaviour or public API change, and no test needed to change.
 - **The size script's budget key `config` became `icons`.** The shared toolbar chunk is the same code, named after a different module now; the limit is unchanged. `stylo.js` grew 50 B gzip, to 5,788 B of 6,000 B.
-- **Still over the ceiling, left out on purpose:** `table-widget.ts`, `types/core.ts`, `theme-canvas.ts` and `inline-ops.ts`; no gate enforces the ceiling.
+- **Still over the ceiling, left out on purpose:** nine others, the largest `table-widget.ts` (425), `types/core.ts`, `theme-canvas.ts` and `inline-ops.ts` (the ADR-015 amendment lists all of them); no gate enforces the ceiling.

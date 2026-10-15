@@ -21,3 +21,4 @@ Records 001 to 012 were written as journal entries and moved here by record 013 
 | [013](013-adr-records-live-in-docs-decisions.md) | Decision records live in docs/decisions, in the template shape        | Accepted |
 | [014](014-image-source-for-markdown-images.md)   | A host `imageSource` for `![alt](src)` images                         | Accepted |
 | [015](015-split-stylo-tsx-under-the-ceiling.md)  | Split `Stylo.tsx` under the 200-line ceiling                          | Accepted |
+| [016](016-line-count-gate.md)                    | A line-count gate with a shrink-only allowlist                        | Accepted |
