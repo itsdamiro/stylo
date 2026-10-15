@@ -80,12 +80,20 @@ export function onEmbedInvalidated(source: EmbedSource, ref: string, listener: (
  * its next mount.
  */
 export function invalidateEmbed(source: EmbedSource, ref?: string): void {
-  const m = caches.get(source)
-  if (!m) return
-  const refs = ref !== undefined ? [ref] : [...m.keys()]
+  invalidateEmbedWhere(source, ref === undefined ? () => true : (r) => r === ref)
+}
+
+/**
+ * {@link invalidateEmbed} for every ref `match` accepts. It looks at the refs
+ * with a cached entry and the refs with a mounted `Embed` listening, so an
+ * embed whose entry the cap evicted while it stayed on screen is still told.
+ */
+export function invalidateEmbedWhere(source: EmbedSource, match: (ref: string) => boolean): void {
+  const cached = caches.get(source)
   const bySource = listeners.get(source)
+  const refs = new Set([...(cached?.keys() ?? []), ...(bySource?.keys() ?? [])].filter(match))
   for (const r of refs) {
-    m.delete(r)
+    cached?.delete(r)
     bySource?.get(r)?.forEach((fn) => fn())
   }
 }

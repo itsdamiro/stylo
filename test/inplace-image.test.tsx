@@ -2,6 +2,7 @@ import { afterEach, expect, test, vi } from "vitest"
 import { cleanup, render } from "@testing-library/react"
 import { EditorView } from "@codemirror/view"
 import { Stylo } from "../src/Stylo"
+import { imageRegistryFacet } from "../src/inplace/config"
 import { imageField } from "../src/inplace/image"
 import type { EmbedSource, ImageSource } from "../src/types"
 
@@ -118,10 +119,44 @@ test("an ![[embed]] is not an image, and the two passes switch on independently"
   expect(images(onlyEmbeds.view)).toEqual([])
 })
 
+test("two images on one line are left as source", async () => {
+  const { view } = await mount("# T\n\n![a](b.png) ![c](d.png)\n", picture)
+  expect(images(view)).toEqual([])
+})
+
+test("an image in a second paragraph of a list item is left as source", async () => {
+  const { view } = await mount("# T\n\n- item\n\n  ![a](b.png)\n", picture)
+  expect(images(view)).toEqual([])
+})
+
+test("an edit that adds an image line draws it without a selection change", async () => {
+  const { view } = await mount("para\n", picture)
+  expect(images(view)).toEqual([])
+  view.dispatch({ changes: { from: view.state.doc.length, insert: "\n![a](b.png)\n" } })
+  expect(images(view).map((i) => i.src)).toEqual(["b.png"])
+})
+
 test("the caret can step over a rendered image", async () => {
   const { view } = await mount("para\n\n![logo](a.svg)\n", picture)
-  const atomic = view.state.facet(EditorView.atomicRanges)
-  expect(atomic.length).toBeGreaterThan(0)
+  const covered = view.state.facet(EditorView.atomicRanges).some((get) => {
+    let found = false
+    get(view).between(0, view.state.doc.length, () => {
+      found = true
+    })
+    return found
+  })
+  expect(covered).toBe(true)
+})
+
+test("deleting an image line takes its slot out of the registry", async () => {
+  const { view } = await mount("para\n\n![logo](a.svg)\n", picture)
+  const registry = view.state.facet(imageRegistryFacet)
+  if (!registry) throw new Error("no registry")
+  const slots = () => registry.getSnapshot().filter((s) => s.image)
+  await vi.waitFor(() => expect(slots()).toHaveLength(1))
+
+  view.dispatch({ changes: { from: 4, to: view.state.doc.length, insert: "" } })
+  await vi.waitFor(() => expect(slots()).toHaveLength(0))
 })
 
 // The slot DOM and the portalled host node are layout-dependent (CodeMirror

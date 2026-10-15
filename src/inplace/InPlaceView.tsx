@@ -159,28 +159,25 @@ export function InPlaceView({
     <div className={styles.inplace} ref={ref}>
       {slots.map((slot) => {
         const { image } = slot
-        if (image && imageSource) {
-          const node = (
-            <HostImage
-              src={image.src}
-              alt={image.alt}
-              literal={slot.ref}
-              source={imageSource}
-              onError={onResolveError}
-            />
-          )
-          return createPortal(node, slot.el, String(slot.id))
-        }
-        if (image || !embedSource) return null
-        const node = (
-          <Embed
-            reference={slot.ref}
-            source={embedSource}
-            onError={onResolveError}
-            inline={slot.inline}
-          />
-        )
-        return createPortal(node, slot.el, String(slot.id))
+        const node = image
+          ? imageSource && (
+              <HostImage
+                src={image.src}
+                alt={image.alt}
+                literal={slot.ref}
+                source={imageSource}
+                onError={onResolveError}
+              />
+            )
+          : embedSource && (
+              <Embed
+                reference={slot.ref}
+                source={embedSource}
+                onError={onResolveError}
+                inline={slot.inline}
+              />
+            )
+        return node ? createPortal(node, slot.el, String(slot.id)) : null
       })}
       {headerDom &&
         canvasHeaderRef.current &&

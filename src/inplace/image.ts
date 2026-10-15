@@ -11,8 +11,8 @@ import { revealedLines } from "./reveal"
  * `EmbedWidget`: `toDOM` builds an empty block and registers it with the
  * per-canvas registry, and `InPlaceView` portals a `HostImage` into it. It uses
  * its own class, not `cm-inplace-embed`, so a picture does not get the embed's
- * left rail. `eq` compares what the host is called with, so CodeMirror keeps the
- * slot across scrolls and selection changes. See ADR-014.
+ * left rail. `eq` compares the source text, which fixes what the host is called with, so
+ * CodeMirror keeps the slot across scrolls and selection changes. See ADR-014.
  */
 class ImageWidget extends WidgetType {
   private id = -1
@@ -27,7 +27,7 @@ class ImageWidget extends WidgetType {
   }
 
   override eq(other: ImageWidget) {
-    return other.raw === this.raw && other.src === this.src && other.alt === this.alt
+    return other.raw === this.raw // `src` and `alt` are read from `raw`
   }
 
   toDOM() {

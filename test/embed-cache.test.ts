@@ -2,6 +2,7 @@ import { expect, test, vi } from "vitest"
 import type { EmbedSource } from "../src/types"
 import {
   invalidateEmbed,
+  invalidateEmbedWhere,
   onEmbedInvalidated,
   peekEmbed,
   resolveEmbed,
@@ -121,4 +122,30 @@ test("invalidating one ref does not notify a listener on another ref", async () 
   onEmbedInvalidated(source, "B", listener)
   invalidateEmbed(source, "A")
   expect(listener).not.toHaveBeenCalled()
+})
+
+test("invalidateEmbedWhere drops the refs it matches and notifies their listeners", async () => {
+  const source = vi.fn<EmbedSource>((ref) => `node:${ref}`)
+  await resolveEmbed(source, "a/1")
+  await resolveEmbed(source, "a/2")
+  await resolveEmbed(source, "b/1")
+  const heard = vi.fn()
+  onEmbedInvalidated(source, "a/2", heard)
+
+  invalidateEmbedWhere(source, (ref) => ref.startsWith("a/"))
+  expect(peekEmbed(source, "a/1")).toBeUndefined()
+  expect(peekEmbed(source, "a/2")).toBeUndefined()
+  expect(peekEmbed(source, "b/1")).toEqual({ node: "node:b/1" })
+  expect(heard).toHaveBeenCalledTimes(1)
+})
+
+test("invalidating everything also tells a mounted embed whose entry the cap evicted", async () => {
+  const source = vi.fn<EmbedSource>((ref) => `node:${ref}`)
+  const heard = vi.fn()
+  onEmbedInvalidated(source, "ref-0", heard)
+  for (let i = 0; i < 70; i++) await resolveEmbed(source, `ref-${i}`)
+  expect(peekEmbed(source, "ref-0")).toBeUndefined()
+
+  invalidateEmbed(source)
+  expect(heard).toHaveBeenCalledTimes(1)
 })

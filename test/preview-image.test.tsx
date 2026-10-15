@@ -92,6 +92,35 @@ test("an image that continues a paragraph is not a lone image", () => {
   expect(source).not.toHaveBeenCalled()
 })
 
+test("an image followed by words in the same paragraph is left alone", () => {
+  const source = vi.fn(picture)
+  const { container } = preview("![a](b.png) and more words\n", source)
+  expect(source).not.toHaveBeenCalled()
+  expect(container.textContent).toContain("and more words")
+})
+
+test("two images on one line are not a lone image", () => {
+  const source = vi.fn(picture)
+  preview("![a](b.png) ![c](d.png)\n", source)
+  expect(source).not.toHaveBeenCalled()
+})
+
+test("an image with no destination is left alone", () => {
+  const source = vi.fn(picture)
+  const { container } = preview("![a]()\n", source)
+  expect(source).not.toHaveBeenCalled()
+  expect(container.querySelector(".stylo-image")).toBeNull()
+})
+
+test("changing only the alt resolves the image again", async () => {
+  const source = vi.fn(picture)
+  const props = { onChange: () => {}, mode: "preview" as const, imageSource: source }
+  const { rerender } = render(<Stylo value="![a|100](x.png)" {...props} />)
+  await screen.findByTestId("pic")
+  rerender(<Stylo value="![a|400](x.png)" {...props} />)
+  await vi.waitFor(() => expect(source).toHaveBeenLastCalledWith("x.png", "a|400"))
+})
+
 test("an image reference ![a][ref] and a link are left alone", () => {
   const source = vi.fn(picture)
   preview("![a][ref]\n\n[a](b.png)\n\n[ref]: c.png\n", source)
@@ -159,6 +188,29 @@ test("invalidateImage() with no src clears every image, and is a no-op without i
   render(<Stylo ref={bare} value="x" onChange={() => {}} mode="preview" />)
   expect(() => bare.current!.invalidateImage("a.png")).not.toThrow()
   expect(() => bare.current!.invalidateImage()).not.toThrow()
+})
+
+test("invalidateImage() reaches a mounted image whose cache entry was evicted", async () => {
+  const ref = createRef<StyloHandle>()
+  let version = 1
+  const source = vi.fn((src: string) => <span data-testid={src}>v{version}</span>)
+  const doc = Array.from({ length: 70 }, (_, i) => `![a](img-${i}.png)`).join("\n\n")
+  render(<Stylo ref={ref} value={doc} onChange={() => {}} mode="preview" imageSource={source} />)
+  await vi.waitFor(() => expect(source).toHaveBeenCalledTimes(70))
+  await screen.findByTestId("img-0.png")
+
+  version = 2
+  ref.current!.invalidateImage()
+  await vi.waitFor(() => expect(screen.getByTestId("img-0.png").textContent).toBe("v2"))
+  ref.current!.invalidateImage("img-1.png")
+  await vi.waitFor(() => expect(screen.getByTestId("img-1.png").textContent).toBe("v2"))
+})
+
+test("a src with a NUL character reaches the host whole", async () => {
+  const source = vi.fn(picture)
+  preview("![a](x\u0000y.png)", source)
+  await screen.findByTestId("pic")
+  expect(source).toHaveBeenCalledWith("x\u0000y.png", "a")
 })
 
 test("split mode draws the same picture", async () => {
