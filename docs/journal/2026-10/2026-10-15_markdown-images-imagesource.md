@@ -23,6 +23,7 @@ tags:
 - **`HostImage` wraps `Embed`,** so an image gets the embed's cache, literal fallback, error report and invalidation. `StyloHandle.invalidateImage(src?)` drops a `src` for every `alt`. `ResolveErrorInfo.source` gains `"imageSource"`.
 - **A size convention, documented and not parsed.** The host reads `|300` / `|w300` (width), `|h200` (height) or `|300x200` (both) or `|full` (the column's width) off `alt`; the props reference carries an example hook, and the browser fixture one that reads all five.
 - **A fix on the way:** a source that threw synchronously escaped the embed cache instead of reaching `onResolveError`. It is now a rejection, for `embedSource` too.
+- **A second fix on the way:** `invalidateEmbed()` with no ref only reached refs that still had a cache entry, so an embed the 64-entry cap had evicted while on screen was never re-resolved. The cache now also visits the refs a mounted embed is listening for (`invalidateEmbedWhere`), which `invalidateImage` is built on.
 
 ## Consequences
 
