@@ -4,14 +4,8 @@ import type { ToolbarCommandId } from "../types"
 import { runInlineInCell } from "./cell-inline"
 import {
   BULLET,
-  disabledWhen,
   heading,
   history,
-  inFrontmatter,
-  inHeading,
-  inLiteral,
-  inOtherInlineLiteral,
-  nothingToWrap,
   ORDERED,
   prefix,
   QUOTE,
@@ -19,6 +13,14 @@ import {
   type ToolbarCommand,
   wrap,
 } from "./command-helpers"
+import {
+  disabledWhen,
+  inFrontmatter,
+  inHeading,
+  inLiteral,
+  inOtherInlineLiteral,
+  nothingToWrap,
+} from "./command-predicates"
 import { fencedCodeActive, mathBlockActive, toggleFencedCode, toggleMathBlock } from "./fence"
 import { frontmatterActive, toggleFrontmatter } from "./frontmatter-toggle"
 import { clearHeading } from "./heading"

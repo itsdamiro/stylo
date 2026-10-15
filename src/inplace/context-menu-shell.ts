@@ -1,8 +1,19 @@
 /**
  * The floating-popup mechanics `context-menu.ts`'s panels share with each
  * other: viewport placement, and outside-press / Escape / delayed-scroll
- * dismissal. Nothing here knows about menu rows.
+ * dismissal, and a row's label. Nothing here knows about menu rows.
  */
+
+import { iconSvg } from "../toolbar/icon-paths"
+
+/** Append a row's icon (an `iconNode` clone or a named icon) and its text to `el`. */
+export function label(doc: Document, el: HTMLElement, text: string, icon?: string, node?: Node) {
+  if (node) el.appendChild(node.cloneNode(true))
+  else if (icon) el.appendChild(iconSvg(doc, icon))
+  const span = doc.createElement("span")
+  span.textContent = text
+  el.appendChild(span)
+}
 
 /** Place a fixed-position panel at (x, y), nudged back on-screen on overflow. */
 export function place(panel: HTMLElement, x: number, y: number, win: Window | null | undefined) {

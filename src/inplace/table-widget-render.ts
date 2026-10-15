@@ -7,7 +7,8 @@
 
 import type { Align } from "../toolbar/table-grid"
 import { renderInline } from "./inline-md"
-import { applyPaint, type CellPaint } from "./table-cell-marks"
+import type { CellPaint } from "./table-cell-marks"
+import { applyPaint } from "./table-cell-paint"
 import { unescapePipe } from "./table-cell-dom"
 
 export interface CellGrid {

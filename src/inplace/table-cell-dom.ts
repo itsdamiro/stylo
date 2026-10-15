@@ -1,4 +1,4 @@
-import { markedContentAt } from "../toolbar/inline-ops"
+import { markedContentAt } from "../toolbar/marked-content"
 import type { ParsedTable } from "./table-widget"
 
 /** `[head, ...body]` as raw cell strings — the editable widget's source of truth. */

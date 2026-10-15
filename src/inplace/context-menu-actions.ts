@@ -7,18 +7,19 @@
  *
  * The individual field/action rows for each inline construct live beside that
  * construct's own file — `linkRow` / `wikiLinkRow` in `link-row.ts`, `mathRow`
- * in `math-edit.ts`, `dividerRow` in `edit-divider.ts` — this file is the
+ * in `math-edit.ts`, `dividerRow` in `edit-divider.ts`, `codeBlockRow` in
+ * `code-block-row.ts` — this file is the
  * assembly: which rows a given context offers, and in what order.
  */
 
 import type { EditorView } from "@codemirror/view"
 import type { MenuGroupId } from "../types"
 import { activeTableCell } from "../toolbar/cell-inline"
-import { BUILTIN_BY_ID } from "../toolbar/commands"
-import { fenceInfoAt, fencedCodeActive } from "../toolbar/fence"
+import { fencedCodeActive } from "../toolbar/fence"
 import { ICON_PATHS } from "../toolbar/icon-paths"
 import { menuGroupsFacet, selectionUIFacet } from "./config"
-import type { MenuField, MenuRow } from "./context-menu"
+import { codeBlockRow } from "./code-block-row"
+import type { MenuRow } from "./context-menu"
 import {
   actions,
   clipboardRows,
@@ -51,36 +52,6 @@ export function cellHasSelection(view: EditorView): boolean {
   if (!cell) return false
   const { from, to } = selectionOffsets(cell)
   return to > from
-}
-
-/**
- * The "Language" row shown when the caret is in a fenced code block: an
- * editable info string (` ```ts `), plus **Remove code block** to unwrap it.
- * The opening fence line is hidden in the seamless canvas, so this is the way
- * to reach the language at all.
- */
-export function codeBlockRow(view: EditorView): MenuField {
-  const info = fenceInfoAt(view.state)
-  return {
-    field: true,
-    label: "Language",
-    icon: ICON_PATHS.codeBlock,
-    value: info?.lang ?? "",
-    placeholder: "ts, python, …",
-    onSubmit: (lang) => {
-      if (info) view.dispatch({ changes: { from: info.from, to: info.to, insert: lang.trim() } })
-      view.focus()
-    },
-    actions: [
-      {
-        label: "Remove code block",
-        onSelect: () => {
-          BUILTIN_BY_ID.codeBlock?.run(view)
-          view.focus()
-        },
-      },
-    ],
-  }
 }
 
 /**

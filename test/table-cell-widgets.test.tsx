@@ -1,7 +1,8 @@
 import { expect, test } from "vitest"
 import { renderInline } from "../src/inplace/inline-md"
 import { cellText, placeCaret, selectionOffsets } from "../src/inplace/table-cell-dom"
-import { applyPaint, type CellPaint } from "../src/inplace/table-cell-marks"
+import type { CellPaint } from "../src/inplace/table-cell-marks"
+import { applyPaint } from "../src/inplace/table-cell-paint"
 
 const widget = (at: number, label = "Accept", key = "k") => ({
   at,

@@ -1,6 +1,6 @@
 /**
- * Re-export barrel over `types/`, split by domain: `core` (`StyloProps`,
- * `StyloHandle`, and the top-level display/mode types), `toolbar` (toolbar
+ * Re-export barrel over `types/`, split by domain: `core` (`StyloProps` and the
+ * top-level display/mode types), `handle` (`StyloHandle`), `toolbar` (toolbar
  * config), `sources` (wikilink/tag/embed resolver types), and `inplace`
  * (in-place canvas config). Kept so nothing importing from `./types` today
  * has to change.
@@ -11,8 +11,8 @@ export type {
   CodeLanguages,
   TaskToggleInfo,
   StyloProps,
-  StyloHandle,
 } from "./types/core"
+export type { StyloHandle } from "./types/handle"
 export type {
   ToolbarCommandId,
   ToolbarCustomItem,

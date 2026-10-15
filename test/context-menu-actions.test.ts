@@ -2,7 +2,8 @@ import { markdownLanguage } from "@codemirror/lang-markdown"
 import { EditorSelection, EditorState } from "@codemirror/state"
 import { EditorView } from "@codemirror/view"
 import { expect, test } from "vitest"
-import { codeBlockRow, menuRows } from "../src/inplace/context-menu-actions"
+import { codeBlockRow } from "../src/inplace/code-block-row"
+import { menuRows } from "../src/inplace/context-menu-actions"
 import type { MenuAction, MenuField, MenuRow, MenuSubmenu } from "../src/inplace/context-menu"
 import {
   menuGroupsFacet,
