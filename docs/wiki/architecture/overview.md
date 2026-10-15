@@ -67,6 +67,8 @@ The UX layer, customization API, and design-token system are specified in [ADR-0
 
 **All four modes are implemented.** `in-place` is the default per ADR-002 §1; it and `preview` / `split` load their render pipeline as a lazy chunk, so a `mode="source"` consumer stays at the CodeMirror-only baseline. See the [in-place canvas tracker](../../journal/2026-09/2026-09-01_in-place-canvas.md), the [foundation milestone](../../journal/2026-09/2026-09-01_foundation-milestone.md), and the [split-mode note](../../journal/2026-09/2026-09-01_split-mode.md).
 
+`src/Stylo.tsx` is the wiring: it picks the surface for `mode` and passes each prop through. The imperative handle (`focus`, `insertAtCursor`, `scrollToHeading`, `invalidateEmbed`, `invalidateImage`) lives in `src/useStyloHandle.ts`, and the toolbar's config resolution and render in `src/toolbar/StyloToolbar.tsx` (ADR-015).
+
 ### UI layers
 
 **First release:**
