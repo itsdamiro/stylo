@@ -20,6 +20,7 @@ The records moved to [`docs/decisions/`](./decisions/README.md) (ADR-013, 2026-1
 
 | Date       | Entry                                                                                                                                                                                   |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-15 | [Stylo.tsx split under the 200-line ceiling](./journal/2026-10/2026-10-15_split-stylo-tsx.md)                                                                                           |
 | 2026-10-15 | [The arrow keys stop on a rendered image's line](./journal/2026-10/2026-10-15_arrow-keys-stop-on-a-rendered-image.md)                                                                   |
 | 2026-10-15 | [Markdown images through a host `imageSource`, on every surface](./journal/2026-10/2026-10-15_markdown-images-imagesource.md)                                                           |
 | 2026-10-09 | [Markdown prose on one line, links checked, browser tests on Linux](./journal/2026-10/2026-10-09_docs-one-line-links-and-linux-browser-tests.md)                                        |

@@ -99,6 +99,32 @@ test.describe("![alt](src) images", () => {
       expect((await caret(page)).line).toBe("")
     })
 
+    // CodeMirror binds Ctrl-N / Ctrl-P to line motion on macOS only, so the spec can only run there.
+    for (const [key, blank] of [
+      ["Control+n", 3],
+      ["Control+p", 4],
+    ] as const) {
+      test(`${key} from the blank line ${blank === 3 ? "above" : "below"} reaches the source (macOS)`, async ({
+        page,
+      }) => {
+        test.skip(process.platform !== "darwin", "Ctrl-N and Ctrl-P are line motion on macOS only")
+        await open(page, blank)
+        await page.keyboard.press(key)
+        await expect(page.locator(".cm-inplace-image")).toHaveCount(1)
+        expect((await caret(page)).line).toBe(SOURCE)
+      })
+    }
+
+    test("readOnly: the surface takes no focus, so the arrows do nothing and the picture stays", async ({
+      page,
+    }) => {
+      await openFixture(page, { mode: "in-place", doc: "image", image: "1", readOnly: "1" })
+      await line(page, 3).click()
+      await page.keyboard.press("ArrowDown")
+      await expect(page.locator(".cm-inplace-image")).toHaveCount(2)
+      await expect(page.locator(".cm-content")).not.toBeFocused()
+    })
+
     test("the revealed source scrolls into view", async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 170 })
       await openFixture(page, { mode: "in-place", doc: "image", image: "1" })

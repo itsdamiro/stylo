@@ -6,6 +6,11 @@ Notable changes to Stylo. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- **Ctrl-N and Ctrl-P stop on a rendered image or `![[ref]]` embed's line on
+  macOS,** as ArrowDown and ArrowUp already do.
+
 ## [0.23.1] - 2026-10-15
 
 ### Fixed

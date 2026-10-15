@@ -25,7 +25,7 @@ const BUDGETS = {
   katex: 95_000, // math rendering
   markdown: 70_000, // remark / rehype / react-markdown — preview only
   useCodeMirror: 13_000, // editor glue shared by every CodeMirror surface
-  config: 3_000, // toolbar glyphs, labels, and item config — shared by the bar and the customizer
+  icons: 3_000, // toolbar glyphs, labels, and item config — shared by the bar and the customizer
   "toolbar-settings": 5_000, // the opt-in <StyloToolbarSettings /> entry (@damiro/stylo/toolbar-settings)
   wikilink: 2_000,
   callout: 2_000,
