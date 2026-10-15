@@ -81,3 +81,12 @@ The owner asked for an image that fills the text column. The size convention in 
 - **Why a word, not a number.** A width in pixels cannot say "whatever the column is", and a percentage (`|100%`) would add a unit to a convention whose other forms have none. `full` reads the same in a note written elsewhere, where it is ignored, as it does here.
 - **It does not break out of the column.** A picture wider than the text, edge to edge, is a layout rule on the canvas with its own `--stylo-*` token and a `preview` reach (ADR-002 §3), so it would be a new record if it is wanted.
 - **The example hook and the fixture read it,** so hosts copy one convention. A host that implements only the numeric forms silently shows `|full` unsized, the same promise-in-the-docs cost as point 9.
+
+## Amendment (2026-10-15): the arrow keys stop on an image's line
+
+Found after the release: in the canvas the caret went from the blank line above a rendered image to the blank line below it, so its source could be reached only by a click beside the picture. The block widget is replaced and atomic, and CodeMirror's vertical motion measures from the rendered box, so it steps over the whole line.
+
+- **ArrowDown and ArrowUp stop on the line.** From the blank line above or below, the arrow puts the caret on the image's line, which withholds the widget and shows the source; the next arrow carries on past it. The column is kept where the line is long enough, and a wrapped line still moves within itself before it steps off. The code is `src/inplace/widget-line-keys.ts`, a high-precedence keymap with no other state.
+- **The other keys needed nothing.** ArrowLeft, ArrowRight, Backspace and Delete from the neighbouring blank line already land on the line, checked in the browser, so they are left to CodeMirror. Shift-arrow still extends a selection across the picture.
+- **A lone `![[ref]]` embed gets the same stop.** It is the same block-replace shape and had the same gap, so the one keymap looks the line up in both fields (`imageField`, `embedField`) rather than leaving the two surfaces unlike. An inline embed is not a block and is untouched.
+- **Not changed:** in `readOnly` a click beside a picture still swaps it for its source, as embeds do.
