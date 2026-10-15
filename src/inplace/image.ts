@@ -66,7 +66,8 @@ function buildImages(state: EditorState): DecorationSet {
   const registry = state.facet(imageRegistryFacet)
   if (!registry) return Decoration.none
 
-  const revealed = revealedLines(state)
+  // Read-only has nothing to edit, so a click beside a picture must not swap it for its source.
+  const revealed = state.readOnly ? new Set<number>() : revealedLines(state)
   const tree = syntaxTree(state)
   const out: Range<Decoration>[] = []
 
@@ -118,7 +119,7 @@ function selectionNearImage(state: EditorState, selection: EditorState["selectio
 export const imageField = StateField.define<DecorationSet>({
   create: buildImages,
   update: (value, tr) => {
-    if (tr.docChanged) return buildImages(tr.state)
+    if (tr.docChanged || tr.startState.readOnly !== tr.state.readOnly) return buildImages(tr.state)
     if (!tr.selection) return value
     const near =
       selectionNearImage(tr.state, tr.startState.selection) ||

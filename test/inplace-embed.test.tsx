@@ -9,9 +9,15 @@ import type { EmbedSource } from "../src/types"
 
 afterEach(cleanup)
 
-async function mount(value: string, embedSource?: EmbedSource) {
+async function mount(value: string, embedSource?: EmbedSource, readOnly = false) {
   const result = render(
-    <Stylo value={value} onChange={() => {}} mode="in-place" embedSource={embedSource} />,
+    <Stylo
+      value={value}
+      onChange={() => {}}
+      mode="in-place"
+      embedSource={embedSource}
+      readOnly={readOnly}
+    />,
   )
   await vi.waitFor(() => {
     if (!result.container.querySelector(".cm-editor")) throw new Error("not mounted")
@@ -126,4 +132,42 @@ test("only a block embed makes a widget line, an inline one does not", async () 
     false,
     false,
   ])
+})
+
+test("read-only keeps an embed drawn with the caret on its line, block and inline", async () => {
+  const doc = "para\n\n![[Note]]\n\nsee ![[Inline]] here\n"
+  const { view } = await mount(doc, canned, true)
+  expect(embedRefs(view)).toEqual(["Note", "Inline"])
+  view.dispatch({ selection: { anchor: view.state.doc.line(3).from + 3 } })
+  expect(embedRefs(view)).toEqual(["Note", "Inline"])
+  view.dispatch({ selection: { anchor: view.state.doc.line(5).from + 6 } })
+  expect(embedRefs(view)).toEqual(["Note", "Inline"])
+})
+
+test("an embed under the caret is drawn again when the note turns read-only", async () => {
+  const doc = "para\n\n![[Note]]\n"
+  const element = (readOnly: boolean) => (
+    <Stylo
+      value={doc}
+      onChange={() => {}}
+      mode="in-place"
+      embedSource={canned}
+      readOnly={readOnly}
+    />
+  )
+  const result = render(element(false))
+  await vi.waitFor(() => {
+    if (!result.container.querySelector(".cm-editor")) throw new Error("not mounted")
+  })
+  const view = EditorView.findFromDOM(result.container.querySelector(".cm-editor") as HTMLElement)
+  if (!view) throw new Error("no EditorView")
+
+  view.dispatch({ selection: { anchor: view.state.doc.line(3).from + 3 } })
+  expect(embedRefs(view)).toEqual([]) // editable: the caret reveals the source
+
+  result.rerender(element(true))
+  await vi.waitFor(() => expect(embedRefs(view)).toEqual(["Note"]))
+
+  result.rerender(element(false))
+  await vi.waitFor(() => expect(embedRefs(view)).toEqual([]))
 })

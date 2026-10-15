@@ -23,6 +23,19 @@ test.describe("![[embed]] on the in-place canvas", () => {
     await expect(line(page, 4)).toHaveText("![[Weekly note]]")
   })
 
+  test("readOnly: a click on the embed's slot keeps the embed, not its source", async ({
+    page,
+  }) => {
+    await openFixture(page, { mode: "in-place", doc: "embed", embed: "1", readOnly: "1" })
+    await line(page, 0).click()
+    await expect(page.locator(".cm-inplace-embed .fixture-embed")).toBeVisible()
+    await page.locator(".cm-content .cm-inplace-embed").click({ position: { x: 2, y: 2 } })
+    await expect(page.locator(".cm-inplace-embed")).toHaveCount(1)
+    await expect(page.locator(".cm-content .cm-line", { hasText: "![[Weekly note]]" })).toHaveCount(
+      0,
+    )
+  })
+
   // Rendered, `.cm-line` 3 is the blank above the embed and 4 the blank below it.
   for (const [blank, key] of [
     [3, "ArrowDown"],
@@ -55,18 +68,34 @@ test.describe("![[embed]] on the in-place canvas", () => {
       expect(await caret(page)).toEqual({ line: "![[Weekly note]]", at: 16 })
     })
 
+    test("ArrowUp lands mid-line at the same column when the embed line is long enough", async ({
+      page,
+    }) => {
+      await open(page)
+      await line(page, 3).click() // "Text below the embed line."
+      await page.keyboard.press("Home")
+      for (let i = 0; i < 5; i++) await page.keyboard.press("ArrowRight")
+      await page.keyboard.press("ArrowUp")
+      await expect(page.locator(".cm-inplace-embed")).toHaveCount(0)
+      expect(await caret(page)).toEqual({ line: "![[Weekly note]]", at: 5 })
+    })
+
     test("ArrowDown moves through a wrapped line first, then onto the embed", async ({ page }) => {
       await open(page)
       await line(page, 2).click({ position: { x: 4, y: 4 } }) // first visual line of the paragraph
       await page.keyboard.press("Home")
-      await page.keyboard.press("ArrowDown")
-      await expect(page.locator(".cm-inplace-embed")).toHaveCount(1)
-      expect((await caret(page)).line).toContain("A long paragraph")
-
-      for (let i = 0; i < 12; i++) {
-        if ((await page.locator(".cm-inplace-embed").count()) === 0) break
+      // The paragraph's visual lines, so the walk is bounded by the layout and not a guess.
+      const visual = await line(page, 2).evaluate((el) =>
+        Math.round(el.getBoundingClientRect().height / parseFloat(getComputedStyle(el).lineHeight)),
+      )
+      expect(visual).toBeGreaterThan(1)
+      for (let i = 0; i < visual - 1; i++) {
         await page.keyboard.press("ArrowDown")
+        await expect(page.locator(".cm-inplace-embed")).toHaveCount(1) // still inside the paragraph
+        expect((await caret(page)).line).toContain("A long paragraph")
       }
+      await page.keyboard.press("ArrowDown")
+      await expect(page.locator(".cm-inplace-embed")).toHaveCount(0)
       expect((await caret(page)).line).toBe("![[Weekly note]]")
     })
   })

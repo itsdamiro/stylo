@@ -125,17 +125,74 @@ test.describe("![alt](src) images", () => {
       await expect(page.locator(".cm-content")).not.toBeFocused()
     })
 
+    test("readOnly: a click on a picture's slot keeps the picture, not its source", async ({
+      page,
+    }) => {
+      await openFixture(page, { mode: "in-place", doc: "image", image: "1", readOnly: "1" })
+      await line(page, 0).click()
+      await expect(page.locator(".cm-inplace-image")).toHaveCount(2)
+      await page
+        .locator(".cm-content .cm-inplace-image")
+        .first()
+        .click({ position: { x: 2, y: 2 } })
+      await expect(page.locator(".cm-inplace-image")).toHaveCount(2)
+      await expect(page.locator(".cm-content .cm-line", { hasText: SOURCE })).toHaveCount(0)
+    })
+
     test("the revealed source scrolls into view", async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 170 })
       await openFixture(page, { mode: "in-place", doc: "image", image: "1" })
+      // The page scrolls, not the editor. Precondition: a small font cannot make the document fit.
+      expect(await page.evaluate(() => document.documentElement.scrollHeight > innerHeight)).toBe(
+        true,
+      )
       await line(page, 0).click()
       await page.keyboard.press("ArrowDown")
       await page.keyboard.press("ArrowDown")
       await page.keyboard.press("ArrowDown") // the blank line above the picture
       await page.keyboard.press("ArrowDown")
+      expect((await caret(page)).line).toBe(SOURCE)
       const source = page.locator(".cm-content .cm-line", { hasText: SOURCE })
-      await expect(source).toBeVisible()
-      await expect(source).toBeInViewport({ ratio: 0.5 }) // fonts differ by platform; unscrolled it is 0
+      // Wholly inside the window, whatever the platform's font: unscrolled it sits below it.
+      await expect
+        .poll(async () => {
+          const box = await source.boundingBox()
+          return box ? box.y >= 0 && box.y + box.height <= (page.viewportSize()?.height ?? 0) : null
+        })
+        .toBe(true)
+    })
+
+    test.describe("a picture on the first or the last line of the document", () => {
+      const open = async (page: Page, blank: number) => {
+        await openFixture(page, { mode: "in-place", doc: "imageedge", image: "1" })
+        // The caret starts on the top picture's line, so render both first by moving to "middle".
+        await line(page, 2).click()
+        await expect(page.locator(".cm-inplace-image")).toHaveCount(2)
+        // Rendered, `.cm-line` 0 is the blank below the top picture and 2 the blank above the bottom one.
+        await line(page, blank).click()
+        await expect(page.locator(".cm-inplace-image")).toHaveCount(2)
+      }
+      test("ArrowUp reaches the top picture's source and stays there", async ({ page }) => {
+        await open(page, 0)
+        await page.keyboard.press("ArrowUp")
+        await expect(page.locator(".cm-inplace-image")).toHaveCount(1)
+        expect((await caret(page)).line).toBe("![top|w120](a/b.svg)")
+
+        await page.keyboard.press("ArrowUp") // nothing above: the source stays open
+        await expect(page.locator(".cm-inplace-image")).toHaveCount(1)
+        expect((await caret(page)).line).toBe("![top|w120](a/b.svg)")
+      })
+
+      test("ArrowDown reaches the bottom picture's source and stays there", async ({ page }) => {
+        await open(page, 2)
+        await page.keyboard.press("ArrowDown")
+        await expect(page.locator(".cm-inplace-image")).toHaveCount(1)
+        expect((await caret(page)).line).toBe("![bottom|h80](d.svg)")
+
+        await page.keyboard.press("ArrowDown") // nothing below: the source stays open
+        await expect(page.locator(".cm-inplace-image")).toHaveCount(1)
+        expect((await caret(page)).line).toBe("![bottom|h80](d.svg)")
+      })
     })
 
     for (const [blank, key] of [
