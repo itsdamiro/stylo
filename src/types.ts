@@ -20,7 +20,7 @@ export type {
   ToolbarConfig,
 } from "./types/toolbar"
 export type { WikiLinkCompletion, WikiLinkSource, TagCompletion, TagSource } from "./types/sources"
-export type { EmbedSource, ResolveErrorInfo } from "./types/sources"
+export type { EmbedSource, ImageSource, ResolveErrorInfo } from "./types/sources"
 export type {
   InPlaceDecorationToggles,
   TableEditing,

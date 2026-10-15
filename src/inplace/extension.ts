@@ -9,6 +9,7 @@ import {
   cellWidgetsFacet,
   hostItemsFacet,
   embedRegistryFacet,
+  imageRegistryFacet,
   inPlaceConfigFacet,
   linkOpenFacet,
   menuGroupsFacet,
@@ -29,6 +30,7 @@ import { frontmatterField } from "./frontmatter"
 import { linkClickEditor } from "./link-click"
 import { linkHoverTooltip } from "./link-hover"
 import { embedField } from "./embed"
+import { imageField } from "./image"
 import type { EmbedRegistry } from "./embed-registry"
 import { blockMathField } from "./math"
 import { mathClickEditor, mathHoverTooltip } from "./math-edit"
@@ -53,6 +55,8 @@ export interface InPlaceOptions {
    * Its presence turns the `![[ref]]` pass on; see ADR-009.
    */
   embedRegistry?: EmbedRegistry
+  /** The same registry, passed only when the host set `imageSource`; turns the `![alt](src)` pass on (ADR-014). */
+  imageRegistry?: EmbedRegistry
   /**
    * Reads the host's right-click items on every menu open. The canvas passes a
    * ref-backed getter so a re-render's closures apply; omitted, the items come
@@ -72,7 +76,7 @@ export interface InPlaceOptions {
  * else, text and line padding alike, stays with CodeMirror.
  */
 const REVEAL_WIDGET =
-  ".cm-inplace-math, .cm-inplace-hr, .cm-inplace-table, .cm-inplace-embed, .cm-inplace-embed-inline"
+  ".cm-inplace-math, .cm-inplace-hr, .cm-inplace-table, .cm-inplace-embed, .cm-inplace-embed-inline, .cm-inplace-image"
 
 /**
  * The complete in-place canvas layer: decoration plugin, display theme, a
@@ -88,6 +92,7 @@ export function inPlaceExtension(opts: InPlaceOptions = {}): Extension {
   return [
     inPlaceConfigFacet.of(resolveToggles(opts.inPlace)),
     embedRegistryFacet.of(opts.embedRegistry ?? null),
+    imageRegistryFacet.of(opts.imageRegistry ?? null),
     tableEditingFacet.of(opts.inPlace?.table ?? "source"),
     revealModeFacet.of(opts.inPlace?.reveal ?? "caret"),
     linkOpenFacet.of(opts.onLinkClick ?? null),
@@ -110,6 +115,7 @@ export function inPlaceExtension(opts: InPlaceOptions = {}): Extension {
     inPlaceAutoformat,
     blockMathField,
     embedField,
+    imageField,
     frontmatterField,
     tableField,
     cellMarksPlugin,

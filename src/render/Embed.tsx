@@ -13,6 +13,10 @@ interface EmbedProps {
    * than the default block `<div>`. The host node should be inline in this mode.
    */
   inline?: boolean
+  /** The text shown while resolving and as the fallback; default `![[reference]]`. */
+  literal?: string
+  /** What `onError` is told; default `embedSource` and `reference`. `HostImage` sets it. */
+  errorInfo?: ResolveErrorInfo
 }
 
 type State = { status: "loading" | "error" } | { status: "ready"; node: ReactNode }
@@ -25,7 +29,7 @@ type State = { status: "loading" | "error" } | { status: "ready"; node: ReactNod
  * resolves — and if it rejects, or resolves to `null` — the literal `![[ref]]`
  * text stands in, so a reference is never silently lost.
  */
-export function Embed({ reference, source, onError, inline }: EmbedProps) {
+export function Embed({ reference, source, onError, inline, literal, errorInfo }: EmbedProps) {
   const [state, setState] = useState<State>(() => {
     const hit = peekEmbed(source, reference)
     return hit ? { status: "ready", node: hit.node } : { status: "loading" }
@@ -44,7 +48,7 @@ export function Embed({ reference, source, onError, inline }: EmbedProps) {
         (node) => live && setState({ status: "ready", node }),
         (error) => {
           if (!live) return
-          onError?.(error, { source: "embedSource", input: reference })
+          onError?.(error, errorInfo ?? { source: "embedSource", input: reference })
           setState({ status: "error" })
         },
       )
@@ -58,10 +62,10 @@ export function Embed({ reference, source, onError, inline }: EmbedProps) {
       live = false
       unsubscribe()
     }
-  }, [reference, source, onError])
+  }, [reference, source, onError, errorInfo])
 
-  const literal = `![[${reference}]]`
-  if (state.status === "loading") return <span aria-busy="true">{literal}</span>
+  const text = literal ?? `![[${reference}]]`
+  if (state.status === "loading") return <span aria-busy="true">{text}</span>
   if (state.status === "ready" && state.node != null) {
     // Keep the mousedown away from the in-place canvas's own delegated
     // handler — same reason and technique as the editable table widget
@@ -84,5 +88,5 @@ export function Embed({ reference, source, onError, inline }: EmbedProps) {
       </div>
     )
   }
-  return <span>{literal}</span>
+  return <span>{text}</span>
 }

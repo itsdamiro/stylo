@@ -2,7 +2,13 @@ import type { ReactNode } from "react"
 import type { Language, LanguageDescription } from "@codemirror/language"
 import type { Extension } from "@codemirror/state"
 import type { EditorView } from "@codemirror/view"
-import type { EmbedSource, ResolveErrorInfo, TagSource, WikiLinkSource } from "./sources"
+import type {
+  EmbedSource,
+  ImageSource,
+  ResolveErrorInfo,
+  TagSource,
+  WikiLinkSource,
+} from "./sources"
 import type { InPlaceConfig } from "./inplace"
 import type { ToolbarCommandId, ToolbarConfig } from "./toolbar"
 
@@ -131,7 +137,15 @@ export interface StyloProps {
    */
   embedSource?: EmbedSource
   /**
-   * Called when `embedSource`, `wikiLinkSource`, or `tagSource` throws or
+   * Resolves a Markdown image, `![alt](src)`, alone on its line, for `preview`,
+   * `split` and the in-place canvas. Called with `src` and `alt` as written,
+   * before any URL filtering; return a node to draw in its place, or `null` to
+   * keep the source. May be async. Off when omitted. Read once, at mount, on
+   * the canvas. See {@link ImageSource}.
+   */
+  imageSource?: ImageSource
+  /**
+   * Called when `embedSource`, `imageSource`, `wikiLinkSource`, or `tagSource` throws or
    * returns a rejected promise. Purely for observation — logging, a toast — the
    * resolver still falls back (literal `![[ref]]` text, or no completions)
    * either way. A `null` return is a valid result, not an error, and does not
@@ -177,7 +191,7 @@ export interface StyloProps {
 
 /**
  * Imperative handle exposed on a `ref` to `<Stylo>`. Every method but
- * `invalidateEmbed` is a no-op — returning `null` / `false` where it has a
+ * `invalidateEmbed` and `invalidateImage` is a no-op — returning `null` / `false` where it has a
  * return value — in `preview` mode or before the editing surface has mounted,
  * since there is no editor then.
  */
@@ -210,4 +224,11 @@ export interface StyloHandle {
    * no-op when `embedSource` isn't set.
    */
   invalidateEmbed(ref?: string): void
+  /**
+   * Drops the cached result for images with this `src` (every `alt`) — or, with
+   * no `src`, every cached image — so the next render re-invokes `imageSource`.
+   * The counterpart of `invalidateEmbed`; works in every mode, and is a no-op
+   * when `imageSource` isn't set.
+   */
+  invalidateImage(src?: string): void
 }

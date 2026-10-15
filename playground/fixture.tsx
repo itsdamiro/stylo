@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client"
 import {
   Stylo,
   type EmbedSource,
+  type ImageSource,
   type RevealMode,
   type SelectionUI,
   type StyloMode,
@@ -26,10 +27,12 @@ import "katex/dist/katex.min.css"
  *   ?sticky=top|bottom                    (default none)
  *   ?toolbar=0                            (default on)
  *   ?theme=dark                           (default light)
- *   ?doc=basic|math|code|rule|table|long|embed (default basic)
+ *   ?doc=basic|math|code|rule|table|long|embed|image (default basic)
  *   ?wikilinks=1                          (canned wikiLinkSource; default off)
  *   ?tags=1                               (canned tagSource; default off)
  *   ?embed=1                              (canned embedSource; default off)
+ *   ?image=1                              (canned imageSource: an inline SVG picture, sized
+ *                                          by a `|w120` / `|h80` suffix on the alt; default off)
  *   ?hostItem=1                           (one right-click "Comment" item, readOnlySafe; its
  *                                          run writes the selected text to window.__hostRun)
  *   ?cellMark=1                           (doc=table, table=cells: marks the word "paint" in its
@@ -62,6 +65,31 @@ const cannedEmbedSource: EmbedSource = (ref) => (
     embed: {ref} <button type="button">act</button>
   </span>
 )
+
+/**
+ * Resolves any image to a small inline-SVG `<img>` (no network), reading the
+ * size convention from ADR-014 off `alt` (`|300`, `|w300`, `|h200`, `|300x200`)
+ * as a host would. `data-src` and `data-alt` record what the hook was given.
+ */
+const cannedImageSource: ImageSource = (src, alt) => {
+  const [text = "", size = ""] = alt.split("|")
+  const m = /^(?:(\d+)|w(\d+)|h(\d+)|(\d+)x(\d+))$/.exec(size.trim())
+  const width = m?.[1] ?? m?.[2] ?? m?.[4]
+  const height = m?.[3] ?? m?.[5]
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="120"><rect width="240" height="120" fill="#cde"/></svg>`
+  return (
+    <img
+      className="fixture-image"
+      src={`data:image/svg+xml;utf8,${encodeURIComponent(svg)}`}
+      alt={text}
+      data-src={src}
+      data-alt={alt}
+      width={width ? Number(width) : undefined}
+      height={height ? Number(height) : undefined}
+      style={{ maxWidth: "100%", height: width && !height ? "auto" : undefined }}
+    />
+  )
+}
 
 const DOCS: Record<string, string> = {
   basic: [
@@ -116,6 +144,19 @@ const DOCS: Record<string, string> = {
       (_, i) => `Paragraph ${i + 1}. Enough lines that the window scrolls.`,
     ),
   ].join("\n"),
+  image: [
+    "# Images",
+    "",
+    "Text before the image.",
+    "",
+    "![logo|w120](a/b.svg)",
+    "",
+    "A sentence with ![inline](c.png) in it.",
+    "",
+    "![tall|h80](d.svg)",
+    "",
+    "Text after the image.",
+  ].join("\n"),
   embed: [
     "# Embeds",
     "",
@@ -145,6 +186,7 @@ const width = params.get("width")
 const wikiLinkSource = params.get("wikilinks") === "1" ? cannedWikiLinkSource : undefined
 const tagSource = params.get("tags") === "1" ? cannedTagSource : undefined
 const embedSource = params.get("embed") === "1" ? cannedEmbedSource : undefined
+const imageSource = params.get("image") === "1" ? cannedImageSource : undefined
 class Dot extends GutterMarker {
   override toDOM() {
     return document.createTextNode("•")
@@ -249,6 +291,7 @@ function Fixture() {
         wikiLinkSource={wikiLinkSource}
         tagSource={tagSource}
         embedSource={embedSource}
+        imageSource={imageSource}
         extensions={hostExtensions}
       />
     </div>

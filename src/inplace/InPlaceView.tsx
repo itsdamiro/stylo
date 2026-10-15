@@ -7,10 +7,12 @@ import type { EditorView } from "@codemirror/view"
 import { CanvasHeaderHost } from "../editor/canvas-header-panel"
 import { useCodeMirror } from "../editor/useCodeMirror"
 import { Embed } from "../render/Embed"
+import { HostImage } from "../render/HostImage"
 import styles from "../styles/stylo.module.css"
 import type {
   CodeLanguages,
   EmbedSource,
+  ImageSource,
   InPlaceConfig,
   ResolveErrorInfo,
   TagSource,
@@ -40,7 +42,9 @@ export interface InPlaceViewProps {
   tagSource?: TagSource
   /** Resolves `![[ref]]` embeds. Read once, at mount — see ADR-009. */
   embedSource?: EmbedSource
-  /** Notified when `embedSource`, `wikiLinkSource`, or `tagSource` rejects. */
+  /** Resolves a Markdown image alone on its line. Read once, at mount — see ADR-014. */
+  imageSource?: ImageSource
+  /** Notified when `embedSource`, `imageSource`, `wikiLinkSource`, or `tagSource` rejects. */
   onResolveError?: (error: unknown, info: ResolveErrorInfo) => void
   /** Called with the doc string on `Mod-s`. */
   onSave?: (value: string) => void
@@ -78,6 +82,7 @@ export function InPlaceView({
   wikiLinkSource,
   tagSource,
   embedSource,
+  imageSource,
   onResolveError,
   onSave,
   onViewChange,
@@ -131,6 +136,7 @@ export function InPlaceView({
       cellMarks: (state) => cellMarksRef.current?.(state) ?? [],
       cellWidgets: (state) => cellWidgetsRef.current?.(state) ?? [],
       embedRegistry: embedSource ? registry : undefined,
+      imageRegistry: imageSource ? registry : undefined,
     }),
     ...(headerHost ? [showPanel.of(headerHost.panel)] : []),
   ])
@@ -151,19 +157,31 @@ export function InPlaceView({
   })
   return (
     <div className={styles.inplace} ref={ref}>
-      {embedSource &&
-        slots.map((slot) =>
-          createPortal(
-            <Embed
-              reference={slot.ref}
-              source={embedSource}
+      {slots.map((slot) => {
+        const { image } = slot
+        if (image && imageSource) {
+          const node = (
+            <HostImage
+              src={image.src}
+              alt={image.alt}
+              literal={slot.ref}
+              source={imageSource}
               onError={onResolveError}
-              inline={slot.inline}
-            />,
-            slot.el,
-            String(slot.id),
-          ),
-        )}
+            />
+          )
+          return createPortal(node, slot.el, String(slot.id))
+        }
+        if (image || !embedSource) return null
+        const node = (
+          <Embed
+            reference={slot.ref}
+            source={embedSource}
+            onError={onResolveError}
+            inline={slot.inline}
+          />
+        )
+        return createPortal(node, slot.el, String(slot.id))
+      })}
       {headerDom &&
         canvasHeaderRef.current &&
         createPortal(canvasHeaderRef.current({ view: editorView }), headerDom)}

@@ -55,6 +55,16 @@ export const embedRegistryFacet = Facet.define<EmbedRegistry | null, EmbedRegist
   combine: (values) => values[0] ?? null,
 })
 
+/**
+ * The canvas's `EmbedRegistry` again, or `null` when the host passed no
+ * `imageSource`. Kept apart from `embedRegistryFacet` so `![[ref]]` embeds and
+ * `![alt](src)` images switch on independently while sharing one registry and
+ * one React portal path. Read by `image.ts`. See ADR-014.
+ */
+export const imageRegistryFacet = Facet.define<EmbedRegistry | null, EmbedRegistry | null>({
+  combine: (values) => values[0] ?? null,
+})
+
 /** Table editing mode, seeded once by `inPlaceExtension`; read by `tables.ts`. */
 export const tableEditingFacet = Facet.define<TableEditing, TableEditing>({
   combine: (values) => values[0] ?? "source",

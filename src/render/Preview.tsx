@@ -11,12 +11,14 @@ import type {
   CodeLanguages,
   EmbedSource,
   FrontmatterDisplay,
+  ImageSource,
   ResolveErrorInfo,
   TaskToggleInfo,
 } from "../types"
 import { buildPreviewComponents } from "./preview-components"
 import { remarkCallout } from "./remark-callout"
 import { remarkEmbed } from "./remark-embed"
+import { remarkImage } from "./remark-image"
 import { remarkWikilink } from "./remark-wikilink"
 
 const REHYPE_PLUGINS = [rehypeKatex]
@@ -26,7 +28,9 @@ export interface PreviewProps {
   onWikiLinkClick?: (target: string) => void
   /** Resolves `![[ref]]` embeds. Omit and `![[…]]` stays literal. */
   embedSource?: EmbedSource
-  /** Notified when `embedSource` rejects; the literal fallback still renders. */
+  /** Resolves a Markdown image alone on its line. Omit and images render as before. */
+  imageSource?: ImageSource
+  /** Notified when `embedSource` or `imageSource` rejects; the literal fallback still renders. */
   onResolveError?: (error: unknown, info: ResolveErrorInfo) => void
   /** `"code"` renders the `---` block as a styled `<pre>`; `"hidden"` (default) drops it. */
   frontmatter?: FrontmatterDisplay
@@ -62,6 +66,7 @@ export function Preview({
   value,
   onWikiLinkClick,
   embedSource,
+  imageSource,
   onResolveError,
   frontmatter = "hidden",
   codeLanguages,
@@ -80,10 +85,11 @@ export function Preview({
       remarkMath,
       ...(softBreaks ? [remarkBreaks] : []),
       ...(embedSource ? [remarkEmbed] : []),
+      ...(imageSource ? [remarkImage] : []),
       remarkWikilink,
       remarkCallout,
     ],
-    [embedSource, softBreaks],
+    [embedSource, imageSource, softBreaks],
   )
 
   // `value` changes on every keystroke, so it's read through a ref rather than
@@ -101,11 +107,12 @@ export function Preview({
         valueRef,
         onWikiLinkClick,
         embedSource,
+        imageSource,
         onResolveError,
         codeLanguages,
         onTaskToggle,
       }),
-    [onWikiLinkClick, embedSource, onResolveError, codeLanguages, onTaskToggle],
+    [onWikiLinkClick, embedSource, imageSource, onResolveError, codeLanguages, onTaskToggle],
   )
 
   return (

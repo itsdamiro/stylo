@@ -56,7 +56,7 @@ An "unsaved changes" indicator, undo history beyond the editor session, conflict
 />
 ```
 
-`embedSource` is reactive on `preview` / `split` but **also read once at mount on the in-place canvas** — keep its identity stable there and remount to change it.
+`embedSource` and `imageSource` are reactive on `preview` / `split` but **also read once at mount on the in-place canvas** — keep their identity stable there and remount to change them.
 
 See [props · applied at mount](../reference/props.md#config-applied-at-mount) for the rationale and the full list.
 
@@ -72,7 +72,7 @@ The [Auto-save guide](autosave.md) has a `useAutosave` hook that debounces `onCh
 
 ## Resolver failures are quiet — `onResolveError` to hear them
 
-`embedSource` and `wikiLinkSource` swallow their own failures: a rejected embed falls back to literal `![[ref]]`, a rejected wikilink search shows no completions. When either is network-backed, wire **`onResolveError(error, info)`** so a backend outage is a log line or a toast, not a silent blank. It is observation only — the fallback is unchanged — and a resolver returning `null` is a valid result, not an error. See [props · resolver errors](../reference/props.md#resolver-errors).
+`embedSource`, `imageSource` and `wikiLinkSource` swallow their own failures: a rejected embed falls back to literal `![[ref]]`, a rejected image to its literal `![alt](src)`, a rejected wikilink search shows no completions. When either is network-backed, wire **`onResolveError(error, info)`** so a backend outage is a log line or a toast, not a silent blank. It is observation only — the fallback is unchanged — and a resolver returning `null` is a valid result, not an error. See [props · resolver errors](../reference/props.md#resolver-errors).
 
 ## Stylesheets — import once
 

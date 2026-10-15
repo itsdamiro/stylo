@@ -1,8 +1,15 @@
 import { Children, isValidElement, type ReactNode } from "react"
 import type { Components } from "react-markdown"
-import type { CodeLanguages, EmbedSource, ResolveErrorInfo, TaskToggleInfo } from "../types"
+import type {
+  CodeLanguages,
+  EmbedSource,
+  ImageSource,
+  ResolveErrorInfo,
+  TaskToggleInfo,
+} from "../types"
 import { CodeBlock } from "./CodeBlock"
 import { Embed } from "./Embed"
+import { HostImage } from "./HostImage"
 import { enableLeadingCheckbox, makeToggleHandler } from "./taskCheckbox"
 
 export interface PreviewComponentsOptions {
@@ -12,6 +19,7 @@ export interface PreviewComponentsOptions {
   valueRef: { current: string }
   onWikiLinkClick?: (target: string) => void
   embedSource?: EmbedSource
+  imageSource?: ImageSource
   onResolveError?: (error: unknown, info: ResolveErrorInfo) => void
   codeLanguages?: CodeLanguages
   onTaskToggle?: (info: TaskToggleInfo) => void
@@ -37,6 +45,26 @@ function embedOrChildren(
   )
 }
 
+/** The `HostImage` for a `data-stylo-image` carrier, or `children` unchanged. */
+function imageOrChildren(
+  rest: object,
+  imageSource: ImageSource | undefined,
+  onResolveError: PreviewComponentsOptions["onResolveError"],
+  children: ReactNode,
+): ReactNode {
+  const src = dataAttr(rest, "data-stylo-image")
+  if (src === undefined || !imageSource) return children
+  return (
+    <HostImage
+      src={src}
+      alt={dataAttr(rest, "data-stylo-image-alt") ?? ""}
+      literal={dataAttr(rest, "data-stylo-image-raw") ?? ""}
+      source={imageSource}
+      onError={onResolveError}
+    />
+  )
+}
+
 /**
  * Builds `react-markdown`'s `components` map for `Preview`: the wikilink
  * click handler on `a`, the embed slots on `div` / `span`, the task-checkbox
@@ -46,6 +74,7 @@ export function buildPreviewComponents({
   valueRef,
   onWikiLinkClick,
   embedSource,
+  imageSource,
   onResolveError,
   codeLanguages,
   onTaskToggle,
@@ -81,7 +110,7 @@ export function buildPreviewComponents({
             embedSource,
             onResolveError,
             false,
-            children,
+            imageOrChildren(rest, imageSource, onResolveError, children),
           )}
         </div>
       )

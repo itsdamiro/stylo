@@ -16,10 +16,11 @@ const dist = fileURLToPath(new URL("../dist/", import.meta.url))
 const BUDGETS = {
   "stylo.js": 6_000, // entry, always loaded — keep it tiny. Bumped from 4,000: the
   // toolbar overflow menu (fit, hook, menu) adds ~2,000 B and lives in the bar
-  InPlaceView: 26_000, // in-place canvas glue — bumped from 22,000, then 23,000, then 24,000:
+  InPlaceView: 27_000, // in-place canvas glue — bumped from 22,000, then 23,000, then 24,000, 26,000:
   // the readOnly table-cell guard and the exitBelow / insertTable fixes (2026-09-13) left only
   // 27 B of headroom; host items in the context menu (2026-10-05) add ~630 B; host cell marks
-  // (0.20.0) took it over 24,000, and host cell widgets (0.21.0) add ~570 B
+  // (0.20.0) took it over 24,000, and host cell widgets (0.21.0) add ~570 B; the Markdown image
+  // widget and its portal (ADR-014) add ~480 B
   Preview: 4_000, // preview glue
   katex: 95_000, // math rendering
   markdown: 70_000, // remark / rehype / react-markdown — preview only
@@ -29,6 +30,7 @@ const BUDGETS = {
   wikilink: 2_000,
   callout: 2_000,
   embed: 2_000, // <Embed> — the ![[ref]] resolver shared by preview and the in-place canvas
+  image: 2_000, // parseImage and the imageSource cache adapter (ADR-014) — shared by preview and the canvas; ~1,300 B and ~1,900 B
   highlight: 2_000, // SYNTAX_TAG_GROUPS + styloHighlightStyle — shared by the in-place canvas and preview's highlightCode.ts
   frontmatter: 2_000, // frontmatterRange / splitFrontmatter — shared by the entry, in-place, and preview
 }

@@ -20,6 +20,7 @@ The records moved to [`docs/decisions/`](./decisions/README.md) (ADR-013, 2026-1
 
 | Date       | Entry                                                                                                                                                                                   |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-15 | [Markdown images through a host `imageSource`, on every surface](./journal/2026-10/2026-10-15_markdown-images-imagesource.md)                                                           |
 | 2026-10-09 | [Markdown prose on one line, links checked, browser tests on Linux](./journal/2026-10/2026-10-09_docs-one-line-links-and-linux-browser-tests.md)                                        |
 | 2026-10-05 | [Host marks and widgets on the rendered table of source mode](./journal/2026-10/2026-10-05_host-marks-and-widgets-in-source-mode-tables.md)                                             |
 | 2026-10-05 | [Host widgets inside table cells: `cellWidgets`](./journal/2026-10/2026-10-05_host-widgets-inside-table-cells.md)                                                                       |

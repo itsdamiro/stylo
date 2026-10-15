@@ -9,8 +9,11 @@
 export interface EmbedSlot {
   /** Monotonic per registry; the React portal key. */
   id: number
-  /** Raw `![[ref]]` reference, passed straight to `embedSource`. */
+  /** Raw `![[ref]]` reference, passed straight to `embedSource`. For an image
+   *  slot, the image as written (its `HostImage` fallback text). */
   ref: string
+  /** Set on a `![alt](src)` image slot: what `imageSource` is called with. */
+  image?: { src: string; alt: string }
   /** `true` for a `![[ref]]` mid-sentence — rendered as phrasing content. */
   inline: boolean
   /** The slot element CodeMirror owns; the portal target. */

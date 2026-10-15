@@ -5,6 +5,7 @@ export type {
   CodeLanguages,
   EmbedSource,
   FrontmatterDisplay,
+  ImageSource,
   CellMark,
   CellWidget,
   InPlaceConfig,

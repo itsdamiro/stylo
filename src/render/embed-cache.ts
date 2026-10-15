@@ -103,7 +103,9 @@ export function resolveEmbed(source: EmbedSource, ref: string): Promise<ReactNod
   const existing = m.get(ref)
   if (existing) return existing.promise
 
-  const promise = Promise.resolve(source(ref)).then(
+  // A source that throws synchronously becomes a rejection, like one that returns
+  // a rejected promise, so it reaches `onResolveError` instead of the effect.
+  const promise = new Promise<ReactNode>((resolve) => resolve(source(ref))).then(
     (node) => {
       const entry = m.get(ref)
       if (entry) {

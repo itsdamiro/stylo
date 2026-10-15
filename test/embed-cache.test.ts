@@ -44,6 +44,16 @@ test("a rejection is not cached — the next resolve retries", async () => {
   expect(source).toHaveBeenCalledTimes(2)
 })
 
+test("a synchronous throw is a rejection, and is not cached either", async () => {
+  const source = vi.fn<EmbedSource>(() => {
+    throw new Error("sync boom")
+  })
+  await expect(resolveEmbed(source, "R")).rejects.toThrow("sync boom")
+  expect(peekEmbed(source, "R")).toBeUndefined()
+  await expect(resolveEmbed(source, "R")).rejects.toThrow("sync boom")
+  expect(source).toHaveBeenCalledTimes(2)
+})
+
 test("the cache is capped and evicts the oldest ref", async () => {
   const source = vi.fn<EmbedSource>((ref) => `node:${ref}`)
   for (let i = 0; i < 70; i++) await resolveEmbed(source, `ref-${i}`)

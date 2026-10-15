@@ -1,6 +1,7 @@
 import { EditorView } from "@codemirror/view"
 import { calloutTheme } from "./theme-callout"
 import { canvasTheme } from "./theme-canvas"
+import { imageTheme } from "./theme-image"
 import { menuTheme } from "./theme-menu"
 import { popupsTheme } from "./theme-popups"
 import { tableTheme } from "./theme-table"
@@ -25,6 +26,7 @@ import { tableGizmosTheme } from "./theme-table-gizmos"
  */
 export const inPlaceTheme = EditorView.theme({
   ...canvasTheme,
+  ...imageTheme,
   ...calloutTheme,
   ...tableTheme,
   ...tableGizmosTheme,

@@ -39,7 +39,8 @@ import "@damiro/stylo/katex.css" // only if you use math in preview
 | `wikiLinkSource`  | `(query: string) => readonly WikiLinkCompletion[] \| Promise<…>`                                | —            | Enables `[[wikilink]]` autocomplete on the CodeMirror surfaces. Called with the target typed so far while the caret is inside an unclosed `[[…`; return your index's matches, already ordered (Stylo does not re-rank or filter). May be async. Off when omitted. Read once, at mount. See [Wikilink autocomplete](#wikilink-autocomplete).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `tagSource`       | `(query: string) => readonly TagCompletion[] \| Promise<…>`                                     | —            | Enables `#tag` autocomplete on the CodeMirror surfaces, mirroring `wikiLinkSource`'s contract exactly. Called with the tag typed so far while the caret is inside an unclosed `#…`; return your index's matches, already ordered. May be async. Off when omitted. Read once, at mount. See [Tag autocomplete](#tag-autocomplete).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `embedSource`     | `(ref: string) => ReactNode \| Promise<ReactNode>`                                              | —            | Resolves `![[ref]]` embeds for `preview`, `split`, and the in-place canvas. Called with the raw reference (`Note#Heading`, `pic.png\|320` — suffixes intact); return a node to render in its place, or `null` to keep it literal. May be async. Off when omitted. Recognised only when the `![[…]]` is alone on its line. See [Embeds](#embeds).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `onResolveError`  | `(error: unknown, info: ResolveErrorInfo) => void`                                              | —            | Called when `embedSource`, `wikiLinkSource`, or `tagSource` throws or rejects. `info.source` names which one; `info.input` is the `![[ref]]` reference or the `[[` / `#` query. Observation only — the resolver still falls back (literal text, or no completions). A `null` return is not an error. Reactive.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `imageSource`     | `(src: string, alt: string) => ReactNode \| Promise<ReactNode>`                                 | —            | Draws a Markdown image, `![alt](src)`, alone on its line, for `preview`, `split`, and the in-place canvas. Called with `src` and `alt` as written, before any URL filtering; return a node to render in its place, or `null` to keep the source. May be async. Off when omitted. See [Images](#images).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onResolveError`  | `(error: unknown, info: ResolveErrorInfo) => void`                                              | —            | Called when `embedSource`, `imageSource`, `wikiLinkSource`, or `tagSource` throws or rejects. `info.source` names which one; `info.input` is the `![[ref]]` reference, the image `src`, or the `[[` / `#` query. Observation only — the resolver still falls back (literal text, or no completions). A `null` return is not an error. Reactive.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `readOnly`        | `boolean`                                                                                       | `false`      | Render the source surface read-only.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `placeholder`     | `string`                                                                                        | —            | Shown when the document is empty (source surface).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `className`       | `string`                                                                                        | —            | Added to the root element alongside the internal classes.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
@@ -54,7 +55,7 @@ Four props feed the CodeMirror extension configuration and are read **once**, wh
 <Stylo key={mode + JSON.stringify(inPlace)} value={doc} onChange={setDoc} inPlace={inPlace} />
 ```
 
-Everything else — `value`, `onChange`, every callback, `readOnly`, `placeholder`, `toolbar`, `icons`, `className`, `embedSource` — is fully reactive and needs no remount. `embedSource` in particular: the preview is a pure function of its props, so keep the function identity stable or the render pipeline rebuilds each frame. (On the in-place canvas `embedSource` is read once at mount, like `wikiLinkSource` — a later change to it is not picked up there without a remount.)
+Everything else — `value`, `onChange`, every callback, `readOnly`, `placeholder`, `toolbar`, `icons`, `className`, `embedSource` — is fully reactive and needs no remount. `embedSource` in particular: the preview is a pure function of its props, so keep the function identity stable or the render pipeline rebuilds each frame. (On the in-place canvas `embedSource` and `imageSource` are read once at mount, like `wikiLinkSource` — a later change to either is not picked up there without a remount.)
 
 `codeLanguages` is the same asymmetric story as `embedSource`: mount-once on the three CodeMirror surfaces (it feeds `@codemirror/lang-markdown`'s extension config, listed above), but fully reactive in `preview` — it has no editor extension to reconstruct, so a changed `codeLanguages` colours the very next render. Give `<Stylo>` a `key` if a CodeMirror surface needs to pick up a different set live; `preview` never needs one.
 
@@ -139,6 +140,44 @@ type TagCompletion = { tag: string }
 - Block renders into `<div class="stylo-embed"><div class="stylo-embed-content">…` (`preview` / `split`) or `<div class="cm-inplace-embed">…` (canvas); inline into `<span class="stylo-embed"><span class="stylo-embed-content stylo-embed-inline">…` (`preview` / `split`) or `<span class="cm-inplace-embed-inline">…` (canvas). `.stylo-embed-content`, `.stylo-embed-inline`, and `--stylo-embed-accent` are the shared override points; zero the padding and border to drop the block frame.
 - Off entirely when `embedSource` is omitted — `![[ref]]` then renders as it did before (the leading `!` as text, `[[ref]]` as a wikilink).
 
+## Images
+
+`![alt](src)` is the Markdown image. Stylo cannot know where your files live, and `preview` leaves the address to the browser (a relative path resolves against the host page, and `react-markdown`'s URL filter drops anything outside `http`, `https`, `irc`, `ircs`, `mailto`, `xmpp` and relative values, a `data:` URL included). Pass **`imageSource`** and the host decides what an image is drawn as, with the same split as [`embedSource`](#embeds):
+
+```tsx
+type ImageSource = (src: string, alt: string) => ReactNode | Promise<ReactNode>
+;<Stylo
+  value={doc}
+  onChange={setDoc}
+  imageSource={(src, alt) => {
+    const [text, size] = alt.split("|") // "logo|w300" → "logo", "w300"
+    const m = /^(?:(\d+)|w(\d+)|h(\d+)|(\d+)x(\d+))$/.exec(size ?? "")
+    const width = m?.[1] ?? m?.[2] ?? m?.[4]
+    const height = m?.[3] ?? m?.[5]
+    return (
+      <img
+        src={vault.assetUrl(src)}
+        alt={text}
+        width={width ? Number(width) : undefined}
+        height={height ? Number(height) : undefined}
+        style={{ maxWidth: "100%", height: width && !height ? "auto" : undefined }}
+      />
+    )
+  }}
+/>
+```
+
+- **Called with `src` and `alt` as written**, before any URL filtering. `src` has its `<angle brackets>` removed and nothing else changed (no percent-decoding, no unescaping); `alt` keeps any `|300` suffix and any Markdown written in it. A link title is ignored. A `data:` source reaches the hook whole.
+- Return a node to draw in its place, or `null` to keep the source as literal text. May be `async`. While it resolves, on `null` and on an error, the image's own source text stands in. Off entirely when `imageSource` is omitted: images render as they did before.
+- **Only an image alone on its line is drawn**, as a top-level paragraph by itself. An image inside a sentence, a list item, a quote, a code span or block, or (on the canvas) a table cell is left as it is today: source on the canvas, the browser's own `<img>` in `preview`. `![[image.png]]` is a different syntax and goes to `embedSource`.
+- **Size is the host's to read.** Stylo does not parse a size out of `alt`. The convention the example reads: `|300` or `|w300` (width), `|h200` (height), `|300x200` (both); one dimension alone scales with the aspect ratio. The bare number and `WxH` are Obsidian's forms, so a note written there keeps its size; `w` and `h` are Stylo's addition. A host that ignores the suffix shows the picture unsized.
+- **Resolutions are cached by `src` and `alt`** (per `imageSource` identity), so the same file with two sizes is two entries. The cache has no TTL: if what is behind a `src` changes while the editor is open, call **`handle.invalidateImage(src)`** (every `alt` for that `src`; no argument clears all) and any image on screen re-resolves. Rejections are not cached.
+- Works on **`preview`, `split`, and the in-place canvas**. On the canvas the picture shows while the caret is off the line; put the caret on the line to edit the source. The canvas reads `imageSource` once, at mount, like `embedSource`.
+- Renders into `<div class="stylo-image"><div class="stylo-embed-content">…` (`preview` / `split`) or `<div class="cm-inplace-image">…` (canvas). `.stylo-image` and `.cm-inplace-image` are the override points; neither draws the embed's left rail.
+- **Loading remote images is your call.** A note that fetches any address on open is a tracking risk, so Stylo never does it by default: `imageSource` is where you decide.
+
+See [ADR-014](../../decisions/014-image-source-for-markdown-images.md).
+
 ## Clickable task checkboxes
 
 `remark-gfm` renders a `- [ ]` / `- [x]` task-list item as an `<input type="checkbox" disabled>` — a faithful, read-only render of the source, not something a host can click. Pass **`onTaskToggle`** and stylo drops the `disabled` attribute for that render pass and reports a click instead of silently doing nothing:
@@ -191,7 +230,7 @@ See [ADR-010](../../decisions/010-canvas-header-panel.md) for the reasoning behi
 
 ## Resolver errors
 
-`embedSource`, `wikiLinkSource`, and `tagSource` fail quietly by design — a rejected `embedSource` leaves the literal `![[ref]]`, a rejected `wikiLinkSource` or `tagSource` shows no completions. Pass **`onResolveError(error, info)`** to observe those failures (log them, show a toast) without changing the fallback:
+`embedSource`, `imageSource`, `wikiLinkSource`, and `tagSource` fail quietly by design — a rejected `embedSource` leaves the literal `![[ref]]`, a rejected `imageSource` leaves the literal `![alt](src)`, a rejected `wikiLinkSource` or `tagSource` shows no completions. Pass **`onResolveError(error, info)`** to observe those failures (log them, show a toast) without changing the fallback:
 
 ```tsx
 <Stylo
@@ -205,7 +244,7 @@ See [ADR-010](../../decisions/010-canvas-header-panel.md) for the reasoning behi
 />
 ```
 
-`info.source` is `"embedSource"`, `"wikiLinkSource"`, or `"tagSource"`; `info.input` is the reference or query it was called with. A resolver that returns `null` has not failed — that is the "keep it literal" result — and does not fire this. The callback is reactive; swap it freely.
+`info.source` is `"embedSource"`, `"imageSource"`, `"wikiLinkSource"`, or `"tagSource"`; `info.input` is the reference, image `src` or query it was called with. A resolver that returns `null` has not failed — that is the "keep it literal" result — and does not fire this. The callback is reactive; swap it freely.
 
 ## Ref — imperative handle
 
@@ -222,15 +261,16 @@ editor.current?.scrollToHeading("Background") // open a note, jump to a heading
 editor.current?.insertAtCursor("![](…)") //     drop text in at the caret
 ```
 
-| Method                  | Returns              | Notes                                                                                                                                                                                  |
-| ----------------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `focus()`               | `void`               | Move keyboard focus into the editing surface.                                                                                                                                          |
-| `scrollToHeading(text)` | `boolean`            | Caret to the first ATX heading whose text matches `text` (trimmed, case-insensitive); scrolls it to the top. `true` if matched.                                                        |
-| `insertAtCursor(md)`    | `void`               | Replace the selection, or insert at the caret when it is empty. No effect when `readOnly`.                                                                                             |
-| `getView()`             | `EditorView \| null` | The underlying CodeMirror view. An escape hatch — **not** covered by semver; the other four are.                                                                                       |
-| `invalidateEmbed(ref?)` | `void`               | Drop the cached `embedSource` result for `ref` — or, with no argument, every cached embed — so the next render re-resolves it. See [Embeds](#embeds). No-op without `embedSource` set. |
+| Method                  | Returns              | Notes                                                                                                                                                                                                                    |
+| ----------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `focus()`               | `void`               | Move keyboard focus into the editing surface.                                                                                                                                                                            |
+| `scrollToHeading(text)` | `boolean`            | Caret to the first ATX heading whose text matches `text` (trimmed, case-insensitive); scrolls it to the top. `true` if matched.                                                                                          |
+| `insertAtCursor(md)`    | `void`               | Replace the selection, or insert at the caret when it is empty. No effect when `readOnly`.                                                                                                                               |
+| `getView()`             | `EditorView \| null` | The underlying CodeMirror view. An escape hatch — **not** covered by semver; the other four are.                                                                                                                         |
+| `invalidateEmbed(ref?)` | `void`               | Drop the cached `embedSource` result for `ref` — or, with no argument, every cached embed — so the next render re-resolves it. See [Embeds](#embeds). No-op without `embedSource` set.                                   |
+| `invalidateImage(src?)` | `void`               | Drop the cached `imageSource` result for every image with this `src` (any `alt`) — or, with no argument, every cached image — so the next render re-resolves it. See [Images](#images). No-op without `imageSource` set. |
 
-`focus()`, `scrollToHeading()`, `insertAtCursor()`, and `getView()` are inert (`null` / `false` / no-op) in `preview` mode and before the surface has mounted — there is no editor then. `invalidateEmbed()` is the exception: it targets the embed cache, not the editor, so it works in every mode, `preview` included.
+`focus()`, `scrollToHeading()`, `insertAtCursor()`, and `getView()` are inert (`null` / `false` / no-op) in `preview` mode and before the surface has mounted — there is no editor then. `invalidateEmbed()` and `invalidateImage()` are the exceptions: they target the resolution caches, not the editor, so they work in every mode, `preview` included.
 
 ## Styling tokens
 

@@ -17,6 +17,7 @@ Stylo is a zero-bloat Markdown editor component for React. Plain text stays cano
 - **`[[wikilinks]]`** — recognised, styled, and clickable, with an `onWikiLinkClick` callback and opt-in `[[` autocomplete from an index you supply (`wikiLinkSource`).
 - **`#tags`** — opt-in `#` autocomplete from an index you supply (`tagSource`), mirroring `wikiLinkSource`'s trigger-while-typing UX.
 - **`![[embed]]` transclusion** — opt-in on every rendered surface (`preview`, `split`, and the in-place canvas): pass `embedSource` and Stylo hands you the reference, you return the node to render in its place.
+- **`![alt](src)` images** — the same opt-in for a Markdown image alone on its line: pass `imageSource` and Stylo hands you `src` and `alt` before any URL filtering, you return the picture.
 - **Interactive tables** — edit a rendered table cell by cell in the in-place canvas, with row / column controls; or keep plain source pipes.
 - **Callouts** — `> [!note]` blockquotes render as tinted admonition blocks (`note` / `tip` / `warning` / `danger` / `example`).
 - **Declarative toolbar** — trim, reorder, or extend the command set, supply your own buttons, swap the icons, and fold what doesn't fit into a `⋯` menu instead of wrapping. [Reference](./docs/wiki/reference/toolbar.md).
@@ -69,16 +70,17 @@ Stylo takes the Obsidian stance instead: **the Markdown string is the source of 
 
 ## Stack
 
-| Concern          | Library                                                                                      |
-| ---------------- | -------------------------------------------------------------------------------------------- |
-| Editing surface  | CodeMirror 6 (`@codemirror/lang-markdown`)                                                   |
-| Find / replace   | `@codemirror/search` — `Mod-f` on every editing surface                                      |
-| Render / preview | `react-markdown` + `remark-gfm` + `remark-math` + `rehype-katex` + `katex`                   |
-| `[[wikilinks]]`  | small custom `remark` plugin                                                                 |
-| `![[embeds]]`    | `remark` plugin (preview) + `EmbedWidget` portal registry (in-place), one host `embedSource` |
-| Frontmatter      | `remark-frontmatter` — fences recognised; key/value parsing deferred                         |
-| Styling          | CSS Modules + `--stylo-*` CSS custom properties — no Tailwind, no CSS-in-JS                  |
-| Icons            | inline SVG, swappable via the `icons` prop — no icon-package dependency                      |
+| Concern          | Library                                                                                         |
+| ---------------- | ----------------------------------------------------------------------------------------------- |
+| Editing surface  | CodeMirror 6 (`@codemirror/lang-markdown`)                                                      |
+| Find / replace   | `@codemirror/search` — `Mod-f` on every editing surface                                         |
+| Render / preview | `react-markdown` + `remark-gfm` + `remark-math` + `rehype-katex` + `katex`                      |
+| `[[wikilinks]]`  | small custom `remark` plugin                                                                    |
+| `![[embeds]]`    | `remark` plugin (preview) + `EmbedWidget` portal registry (in-place), one host `embedSource`    |
+| `![](images)`    | `remarkImage` (preview) + `ImageWidget` on the same registry (in-place), one host `imageSource` |
+| Frontmatter      | `remark-frontmatter` — fences recognised; key/value parsing deferred                            |
+| Styling          | CSS Modules + `--stylo-*` CSS custom properties — no Tailwind, no CSS-in-JS                     |
+| Icons            | inline SVG, swappable via the `icons` prop — no icon-package dependency                         |
 
 Styling and icon decisions are recorded in [ADR-002](./docs/decisions/002-editor-ux-and-customization.md); the math engine and KaTeX asset delivery in [ADR-003](./docs/decisions/003-katex-math-rendering.md).
 

@@ -66,10 +66,30 @@ export type TagSource = (
  */
 export type EmbedSource = (ref: string) => ReactNode | Promise<ReactNode>
 
+/**
+ * Resolves a Markdown image, `![alt](src)`, to the node drawn in its place.
+ * Called with `src` and `alt` exactly as written — `src` without its
+ * `<angle brackets>`, `alt` with any `|300` size suffix intact, nothing
+ * decoded — and **before** `react-markdown`'s URL filter, so a `data:` source
+ * reaches it. Return a node to render instead of the image, or `null` to leave
+ * the source as literal text. May be async.
+ *
+ * Pass it to enable it; omit it and images render as they did before. Works on
+ * `preview`, `split`, and the in-place canvas, for an image **alone on its
+ * line** at the top level of the document. An image inside a sentence, a list
+ * item, a quote, or a table cell is left as it is today. The canvas reads it
+ * once, at mount. Results are memoised by `src` and `alt` per function identity
+ * and dropped with `StyloHandle.invalidateImage`; rejections are not cached.
+ *
+ * Stylo does not read a size out of `alt`. A convention a host can copy:
+ * `|300` or `|w300` (width), `|h200` (height), `|300x200` (both). See ADR-014.
+ */
+export type ImageSource = (src: string, alt: string) => ReactNode | Promise<ReactNode>
+
 /** Which host resolver rejected, and the argument it was called with. */
 export interface ResolveErrorInfo {
   /** The prop whose function threw or returned a rejected promise. */
-  source: "embedSource" | "wikiLinkSource" | "tagSource"
-  /** What it was asked to resolve — an `![[ref]]` reference, or the `[[` query. */
+  source: "embedSource" | "imageSource" | "wikiLinkSource" | "tagSource"
+  /** What it was asked to resolve — an `![[ref]]` reference, an image `src`, or the `[[` query. */
   input: string
 }

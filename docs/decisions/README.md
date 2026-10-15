@@ -19,3 +19,4 @@ Records 001 to 012 were written as journal entries and moved here by record 013 
 | [011](011-embed-cache-invalidation.md)           | Embed cache invalidation: a host-triggered `invalidateEmbed`          | Accepted |
 | [012](012-host-extensions-prop.md)               | A host `extensions` prop, and gutters a host can show                 | Accepted |
 | [013](013-adr-records-live-in-docs-decisions.md) | Decision records live in docs/decisions, in the template shape        | Accepted |
+| [014](014-image-source-for-markdown-images.md)   | A host `imageSource` for `![alt](src)` images                         | Accepted |

@@ -9,6 +9,7 @@ import { Toolbar } from "./toolbar/Toolbar"
 import { resolveToolbarItems } from "./toolbar/config"
 import { splitFrontmatter } from "./frontmatter"
 import { invalidateEmbed } from "./render/embed-cache"
+import { invalidateImage } from "./render/image-cache"
 import "./styles/tokens.css"
 import type { ResolveErrorInfo, StyloHandle, StyloProps } from "./types"
 
@@ -40,6 +41,7 @@ export const Stylo = forwardRef<StyloHandle, StyloProps>(function Stylo(
     wikiLinkSource,
     tagSource,
     embedSource,
+    imageSource,
     onResolveError,
     toolbar,
     icons,
@@ -78,6 +80,8 @@ export const Stylo = forwardRef<StyloHandle, StyloProps>(function Stylo(
   // imperative handle itself to be rebuilt when `embedSource` changes.
   const embedSourceRef = useRef(embedSource)
   embedSourceRef.current = embedSource
+  const imageSourceRef = useRef(imageSource)
+  imageSourceRef.current = imageSource
   const lastFrontmatter = useRef<string | null | undefined>(undefined)
   useEffect(() => {
     const raw = splitFrontmatter(value)?.frontmatter ?? null
@@ -117,6 +121,10 @@ export const Stylo = forwardRef<StyloHandle, StyloProps>(function Stylo(
       invalidateEmbed: (ref) => {
         const source = embedSourceRef.current
         if (source) invalidateEmbed(source, ref)
+      },
+      invalidateImage: (src) => {
+        const source = imageSourceRef.current
+        if (source) invalidateImage(source, src)
       },
     }),
     [view],
@@ -174,6 +182,7 @@ export const Stylo = forwardRef<StyloHandle, StyloProps>(function Stylo(
             value={value}
             onWikiLinkClick={onWikiLinkClick}
             embedSource={embedSource}
+            imageSource={imageSource}
             onResolveError={resolveError}
             frontmatter={frontmatter}
             codeLanguages={codeLanguages}
@@ -194,6 +203,7 @@ export const Stylo = forwardRef<StyloHandle, StyloProps>(function Stylo(
           wikiLinkSource={wikiLinkSource}
           tagSource={tagSource}
           embedSource={embedSource}
+          imageSource={imageSource}
           onResolveError={resolveError}
           frontmatter={frontmatter}
           softBreaks={softBreaks}
@@ -219,6 +229,7 @@ export const Stylo = forwardRef<StyloHandle, StyloProps>(function Stylo(
             wikiLinkSource={wikiLinkSource}
             tagSource={tagSource}
             embedSource={embedSource}
+            imageSource={imageSource}
             onResolveError={resolveError}
             onSave={onSave}
             onViewChange={setView}

@@ -652,6 +652,14 @@
   margin-bottom: 0;
 }
 
+/* A Markdown image alone on its line, drawn by the host's `imageSource`.
+   `remark-image` swaps its paragraph for `<div class="stylo-image">`, and
+   `HostImage` nests the host node in `.stylo-embed-content`. A stable override
+   point; it has no left rail, unlike `.stylo-embed`. */
+.preview :global(.stylo-image) {
+  margin: 1em 0;
+}
+
 /* A GFM table renders wrapped in `<div class="stylo-table-wrap">`, which
    carries the block/scroll behaviour a table wider than its column needs —
    `display: block` directly on `<table>` disables its own table-layout
