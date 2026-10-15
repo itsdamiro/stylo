@@ -27,12 +27,13 @@ import "katex/dist/katex.min.css"
  *   ?sticky=top|bottom                    (default none)
  *   ?toolbar=0                            (default on)
  *   ?theme=dark                           (default light)
- *   ?doc=basic|math|code|rule|table|long|embed|image (default basic)
+ *   ?doc=basic|math|code|rule|table|long|embed|image|imagefull (default basic)
  *   ?wikilinks=1                          (canned wikiLinkSource; default off)
  *   ?tags=1                               (canned tagSource; default off)
  *   ?embed=1                              (canned embedSource; default off)
  *   ?image=1                              (canned imageSource: an inline SVG picture, sized
- *                                          by a `|w120` / `|h80` suffix on the alt; default off)
+ *                                          by a `|w120` / `|h80` suffix on the alt; default off;
+ *                                          `image=slow` resolves each after 600 ms)
  *   ?hostItem=1                           (one right-click "Comment" item, readOnlySafe; its
  *                                          run writes the selected text to window.__hostRun)
  *   ?cellMark=1                           (doc=table, table=cells: marks the word "paint" in its
@@ -68,11 +69,12 @@ const cannedEmbedSource: EmbedSource = (ref) => (
 
 /**
  * Resolves any image to a small inline-SVG `<img>` (no network), reading the
- * size convention from ADR-014 off `alt` (`|300`, `|w300`, `|h200`, `|300x200`)
+ * size convention from ADR-014 off `alt` (`|300`, `|w300`, `|h200`, `|300x200`, `|full`)
  * as a host would. `data-src` and `data-alt` record what the hook was given.
  */
 const cannedImageSource: ImageSource = (src, alt) => {
   const [text = "", size = ""] = alt.split("|")
+  const full = size.trim() === "full"
   const m = /^(?:(\d+)|w(\d+)|h(\d+)|(\d+)x(\d+))$/.exec(size.trim())
   const width = m?.[1] ?? m?.[2] ?? m?.[4]
   const height = m?.[3] ?? m?.[5]
@@ -86,7 +88,11 @@ const cannedImageSource: ImageSource = (src, alt) => {
       data-alt={alt}
       width={width ? Number(width) : undefined}
       height={height ? Number(height) : undefined}
-      style={{ maxWidth: "100%", height: width && !height ? "auto" : undefined }}
+      style={{
+        maxWidth: "100%",
+        width: full ? "100%" : undefined,
+        height: full || (width && !height) ? "auto" : undefined,
+      }}
     />
   )
 }
@@ -157,6 +163,9 @@ const DOCS: Record<string, string> = {
     "",
     "Text after the image.",
   ].join("\n"),
+  imagefull: ["# Wide", "", "Text before.", "", "![wide|full](a/b.svg)", "", "Text after."].join(
+    "\n",
+  ),
   embed: [
     "# Embeds",
     "",
@@ -186,7 +195,14 @@ const width = params.get("width")
 const wikiLinkSource = params.get("wikilinks") === "1" ? cannedWikiLinkSource : undefined
 const tagSource = params.get("tags") === "1" ? cannedTagSource : undefined
 const embedSource = params.get("embed") === "1" ? cannedEmbedSource : undefined
-const imageSource = params.get("image") === "1" ? cannedImageSource : undefined
+const slowImageSource: ImageSource = (src, alt) =>
+  new Promise((resolve) => setTimeout(() => resolve(cannedImageSource(src, alt)), 600))
+const imageSource =
+  params.get("image") === "1"
+    ? cannedImageSource
+    : params.get("image") === "slow"
+      ? slowImageSource
+      : undefined
 class Dot extends GutterMarker {
   override toDOM() {
     return document.createTextNode("•")

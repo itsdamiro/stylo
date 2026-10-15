@@ -82,7 +82,8 @@ export type EmbedSource = (ref: string) => ReactNode | Promise<ReactNode>
  * and dropped with `StyloHandle.invalidateImage`; rejections are not cached.
  *
  * Stylo does not read a size out of `alt`. A convention a host can copy:
- * `|300` or `|w300` (width), `|h200` (height), `|300x200` (both). See ADR-014.
+ * `|300` or `|w300` (width), `|h200` (height), `|300x200` (both), `|full` (the
+ * column's width). See ADR-014.
  */
 export type ImageSource = (src: string, alt: string) => ReactNode | Promise<ReactNode>
 

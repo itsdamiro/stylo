@@ -71,3 +71,12 @@ Written when the slice was built; the decision above stands, with these details 
 - **A synchronous throw is now a rejection.** `embed-cache.ts` called the host source directly, so a source that threw (rather than returned a rejected promise) escaped into the effect and `onResolveError` was never called. It now wraps the call, which fixes `embedSource` the same way; a test pins it. The request asked for a throw to reach `onResolveError`.
 - **The pass is a separate facet, `imageRegistryFacet`,** pointing at the same registry as `embedRegistryFacet`, so passing only `imageSource` does not make `![[ref]]` lines empty slots, nor the reverse.
 - **Bundle budgets.** The `InPlaceView` chunk grew about 480 B gzip (to 26,408 B) and two shared chunks are new, about 1,300 B and 1,900 B; the budgets in `scripts/check-bundle-size.mjs` were set to 27,000 B and 2,000 B each. `stylo.js`, which holds the handle, grew about 60 B.
+
+## Amendment (2026-10-15): a `full` size form
+
+The owner asked for an image that fills the text column. The size convention in point 9 gains a fifth form: `|full`, as in `![logo|full](a/b.svg)`. The host draws the picture at the full width of its container and scales the height with the aspect ratio, so a small picture is stretched and a large one is capped, which `|300` alone does not do.
+
+- **Still the host's to read.** Stylo does not parse `full` any more than it parses `300`: `alt` reaches the hook whole, and a host that ignores the suffix shows the picture unsized. Nothing in `src/` changes except the doc comment on `ImageSource`.
+- **Why a word, not a number.** A width in pixels cannot say "whatever the column is", and a percentage (`|100%`) would add a unit to a convention whose other forms have none. `full` reads the same in a note written elsewhere, where it is ignored, as it does here.
+- **It does not break out of the column.** A picture wider than the text, edge to edge, is a layout rule on the canvas with its own `--stylo-*` token and a `preview` reach (ADR-002 §3), so it would be a new record if it is wanted.
+- **The example hook and the fixture read it,** so hosts copy one convention. A host that implements only the numeric forms silently shows `|full` unsized, the same promise-in-the-docs cost as point 9.

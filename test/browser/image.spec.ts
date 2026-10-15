@@ -23,6 +23,25 @@ test.describe("![alt](src) images", () => {
     await expect.poll(async () => (await pics.nth(1).boundingBox())?.height).toBe(80)
   })
 
+  test("a |full suffix the host reads fills the column on every surface", async ({ page }) => {
+    for (const mode of ["in-place", "preview", "split"]) {
+      await openFixture(page, { mode, doc: "imagefull", image: "1" })
+      if (mode === "in-place") await line(page, 0).click()
+      const pic = page.locator("img.fixture-image")
+      await expect(pic).toHaveCount(1)
+      // The slot is the column; the picture matches it, scaled in proportion (240x120).
+      const holder = page.locator(mode === "in-place" ? ".cm-inplace-image" : ".stylo-image")
+      await expect
+        .poll(async () => {
+          const [p, h] = [await pic.boundingBox(), await holder.boundingBox()]
+          return p && h
+            ? [Math.round(p.width) - Math.round(h.width), Math.round(p.height * 2 - p.width)]
+            : null
+        })
+        .toEqual([0, 0])
+    }
+  })
+
   test("the source shows when the caret is on the line, the picture when it leaves", async ({
     page,
   }) => {
@@ -42,6 +61,35 @@ test.describe("![alt](src) images", () => {
 
     await line(page, 0).click()
     await expect(page.locator(".cm-inplace-image")).toHaveCount(2)
+  })
+
+  test("a slow hook resolving after the caret moved onto the line leaves the source alone", async ({
+    page,
+  }) => {
+    const errors: string[] = []
+    page.on("pageerror", (e) => errors.push(e.message))
+    page.on("console", (m) => m.type() === "error" && errors.push(m.text()))
+
+    await openFixture(page, { mode: "in-place", doc: "image", image: "slow" })
+    await line(page, 0).click()
+    // Both hooks are still pending: step the caret onto the first image's line.
+    await page
+      .locator(".cm-content .cm-inplace-image")
+      .first()
+      .click({ position: { x: 2, y: 2 } })
+    const source = page.locator(".cm-content .cm-line", { hasText: "![logo|w120](a/b.svg)" })
+    await expect(source).toBeVisible()
+
+    // Wait out the 600 ms hook: the revealed line must keep its source and show no picture.
+    await page.waitForTimeout(900)
+    await expect(source).toBeVisible()
+    await expect(page.locator(".cm-content .cm-inplace-image")).toHaveCount(1)
+
+    // Leaving the line draws it from the resolved result.
+    await line(page, 0).click()
+    await expect(page.locator(".cm-content .cm-inplace-image")).toHaveCount(2)
+    await expect(page.locator(".cm-content img.fixture-image")).toHaveCount(2)
+    expect(errors).toEqual([])
   })
 
   test("an image inside a sentence stays as source", async ({ page }) => {

@@ -151,6 +151,7 @@ type ImageSource = (src: string, alt: string) => ReactNode | Promise<ReactNode>
   onChange={setDoc}
   imageSource={(src, alt) => {
     const [text, size] = alt.split("|") // "logo|w300" → "logo", "w300"
+    const full = size === "full" // fill the column, height follows
     const m = /^(?:(\d+)|w(\d+)|h(\d+)|(\d+)x(\d+))$/.exec(size ?? "")
     const width = m?.[1] ?? m?.[2] ?? m?.[4]
     const height = m?.[3] ?? m?.[5]
@@ -160,7 +161,11 @@ type ImageSource = (src: string, alt: string) => ReactNode | Promise<ReactNode>
         alt={text}
         width={width ? Number(width) : undefined}
         height={height ? Number(height) : undefined}
-        style={{ maxWidth: "100%", height: width && !height ? "auto" : undefined }}
+        style={{
+          maxWidth: "100%",
+          width: full ? "100%" : undefined,
+          height: full || (width && !height) ? "auto" : undefined,
+        }}
       />
     )
   }}
@@ -170,7 +175,7 @@ type ImageSource = (src: string, alt: string) => ReactNode | Promise<ReactNode>
 - **Called with `src` and `alt` as written**, before any URL filtering. `src` has its `<angle brackets>` removed and nothing else changed (no percent-decoding, no unescaping); `alt` keeps any `|300` suffix and any Markdown written in it. A link title is ignored. A `data:` source reaches the hook whole.
 - Return a node to draw in its place, or `null` to keep the source as literal text. May be `async`. While it resolves, on `null` and on an error, the image's own source text stands in. Off entirely when `imageSource` is omitted: images render as they did before.
 - **Only an image alone on its line is drawn**, as a top-level paragraph by itself. An image inside a sentence, a list item, a quote, a code span or block, or (on the canvas) a table cell is left as it is today: source on the canvas, the browser's own `<img>` in `preview`. `![[image.png]]` is a different syntax and goes to `embedSource`.
-- **Size is the host's to read.** Stylo does not parse a size out of `alt`. The convention the example reads: `|300` or `|w300` (width), `|h200` (height), `|300x200` (both); one dimension alone scales with the aspect ratio. The bare number and `WxH` are Obsidian's forms, so a note written there keeps its size; `w` and `h` are Stylo's addition. A host that ignores the suffix shows the picture unsized.
+- **Size is the host's to read.** Stylo does not parse a size out of `alt`. The convention the example reads: `|300` or `|w300` (width), `|h200` (height), `|300x200` (both), `|full` (the full width of the column, height following); one dimension alone scales with the aspect ratio. The bare number and `WxH` are Obsidian's forms, so a note written there keeps its size; `w`, `h` and `full` are Stylo's addition. A host that ignores the suffix shows the picture unsized.
 - **Resolutions are cached by `src` and `alt`** (per `imageSource` identity), so the same file with two sizes is two entries. The cache has no TTL: if what is behind a `src` changes while the editor is open, call **`handle.invalidateImage(src)`** (every `alt` for that `src`; no argument clears all) and any image on screen re-resolves. Rejections are not cached.
 - Works on **`preview`, `split`, and the in-place canvas**. On the canvas the picture shows while the caret is off the line; put the caret on the line to edit the source. The canvas reads `imageSource` once, at mount, like `embedSource`.
 - Renders into `<div class="stylo-image"><div class="stylo-embed-content">…` (`preview` / `split`) or `<div class="cm-inplace-image">…` (canvas). `.stylo-image` and `.cm-inplace-image` are the override points; neither draws the embed's left rail.
