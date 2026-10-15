@@ -4,7 +4,8 @@ import { EditorView } from "@codemirror/view"
 import { Stylo } from "../src/Stylo"
 import { renderInline } from "../src/inplace/inline-md"
 import { placeCaret, selectionOffsets } from "../src/inplace/table-cell-dom"
-import { applyPaint, cellPaint } from "../src/inplace/table-cell-marks"
+import { cellPaint } from "../src/inplace/table-cell-marks"
+import { applyPaint } from "../src/inplace/table-cell-paint"
 import type { CellMark } from "../src/types"
 
 afterEach(cleanup)

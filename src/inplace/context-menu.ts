@@ -5,8 +5,7 @@
  * passes plain rows with `onSelect` callbacks.
  */
 
-import { iconSvg } from "../toolbar/icon-paths"
-import { armDismiss, place, placeFlyout } from "./context-menu-shell"
+import { armDismiss, label, place, placeFlyout } from "./context-menu-shell"
 import { isField, isSubmenu } from "./context-menu-types"
 import type { ContextMenu, MenuAction, MenuField, MenuRow } from "./context-menu-types"
 
@@ -52,19 +51,11 @@ export function createContextMenu(
       e.stopPropagation()
     })
 
-  const label = (el: HTMLElement, text: string, icon?: string, node?: Node) => {
-    if (node) el.appendChild(node.cloneNode(true))
-    else if (icon) el.appendChild(iconSvg(doc, icon))
-    const span = doc.createElement("span")
-    span.textContent = text
-    el.appendChild(span)
-  }
-
   const actionButton = (a: MenuAction): HTMLElement => {
     const b = doc.createElement("button")
     b.type = "button"
     b.className = `${className}-item`
-    label(b, a.label, a.icon, a.iconNode)
+    label(doc, b, a.label, a.icon, a.iconNode)
     if (a.id) b.dataset.menuItem = a.id
     if (a.title) b.title = a.title
     if (a.active) b.dataset.active = ""
@@ -97,7 +88,7 @@ export function createContextMenu(
     const b = doc.createElement("button")
     b.type = "button"
     b.className = `${className}-item ${className}-parent`
-    label(b, text, icon)
+    label(doc, b, text, icon)
     if (disabled) {
       b.disabled = true
       return b

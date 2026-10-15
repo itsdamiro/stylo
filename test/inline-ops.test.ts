@@ -1,5 +1,6 @@
 import { expect, test } from "vitest"
-import { markedContentAt, wrapString } from "../src/toolbar/inline-ops"
+import { markedContentAt } from "../src/toolbar/marked-content"
+import { wrapString } from "../src/toolbar/inline-ops"
 
 /** Char span of `markedContentAt`, sliced back to text for readability. */
 function content(text: string, pos: number): string | null {

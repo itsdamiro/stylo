@@ -18,6 +18,7 @@ import type { ToolbarCommandId, ToolbarItem } from "../types"
 import { DEFAULT_TOOLBAR_ITEMS } from "../toolbar/config"
 import { ALL_BUILTIN_IDS } from "../toolbar/labels"
 import styles from "./StyloToolbarSettings.module.css"
+import { PaletteList } from "./PaletteList"
 import { SortableRow } from "./SortableRow"
 import {
   append,
@@ -164,37 +165,7 @@ export function StyloToolbarSettings({
         </div>
       </section>
 
-      <section className={styles.col}>
-        <h3 className={styles.colHead} id={availHeadId}>
-          Available
-        </h3>
-        <ul className={styles.list} aria-labelledby={availHeadId}>
-          {paletteItems.length === 0 && (
-            <li className={styles.empty}>Every button is on the bar.</li>
-          )}
-          {paletteItems.map((item, i) => {
-            const { icon, label } = resolveDisplay(item, icons)
-            return (
-              <li key={itemKey(item, i)} className={styles.row}>
-                <span className={styles.glyph} aria-hidden="true">
-                  {icon}
-                </span>
-                <span className={styles.label}>{label}</span>
-                <span className={styles.rowActions}>
-                  <button
-                    type="button"
-                    className={styles.textButton}
-                    aria-label={`Add ${label} to the bar`}
-                    onClick={() => add(item)}
-                  >
-                    Add
-                  </button>
-                </span>
-              </li>
-            )
-          })}
-        </ul>
-      </section>
+      <PaletteList headId={availHeadId} items={paletteItems} icons={icons} onAdd={add} />
 
       <div aria-live="polite" className={styles.srOnly}>
         {message}

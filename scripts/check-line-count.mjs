@@ -15,17 +15,7 @@ import { fileURLToPath } from "node:url"
 const CEILING = 200
 
 // Path (from the repo root) -> the length the file may not exceed.
-const ALLOWLIST = {
-  "src/inplace/table-widget.ts": 425,
-  "src/types/core.ts": 234,
-  "src/inplace/theme-canvas.ts": 225,
-  "src/toolbar/inline-ops.ts": 207,
-  "src/toolbar-settings/StyloToolbarSettings.tsx": 204,
-  "src/toolbar/command-helpers.ts": 202,
-  "src/inplace/context-menu-actions.ts": 202,
-  "src/inplace/context-menu.ts": 201,
-  "src/inplace/table-cell-marks.ts": 201,
-}
+const ALLOWLIST = {}
 
 const root = fileURLToPath(new URL("..", import.meta.url))
 

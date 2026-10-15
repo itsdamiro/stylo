@@ -1,61 +1,19 @@
 /**
  * Shared machinery for `commands.ts`'s `BUILTIN_COMMANDS` registry: the
- * `ToolbarCommand` shape, the context predicates that drive `disabled`, and
- * the small factory functions that build a command from a mark / heading
- * level / line-prefix spec.
+ * `ToolbarCommand` shape and the small factory functions that build a command
+ * from a mark / heading level / line-prefix spec.
  */
 
 import type { EditorState } from "@codemirror/state"
 import type { Command, EditorView } from "@codemirror/view"
-import { frontmatterRange } from "../frontmatter"
 import type { ToolbarCommandId } from "../types"
 import { linePrefixActive, toggleLinePrefix, type LinePrefixSpec } from "./block"
-import { fencedCodeActive, mathBlockActive } from "./fence"
 import { toggleHeading } from "./heading"
 import { toggleWrap, wrapActive } from "./inline"
 import { runInlineInCell } from "./cell-inline"
 import { wrapString } from "./inline-ops"
+import { disabledWhen, inLiteral, inOtherInlineLiteral, nothingToWrap } from "./command-predicates"
 import { tableActive } from "./table"
-
-// --- context predicates: where a command can't sensibly apply ---
-
-/** Caret's line is an ATX heading (`#` … `######`). */
-export const inHeading = (s: EditorState): boolean =>
-  /^\s{0,3}#{1,6}(?:\s|$)/.test(s.doc.lineAt(s.selection.main.head).text)
-
-/** Caret is inside the leading `---` YAML block. */
-export const inFrontmatter = (s: EditorState): boolean => {
-  const r = frontmatterRange(s.doc)
-  return r !== null && s.selection.main.head <= r.to
-}
-
-/** Contexts where inline markup is literal or would break the syntax. */
-export const inLiteral = (s: EditorState): boolean =>
-  inFrontmatter(s) || fencedCodeActive(s) || mathBlockActive(s)
-
-/**
- * Inside an inline `` `code` `` or `$math$` span, no *other* mark can be added —
- * `` `**x**` `` / `$`x`$` are not valid. The span's own mark stays live so it
- * can be toggled off.
- */
-export const inOtherInlineLiteral =
-  (mark: string) =>
-  (s: EditorState): boolean =>
-    (mark !== "`" && wrapActive(s, "`")) || (mark !== "$" && wrapActive(s, "$"))
-
-/**
- * Nothing to wrap — a collapsed caret with no word at it (a blank line, a run
- * of spaces, punctuation). Wrapping there just drops an empty `****` / `` `` ``
- * pair, which shows as literal marks in the seamless canvas.
- */
-export const nothingToWrap = (s: EditorState): boolean =>
-  s.selection.main.empty && !s.wordAt(s.selection.main.head)
-
-/** A `disabled` predicate that fires when any of `checks` matches. */
-export const disabledWhen =
-  (...checks: ((s: EditorState) => boolean)[]) =>
-  (s: EditorState): boolean =>
-    checks.some((c) => c(s))
 
 export interface ToolbarCommand {
   id: ToolbarCommandId
