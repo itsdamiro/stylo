@@ -77,7 +77,7 @@ export interface InPlaceOptions {
  * else, text and line padding alike, stays with CodeMirror.
  */
 const REVEAL_WIDGET =
-  ".cm-inplace-math, .cm-inplace-hr, .cm-inplace-table, .cm-inplace-embed, .cm-inplace-embed-inline, .cm-inplace-image"
+  ".cm-inplace-math, .cm-inplace-hr, .cm-inplace-table, .cm-inplace-embed, .cm-inplace-embed-inline, .cm-inplace-image, .cm-inplace-image-inline"
 
 /**
  * The complete in-place canvas layer: decoration plugin, display theme, a

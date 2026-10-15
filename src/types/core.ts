@@ -137,13 +137,22 @@ export interface StyloProps {
    */
   embedSource?: EmbedSource
   /**
-   * Resolves a Markdown image, `![alt](src)`, alone on its line, for `preview`,
-   * `split` and the in-place canvas. Called with `src` and `alt` as written,
-   * before any URL filtering; return a node to draw in its place, or `null` to
-   * keep the source. May be async. Off when omitted. Read once, at mount, on
-   * the canvas. See {@link ImageSource}.
+   * Resolves a Markdown image, `![alt](src)`, for `preview`, `split` and the
+   * in-place canvas: alone on its line or in a sentence, list item or quote
+   * (phrasing content for those); a table cell on `preview` and `split` only.
+   * Called with `src` and `alt` as written, before any URL filtering; return a
+   * node, or `null` to keep the source. May be async. Off when omitted. Read once,
+   * at mount, on the canvas. See {@link ImageSource}.
    */
   imageSource?: ImageSource
+  /**
+   * `"wide"` lets a picture alone on its line spill past the column toward the side
+   * `imageAlign` leaves open, to the editor's edge less 1rem (canvas only; centred
+   * column assumed for `"center"` and `"right"`). Default `"column"`. Reactive.
+   */
+  imageWidth?: "column" | "wide"
+  /** Where a picture alone on its line sits when narrower than the column. Reactive. */
+  imageAlign?: "left" | "center" | "right"
   /**
    * Called when `embedSource`, `imageSource`, `wikiLinkSource`, or `tagSource` throws or
    * returns a rejected promise. Purely for observation — logging, a toast — the

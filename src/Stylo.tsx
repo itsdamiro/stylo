@@ -40,6 +40,8 @@ export const Stylo = forwardRef<StyloHandle, StyloProps>(function Stylo(
     tagSource,
     embedSource,
     imageSource,
+    imageWidth = "column",
+    imageAlign = "left",
     onResolveError,
     toolbar,
     icons,
@@ -89,7 +91,12 @@ export const Stylo = forwardRef<StyloHandle, StyloProps>(function Stylo(
     .join(" ")
 
   return (
-    <div className={rootClass} data-stylo-mode={resolved}>
+    <div
+      className={rootClass}
+      data-stylo-mode={resolved}
+      data-stylo-image-width={imageWidth}
+      data-stylo-image-align={imageAlign}
+    >
       <StyloToolbar
         view={view}
         toolbar={toolbar}

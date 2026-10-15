@@ -243,16 +243,59 @@ test.describe("![alt](src) images", () => {
     // Leaving the line draws it from the resolved result.
     await line(page, 0).click()
     await expect(page.locator(".cm-content .cm-inplace-image")).toHaveCount(2)
-    await expect(page.locator(".cm-content img.fixture-image")).toHaveCount(2)
+    await expect(page.locator(".cm-content img.fixture-image")).toHaveCount(3) // two blocks, one in the sentence
     expect(errors).toEqual([])
   })
 
-  test("an image inside a sentence stays as source", async ({ page }) => {
+  test("an image inside a sentence is drawn in the line, and its source shows under the caret", async ({
+    page,
+  }) => {
     await openFixture(page, { mode: "in-place", doc: "image", image: "1" })
     await line(page, 0).click()
-    await expect(
-      page.locator(".cm-content .cm-line", { hasText: "![inline](c.png)" }),
-    ).toBeVisible()
+    const sentence = page.locator(".cm-content .cm-line", { hasText: "A sentence with" })
+    const inline = sentence.locator(".cm-inplace-image-inline img.fixture-image")
+    await expect(inline).toBeVisible()
+    await expect(inline).toHaveAttribute("data-src", "c.png")
+    await expect(sentence).toContainText("in it.")
+    await expect(sentence).not.toContainText("![inline](c.png)")
+
+    // The caret on the line withholds the picture and shows the source for editing.
+    await sentence.click({ position: { x: 6, y: 6 } })
+    await expect(sentence).toContainText("![inline](c.png)")
+    await expect(inline).toHaveCount(0)
+  })
+
+  test("images in a sentence, a list, a quote and a heading are drawn; a cell, a link and code stay source on the canvas", async ({
+    page,
+  }) => {
+    await openFixture(page, { mode: "in-place", doc: "imageinline", image: "1" })
+    await line(page, 0).click() // the heading's own line is the caret's, so click it away below
+    await page
+      .locator(".cm-content .cm-line", { hasText: "Code" })
+      .click({ position: { x: 4, y: 4 } })
+    const text = page.locator(".cm-content")
+    // heading is revealed under the caret only while it is on that line: move off it first
+    await expect(page.locator(".cm-inplace-image-inline img.fixture-image")).toHaveCount(5)
+    await expect(text).toContainText("![linked](l.svg)")
+    await expect(text).toContainText("![code](k.svg)")
+    // A table cell is the table widget's own: no picture, whatever it makes of the syntax.
+    await expect(page.locator(".cm-inplace-table img")).toHaveCount(0)
+    await expect(page.locator(".cm-inplace-table")).toContainText("cell")
+  })
+
+  test("preview and split draw an image in a cell too, and leave a link and code alone", async ({
+    page,
+  }) => {
+    for (const mode of ["preview", "split"]) {
+      await openFixture(page, { mode, doc: "imageinline", image: "1" })
+      const drawn = page.locator(".stylo-image-inline img.fixture-image")
+      await expect(drawn).toHaveCount(mode === "preview" ? 6 : 6) // five in lines, one in the cell
+      await expect(
+        page.locator(".stylo-image-inline td img, td .stylo-image-inline img"),
+      ).toHaveCount(1)
+      await expect(page.locator("a img[src='l.svg']")).toHaveCount(1)
+      await expect(page.locator("code", { hasText: "![code](k.svg)" })).toHaveCount(1)
+    }
   })
 
   test("no imageSource: the canvas shows the source, nothing is drawn", async ({ page }) => {

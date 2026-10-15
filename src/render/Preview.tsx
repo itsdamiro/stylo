@@ -28,7 +28,7 @@ export interface PreviewProps {
   onWikiLinkClick?: (target: string) => void
   /** Resolves `![[ref]]` embeds. Omit and `![[…]]` stays literal. */
   embedSource?: EmbedSource
-  /** Resolves a Markdown image alone on its line. Omit and images render as before. */
+  /** Resolves a Markdown image, alone on its line or in text. Omit and images render as before. */
   imageSource?: ImageSource
   /** Notified when `embedSource` or `imageSource` rejects; the literal fallback still renders. */
   onResolveError?: (error: unknown, info: ResolveErrorInfo) => void

@@ -4,7 +4,8 @@ import { EditorSelection, EditorState, type Extension } from "@codemirror/state"
 import { EditorView } from "@codemirror/view"
 import { Stylo } from "../src/Stylo"
 import { imageRegistryFacet } from "../src/inplace/config"
-import { imageField } from "../src/inplace/image"
+import { ImageWidget, imageField } from "../src/inplace/image"
+import { EmbedRegistry } from "../src/inplace/embed-registry"
 import { isWidgetLine, stepOntoWidgetLine } from "../src/inplace/widget-line-keys"
 import type { EmbedSource, ImageSource } from "../src/types"
 
@@ -88,22 +89,33 @@ test("the image is withheld while the caret is on its line", async () => {
   expect(images(view)).toHaveLength(1)
 })
 
-test("an image inside a sentence is left as source", async () => {
-  const { view } = await mount("# T\n\nsee ![a](b.png) here\n", picture)
-  expect(images(view)).toEqual([])
+test("an image inside a sentence is an inline widget with src and alt as written", async () => {
+  const { view } = await mount("# T\n\nsee ![a|w50](b.png) here\n", picture)
+  expect(images(view)).toEqual([
+    { src: "b.png", alt: "a|w50", raw: "![a|w50](b.png)", block: false },
+  ])
+  expect(isWidgetLine(view.state, 3)).toBe(false) // inline: not a widget line
 })
 
-test("an image in a list item, a quote, code or a table cell is left as source", async () => {
+test("an image in a list item, a quote or a heading is an inline widget", async () => {
+  const doc = "para\n\n# T ![h](h.png)\n\n- ![a](b.png)\n\n> ![c](d.png)\n"
+  const { view } = await mount(doc, picture)
+  expect(images(view).map((i) => [i.src, i.block])).toEqual([
+    ["h.png", false],
+    ["b.png", false],
+    ["d.png", false],
+  ])
+})
+
+test("an image in code, a link or a table cell is left as source", async () => {
   const doc = [
     "# T",
-    "",
-    "- ![a](b.png)",
-    "",
-    "> ![c](d.png)",
     "",
     "```",
     "![e](f.png)",
     "```",
+    "",
+    "`![i](j.png)` and [![l](m.png)](https://x.test)",
     "",
     "| a | b |",
     "| - | - |",
@@ -114,9 +126,78 @@ test("an image in a list item, a quote, code or a table cell is left as source",
   expect(images(view)).toEqual([])
 })
 
-test("an image that continues a paragraph is left as source", async () => {
+test("an image that continues a paragraph is an inline widget", async () => {
   const { view } = await mount("# T\n\nsome words\n![a](b.png)\n", picture)
+  expect(images(view).map((i) => [i.src, i.block])).toEqual([["b.png", false]])
+})
+
+test("two images on one line are two inline widgets", async () => {
+  const { view } = await mount("# T\n\n![a](b.png) ![c](d.png)\n", picture)
+  expect(images(view).map((i) => [i.src, i.block])).toEqual([
+    ["b.png", false],
+    ["d.png", false],
+  ])
+})
+
+test("an image in a second paragraph of a list item is an inline widget", async () => {
+  const { view } = await mount("# T\n\n- item\n\n  ![a](b.png)\n", picture)
+  expect(images(view).map((i) => [i.src, i.block])).toEqual([["b.png", false]])
+})
+
+test("an inline image is withheld while the caret is on its line, and read-only keeps it", async () => {
+  const doc = "para\n\nsee ![a](b.png) here\n"
+  const { view } = await mount(doc, picture)
+  expect(images(view)).toHaveLength(1)
+  view.dispatch({ selection: { anchor: view.state.doc.line(3).from + 2 } })
   expect(images(view)).toEqual([])
+  view.dispatch({ selection: { anchor: 0 } })
+  expect(images(view)).toHaveLength(1)
+  cleanup()
+
+  const readOnly = await mount(doc, picture, undefined, undefined, true)
+  readOnly.view.dispatch({ selection: { anchor: readOnly.view.state.doc.line(3).from + 2 } })
+  expect(images(readOnly.view)).toHaveLength(1)
+})
+
+test("an inline image portals the host node into a span slot, a block one into a div", async () => {
+  const { container, view } = await mount("# T\n\nsee ![a](b.png) here\n\n![c](d.png)\n", picture)
+  await vi.waitFor(() => {
+    if (!container.querySelector("span.cm-inplace-image-inline img")) throw new Error("no slot")
+    if (!container.querySelector("div.cm-inplace-image img")) throw new Error("no block slot")
+  })
+  // The wrapper `Embed` draws follows the slot's shape: phrasing content in a line.
+  expect(
+    container.querySelector("span.cm-inplace-image-inline > span.stylo-embed-inline"),
+  ).not.toBeNull()
+  expect(container.querySelector("div.cm-inplace-image > div.stylo-embed-content")).not.toBeNull()
+  expect(view.state.doc.line(3).text).toBe("see ![a](b.png) here")
+})
+
+test("a block picture replaces its whole line, spaces around it included, as preview draws it", async () => {
+  const { view } = await mount("para\n\n  ![a](b.png)  \n", picture)
+  const line = view.state.doc.line(3)
+  const ranges: [number, number][] = []
+  view.state.field(imageField).between(0, view.state.doc.length, (from, to) => {
+    ranges.push([from, to])
+  })
+  expect(ranges).toEqual([[line.from, line.to]])
+})
+
+test("an image that spans two lines is left as source", async () => {
+  const { view } = await mount("# T\n\nsee ![a\nb](c.png) here\n", picture)
+  expect(images(view)).toEqual([])
+})
+
+test("an image that starts on an earlier line is not drawn from the line it ends on", async () => {
+  const { view } = await mount("# T\n\nsee ![a\nb](c.png) and ![d](e.png)\n", picture)
+  expect(images(view).map((i) => i.src)).toEqual(["e.png"])
+})
+
+test("a block widget and an inline one with the same text are not equal", () => {
+  const registry = new EmbedRegistry()
+  const block = new ImageWidget("![a](b.png)", "b.png", "a", registry, false)
+  expect(block.eq(new ImageWidget("![a](b.png)", "b.png", "a", registry, false))).toBe(true)
+  expect(block.eq(new ImageWidget("![a](b.png)", "b.png", "a", registry, true))).toBe(false)
 })
 
 test("an ![[embed]] is not an image, and the two passes switch on independently", async () => {
@@ -127,16 +208,6 @@ test("an ![[embed]] is not an image, and the two passes switch on independently"
 
   const onlyEmbeds = await mount("# T\n\n![[Note]]\n\n![a](b.png)\n", undefined, embed)
   expect(images(onlyEmbeds.view)).toEqual([])
-})
-
-test("two images on one line are left as source", async () => {
-  const { view } = await mount("# T\n\n![a](b.png) ![c](d.png)\n", picture)
-  expect(images(view)).toEqual([])
-})
-
-test("an image in a second paragraph of a list item is left as source", async () => {
-  const { view } = await mount("# T\n\n- item\n\n  ![a](b.png)\n", picture)
-  expect(images(view)).toEqual([])
 })
 
 test("an edit that adds an image line draws it without a selection change", async () => {

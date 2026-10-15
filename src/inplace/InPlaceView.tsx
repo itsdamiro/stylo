@@ -42,7 +42,7 @@ export interface InPlaceViewProps {
   tagSource?: TagSource
   /** Resolves `![[ref]]` embeds. Read once, at mount — see ADR-009. */
   embedSource?: EmbedSource
-  /** Resolves a Markdown image alone on its line. Read once, at mount — see ADR-014. */
+  /** Resolves a Markdown image, alone on its line or in text. Read once, at mount — see ADR-014. */
   imageSource?: ImageSource
   /** Notified when `embedSource`, `imageSource`, `wikiLinkSource`, or `tagSource` rejects. */
   onResolveError?: (error: unknown, info: ResolveErrorInfo) => void
@@ -166,6 +166,7 @@ export function InPlaceView({
                 alt={image.alt}
                 literal={slot.ref}
                 source={imageSource}
+                inline={slot.inline}
                 onError={onResolveError}
               />
             )
