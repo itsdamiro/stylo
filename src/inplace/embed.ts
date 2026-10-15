@@ -62,7 +62,8 @@ function buildEmbeds(state: EditorState): DecorationSet {
   if (!registry || !state.facet(inPlaceConfigFacet).embeds) return Decoration.none
   if (!state.doc.toString().includes("![[")) return Decoration.none
 
-  const revealed = revealedLines(state)
+  // Read-only has nothing to edit, so a click beside an embed must not swap it for its source.
+  const revealed = state.readOnly ? new Set<number>() : revealedLines(state)
   const tree = syntaxTree(state)
   const out: Range<Decoration>[] = []
 
@@ -123,7 +124,7 @@ function selectionNearEmbed(state: EditorState, selection: EditorState["selectio
 export const embedField = StateField.define<DecorationSet>({
   create: buildEmbeds,
   update: (value, tr) => {
-    if (tr.docChanged) return buildEmbeds(tr.state)
+    if (tr.docChanged || tr.startState.readOnly !== tr.state.readOnly) return buildEmbeds(tr.state)
     if (!tr.selection) return value
     // Same reasoning as `tableField`: most caret moves are nowhere near an
     // embed, so a per-line text check is far cheaper than rescanning the

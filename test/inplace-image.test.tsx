@@ -17,12 +17,14 @@ async function mount(
   imageSource?: ImageSource,
   embedSource?: EmbedSource,
   extensions?: readonly Extension[],
+  readOnly = false,
 ) {
   const result = render(
     <Stylo
       value={value}
       onChange={() => {}}
       mode="in-place"
+      readOnly={readOnly}
       imageSource={imageSource}
       embedSource={embedSource}
       extensions={extensions}
@@ -185,6 +187,63 @@ test("a line replaced by an image widget is a widget line, the caret's own line 
 
   view.dispatch({ selection: { anchor: view.state.doc.line(3).from + 3 } })
   expect(isWidgetLine(view.state, 3)).toBe(false)
+})
+
+test("a widget on the first or the last line of the document is a widget line", async () => {
+  const { view } = await mount("![top](a.svg)\n\npara\n\n![bottom](b.svg)", picture)
+  const last = view.state.doc.lines
+  view.dispatch({ selection: { anchor: view.state.doc.line(3).from } })
+  expect([1, last].map((n) => isWidgetLine(view.state, n))).toEqual([true, true])
+  expect(isWidgetLine(view.state, 0)).toBe(false)
+  expect(isWidgetLine(view.state, last + 1)).toBe(false)
+})
+
+test("a lone embed is a widget line, an inline embed, block math and plain text are not", async () => {
+  const embed: EmbedSource = () => <span>e</span>
+  const { view } = await mount(
+    "para\n\n![[Note]]\n\nsee ![[Inline]] here\n\n$$\nx^2\n$$\n\nend\n",
+    undefined,
+    embed,
+  )
+  const lines = view.state.doc.lines
+  const flags = Array.from({ length: lines }, (_, i) => isWidgetLine(view.state, i + 1))
+  expect(flags.map((on, i) => (on ? i + 1 : 0)).filter(Boolean)).toEqual([3]) // the lone embed only
+})
+
+test("read-only keeps a picture drawn with the caret on its line", async () => {
+  const { view } = await mount("para\n\n![logo](a.svg)\n", picture, undefined, undefined, true)
+  expect(images(view)).toHaveLength(1)
+  view.dispatch({ selection: { anchor: view.state.doc.line(3).from + 3 } })
+  expect(images(view)).toHaveLength(1)
+  expect(isWidgetLine(view.state, 3)).toBe(true)
+})
+
+test("a picture under the caret is drawn again when the note turns read-only", async () => {
+  const doc = "para\n\n![logo](a.svg)\n"
+  const element = (readOnly: boolean) => (
+    <Stylo
+      value={doc}
+      onChange={() => {}}
+      mode="in-place"
+      imageSource={picture}
+      readOnly={readOnly}
+    />
+  )
+  const result = render(element(false))
+  await vi.waitFor(() => {
+    if (!result.container.querySelector(".cm-editor")) throw new Error("not mounted")
+  })
+  const view = EditorView.findFromDOM(result.container.querySelector(".cm-editor") as HTMLElement)
+  if (!view) throw new Error("no EditorView")
+
+  view.dispatch({ selection: { anchor: view.state.doc.line(3).from + 3 } })
+  expect(images(view)).toEqual([]) // editable: the caret reveals the source
+
+  result.rerender(element(true))
+  await vi.waitFor(() => expect(images(view)).toHaveLength(1))
+
+  result.rerender(element(false))
+  await vi.waitFor(() => expect(images(view)).toEqual([]))
 })
 
 test("the arrow steps are left to CodeMirror with more than one cursor", async () => {

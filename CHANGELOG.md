@@ -10,6 +10,8 @@ Notable changes to Stylo. The format follows
 
 - **Ctrl-N and Ctrl-P stop on a rendered image or `![[ref]]` embed's line on
   macOS,** as ArrowDown and ArrowUp already do.
+- **A click beside a picture or `![[ref]]` embed in a `readOnly` note no longer
+  swaps it for its source.** There is nothing to edit, so it stays rendered.
 
 ## [0.23.1] - 2026-10-15
 
