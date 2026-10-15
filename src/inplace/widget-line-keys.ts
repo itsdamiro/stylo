@@ -8,7 +8,8 @@
  * keyboard. This stops the caret on the widget's line instead, which reveals
  * the source for editing; the next arrow carries on past it. The column is kept
  * where the line is long enough. ArrowLeft, ArrowRight, Backspace and Delete
- * already step onto the line, so they are left to CodeMirror.
+ * already step onto the line, so they are left to CodeMirror. Ctrl-N and Ctrl-P
+ * (macOS line motion) take the same stop as the arrows.
  */
 
 import { type EditorState, EditorSelection, type Extension, Prec } from "@codemirror/state"
@@ -56,5 +57,7 @@ export const inPlaceWidgetLineKeys: Extension = Prec.high(
   keymap.of([
     { key: "ArrowDown", run: stepOntoWidgetLine(true) },
     { key: "ArrowUp", run: stepOntoWidgetLine(false) },
+    { mac: "Ctrl-n", run: stepOntoWidgetLine(true) },
+    { mac: "Ctrl-p", run: stepOntoWidgetLine(false) },
   ]),
 )
