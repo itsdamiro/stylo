@@ -6,6 +6,8 @@ Notable changes to Stylo. The format follows
 
 ## [Unreleased]
 
+## [0.23.2] - 2026-10-15
+
 ### Fixed
 
 - **Ctrl-N and Ctrl-P stop on a rendered image or `![[ref]]` embed's line on
@@ -860,6 +862,7 @@ consumable from git.
 - `inPlace` config is read once at mount; changing it needs a remount. (Now
   documented as an intentional contract — see `[Unreleased]`.)
 
+[0.23.2]: https://github.com/itsdamiro/stylo/releases/tag/v0.23.2
 [0.23.1]: https://github.com/itsdamiro/stylo/releases/tag/v0.23.1
 [0.23.0]: https://github.com/itsdamiro/stylo/releases/tag/v0.23.0
 [0.19.1]: https://github.com/itsdamiro/stylo/releases/tag/v0.19.1
