@@ -1,17 +1,19 @@
 ---
 type: decision
-status: proposed
+status: accepted
 date: 2026-10-16
 projects: [stylo]
 concepts: [Host integration, In-place canvas]
 amends: [14]
 supersedes: []
-tags: [type/decision, status/proposed, project/stylo, topic/architecture]
+tags: [type/decision, status/accepted, project/stylo, topic/architecture]
 ---
 
 # 017 — Images in a sentence, a list item or a quote, and a width the host chooses
 
-> **Summary.** `imageSource` also draws a Markdown image that sits in a sentence, a list item or a quote, as an inline slot, and every drawn image is capped at its column. Two new props let the host choose how far a picture may spill past the column to the editor's width (`imageWidth`) and where a narrower one sits (`imageAlign`). It costs a second slot shape on the canvas, a table-cell and a linked-image gap that the docs state, and a layout rule that must be proven in a browser before it is accepted.
+> **Summary.** `imageSource` also draws a Markdown image that sits in a sentence, a list item or a quote, as an inline slot, and every drawn image is capped at its column. Two new props let the host choose how far a picture may spill past the column to the editor's width (`imageWidth`) and where a narrower one sits (`imageAlign`). It costs a second slot shape on the canvas, a table-cell and a linked-image gap that the docs state, and a layout rule that the spike proved on the canvas only.
+
+Accepted by the owner on 2026-10-16, with the spike's result and its one change recorded in the amendment below: `imageWidth: "wide"` on the canvas only, `preview` and `split` kept at the column, `imageAlign` on both. The picks marked "for the owner to confirm" (a table cell stays literal on the canvas; a linked image stays as source), the names `imageWidth`, `imageAlign` and their values, and the 1rem gutter stand as written.
 
 ## Context
 
@@ -40,7 +42,7 @@ ADR-014 draws an image only when it is alone on its line as a top-level paragrap
 
 - **Easier.** A host that sets `imageSource` sees pictures wherever a note puts them, not only on their own line, and chooses how far a picture may go beyond the text. A consumer that never passes `imageSource` sees nothing change, and one that never passes `imageWidth` gets the column cap.
 - **Harder.** A second slot shape (inline) sits beside the block one on the canvas, and the width rule is the one place Stylo styles a host's node. A host that gives a picture both a fixed width and a fixed height can still see it distorted when the cap applies, because the cap is `max-width` only. The wide mode depends on a layout the spike must prove, so this record stays `proposed` until it has.
-- **Parity gaps by design.** A table cell on the canvas, and a linked image on every surface, are source rather than a picture, and `preview` and `split` differ from the canvas for a cell. The docs say so, and tests pin both.
+- **Parity gaps by design.** A table cell on the canvas (which the table widget renders as it always has, with no picture), and a linked image on every surface, are not drawn as a picture, and `preview` and `split` differ from the canvas for a cell. The docs say so, and tests pin both.
 - **Left open.** A reference-style image (`![alt][ref]`) and a raw `<img>` are not handled, since `parseImage` reads only the inline form. Drawing in a table cell on the canvas, a linked image, and a per-image wide form are each their own decision, with the conditions below.
 
 ## Alternatives rejected
@@ -52,3 +54,18 @@ ADR-014 draws an image only when it is alone on its line as a top-level paragrap
 - **Draw an image in a table cell on the canvas.** Full parity, but it wires the table widgets to the React registry. Becomes right if a host needs pictures in tables and accepts the coupling.
 - **Draw a linked image.** Badges and linked thumbnails would render, but the link click and the picture need one agreed meaning. Becomes right when a host asks, with tests for the click.
 - **Reuse the block slot for every image.** A block replace would hide a list marker or the text around a sentence's image. Never right for an image that shares its line with other content.
+
+## Amendment (2026-10-16): the spike's result, and wide mode on the canvas only
+
+Point 1's spike ran in real Chrome, on a page that mounted `<Stylo>` with the candidate CSS as the host's stylesheet, in a 700 px editor with a 420 px column (and in a 1,100 px one with a 640 px column). The decision above stands, with these details fixed.
+
+- **The canvas is clean with CSS only.** `container-type: inline-size` goes on `.cm-scroller` (the context menu, the selection bar and CodeMirror's tooltips mount on `.cm-editor`, outside it, so layout containment reaches none of them), and only when `imageWidth` is `"wide"`, so a host on the default pays nothing. The slot becomes a flex row whose `justify-content` is `imageAlign`; the host node's wrapper (`.stylo-embed-content`) takes `flex: none`, `min-width: 100%` and a `max-width` (so it grows to its picture, between the column and the cap, and a host `width: 100%` still means the column), and its child takes `max-width: 100%`. A first version that left the wrapper column-wide and let the picture overflow it was defeated by a host `<img>` with its own `max-width: 100%`, as a Tailwind-style reset has. A narrow picture sits where `imageAlign` puts it, a wider one spills toward the open side up to the editor's edge, `scrollWidth` equals `clientWidth` at every alignment, a host `<img>` that carries its own `max-width: 100%` behaves the same, and clicks land on the right line, also after the editor is resized so that every picture changes height (CodeMirror remeasures when the scroller resizes).
+- **`cqw` includes the scrollbar, so the cap holds back a fixed `1rem`.** A container query unit on a scroll box is its border-box width, scrollbar included (8 px in the spike, up to about 15 px elsewhere, 0 for an overlay bar), so a cap of `100cqw` overflowed by the bar and showed a horizontal scrollbar. The cap is `calc(100cqw - 1rem)` for `center` and `calc((100cqw - 1rem + 100%) / 2)` for `left` and `right`, where `100%` is the slot. The same margin shows as a little air beside a picture that spills, never as a scrollbar.
+- **`center` and `right` assume a column centred in the editor.** The room beside the column is read as `(editor − column) / 2` on each side, so a host that leaves its column flush left sees a centred or right-aligned wide picture run off the left edge, where it cannot be reached. `left` degrades safely there, at a cap a little under the room it has. The props reference says so: choose `imageAlign: "left"` or leave `imageWidth` at `"column"` when the column is not centred.
+- **`imageWidth: "wide"` is a canvas-only mode; `preview` and the preview pane of `split` stay at the column.** `.preview` is both the scroll box and the padded column, so a container query unit on it measures the column and nothing can spill. The unit works on the Stylo root, but `container-type` applies layout containment, which would make the root the containing block of the `position: fixed` toolbar, selection bar and menus. A wrapper inside `.preview` that carries the padding would work but changes the DOM that hosts style, and a host's own `.preview` padding override would then sit outside the container. The owner chose the canvas only, as the surface where hosts lay the page out; the parity gap is stated in the docs and pinned by a test.
+- **`imageAlign` applies on every surface that draws a block picture.** Placing a narrower picture needs no container unit (a flex row and `justify-content`), so `preview`, `split` and the canvas agree on it. An inline slot ignores both props.
+- **The choice reaches the CSS as two attributes on the component's root,** `data-stylo-image-width` and `data-stylo-image-align` (following the existing `data-stylo-mode`), so a change needs no remount. Consumers do not style these; they are the contract between the props and the stylesheet.
+- **Still left open.** A column that is not centred with a wide centred or right picture, a wide mode for `preview`, and a distorted picture when a host gives it both a fixed width and a fixed height (the cap is `max-width` only).
+- **One pass, in `image.ts`.** Point 8 put the inline pass in a new `src/inplace/image-inline.ts`. A review of the slice found that two passes derived the same answer twice (each walked the line, and the block pass re-read what the inline pass had already classified) and that the split existed only to avoid an import cycle. `buildImages` now visits each line that holds `![` once and classifies every `Image` node: a top-level paragraph by itself is a block slot, any other is an inline one. `image.ts` is 151 lines, and `ImageWidget` stays in it.
+- **Code never needs skipping.** Parsed by the Markdown grammar, an inline code span, a fenced block and an indented block contain no `Image` node, so only a table and a link are skipped.
+- **Trailing spaces do not make a picture inline.** `![a](b)` followed by spaces on its line is still an image alone in its paragraph (Lezer's paragraph range includes them), so it is a block slot on the canvas as it is in `preview`, and the block slot replaces the whole line.
