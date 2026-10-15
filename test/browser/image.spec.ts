@@ -153,11 +153,15 @@ test.describe("![alt](src) images", () => {
       await page.keyboard.press("ArrowDown")
       expect((await caret(page)).line).toBe(SOURCE)
       const source = page.locator(".cm-content .cm-line", { hasText: SOURCE })
-      // Wholly inside the window, whatever the platform's font: unscrolled it sits below it.
+      // Inside the window, whatever the platform's font: unscrolled it sits well below it.
+      // CodeMirror leaves the line flush with the edge, so allow a couple of pixels of rounding.
       await expect
         .poll(async () => {
           const box = await source.boundingBox()
-          return box ? box.y >= 0 && box.y + box.height <= (page.viewportSize()?.height ?? 0) : null
+          const slack = 2
+          return box
+            ? box.y >= -slack && box.y + box.height <= (page.viewportSize()?.height ?? 0) + slack
+            : null
         })
         .toBe(true)
     })
