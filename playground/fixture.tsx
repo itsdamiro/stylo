@@ -27,7 +27,7 @@ import "katex/dist/katex.min.css"
  *   ?sticky=top|bottom                    (default none)
  *   ?toolbar=0                            (default on)
  *   ?theme=dark                           (default light)
- *   ?doc=basic|math|code|rule|table|long|embed|image|imagefull (default basic)
+ *   ?doc=basic|math|code|rule|table|long|embed|embedtight|image|imagefull (default basic)
  *   ?wikilinks=1                          (canned wikiLinkSource; default off)
  *   ?tags=1                               (canned tagSource; default off)
  *   ?embed=1                              (canned embedSource; default off)
@@ -166,6 +166,15 @@ const DOCS: Record<string, string> = {
   imagefull: ["# Wide", "", "Text before.", "", "![wide|full](a/b.svg)", "", "Text after."].join(
     "\n",
   ),
+  embedtight: [
+    "# Tight",
+    "",
+    "A long paragraph that wraps over several visual lines so the caret has to cross them before it reaches the embed. ".repeat(
+      4,
+    ),
+    "![[Weekly note]]",
+    "Text below the embed line.",
+  ].join("\n"),
   embed: [
     "# Embeds",
     "",

@@ -6,6 +6,14 @@ Notable changes to Stylo. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- **ArrowUp and ArrowDown stop on a rendered image or `![[ref]]` embed's line
+  in the in-place canvas.** The caret used to step from the blank line above
+  straight to the blank line below, so the source could only be reached by a
+  click beside the picture. The arrow now puts the caret on the line, which
+  shows the source, and the next arrow carries on.
+
 ## [0.23.0] - 2026-10-15
 
 ### Added

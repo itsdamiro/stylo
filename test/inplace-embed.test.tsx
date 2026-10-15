@@ -4,6 +4,7 @@ import { EditorView } from "@codemirror/view"
 import { Stylo } from "../src/Stylo"
 import { embedField } from "../src/inplace/embed"
 import { inPlacePlugin } from "../src/inplace/plugin"
+import { isWidgetLine } from "../src/inplace/widget-line-keys"
 import type { EmbedSource } from "../src/types"
 
 afterEach(cleanup)
@@ -114,3 +115,15 @@ test("![[ref]] inside a table cell is left to the table widget — no embedField
 // The slot DOM and the portalled host node are layout-dependent (CodeMirror
 // renders no widgets into a zero-height jsdom viewport); that path is covered
 // by test/browser/embed.spec.ts.
+
+test("only a block embed makes a widget line, an inline one does not", async () => {
+  const embedSource: EmbedSource = (ref) => <span>{ref}</span>
+  const { view } = await mount("a\n\n![[lone]]\n\n![[starts]] a line\n", embedSource)
+  expect([1, 2, 3, 4, 5].map((n) => isWidgetLine(view.state, n))).toEqual([
+    false,
+    false,
+    true,
+    false,
+    false,
+  ])
+})

@@ -1,5 +1,5 @@
-import { expect, test } from "@playwright/test"
-import { line, openFixture } from "./_fixture"
+import { expect, type Page, test } from "@playwright/test"
+import { caret, line, openFixture } from "./_fixture"
 
 test.describe("![alt](src) images", () => {
   test("the canvas draws a lone image through imageSource, as written", async ({ page }) => {
@@ -61,6 +61,74 @@ test.describe("![alt](src) images", () => {
 
     await line(page, 0).click()
     await expect(page.locator(".cm-inplace-image")).toHaveCount(2)
+  })
+
+  test.describe("keyboard onto a rendered image's line", () => {
+    const SOURCE = "![logo|w120](a/b.svg)"
+    // Rendered, `.cm-line` 3 is the blank above the first image and 4 the blank below it.
+    const open = async (page: Page, blank: number) => {
+      await openFixture(page, { mode: "in-place", doc: "image", image: "1" })
+      await line(page, 0).click()
+      await line(page, blank).click()
+      await expect(page.locator(".cm-inplace-image")).toHaveCount(2)
+    }
+    test("ArrowDown from the blank line above reveals the source, the next arrow passes it", async ({
+      page,
+    }) => {
+      await open(page, 3)
+      await page.keyboard.press("ArrowDown")
+      await expect(page.locator(".cm-inplace-image")).toHaveCount(1)
+      expect((await caret(page)).line).toBe(SOURCE)
+
+      await page.keyboard.press("ArrowDown")
+      await expect(page.locator(".cm-inplace-image")).toHaveCount(2)
+      expect((await caret(page)).line).toBe("")
+      await expect(line(page, 4)).toBeVisible()
+    })
+
+    test("ArrowUp from the blank line below reveals the source, the next arrow passes it", async ({
+      page,
+    }) => {
+      await open(page, 4)
+      await page.keyboard.press("ArrowUp")
+      await expect(page.locator(".cm-inplace-image")).toHaveCount(1)
+      expect((await caret(page)).line).toBe(SOURCE)
+
+      await page.keyboard.press("ArrowUp")
+      await expect(page.locator(".cm-inplace-image")).toHaveCount(2)
+      expect((await caret(page)).line).toBe("")
+    })
+
+    test("the revealed source scrolls into view", async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 170 })
+      await openFixture(page, { mode: "in-place", doc: "image", image: "1" })
+      await line(page, 0).click()
+      await page.keyboard.press("ArrowDown")
+      await page.keyboard.press("ArrowDown")
+      await page.keyboard.press("ArrowDown") // the blank line above the picture
+      await page.keyboard.press("ArrowDown")
+      const source = page.locator(".cm-content .cm-line", { hasText: SOURCE })
+      await expect(source).toBeVisible()
+      await expect(source).toBeInViewport({ ratio: 0.5 }) // fonts differ by platform; unscrolled it is 0
+    })
+
+    for (const [blank, key] of [
+      [3, "ArrowRight"],
+      [4, "ArrowLeft"],
+      [3, "Delete"],
+      [4, "Backspace"],
+    ] as const) {
+      test(`${key} from the blank line ${blank === 3 ? "above" : "below"} reaches the source`, async ({
+        page,
+      }) => {
+        await open(page, blank)
+        await page.keyboard.press(key)
+        await expect(page.locator(".cm-inplace-image")).toHaveCount(1)
+        // The picture's source stays whole: an arrow moves, a delete only joins the blank line.
+        await expect(page.locator(".cm-content .cm-line", { hasText: SOURCE })).toBeVisible()
+        expect((await caret(page)).line).toContain(SOURCE)
+      })
+    }
   })
 
   test("a slow hook resolving after the caret moved onto the line leaves the source alone", async ({

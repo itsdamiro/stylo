@@ -1,5 +1,5 @@
-import { expect, test } from "@playwright/test"
-import { line, openFixture } from "./_fixture"
+import { expect, type Page, test } from "@playwright/test"
+import { caret, line, openFixture } from "./_fixture"
 
 test.describe("![[embed]] on the in-place canvas", () => {
   test("portals the host node into a slot in the canvas", async ({ page }) => {
@@ -21,6 +21,54 @@ test.describe("![[embed]] on the in-place canvas", () => {
     await page.locator(".cm-content .cm-inplace-embed").click({ position: { x: 2, y: 2 } })
     await expect(page.locator(".cm-inplace-embed")).toHaveCount(0)
     await expect(line(page, 4)).toHaveText("![[Weekly note]]")
+  })
+
+  // Rendered, `.cm-line` 3 is the blank above the embed and 4 the blank below it.
+  for (const [blank, key] of [
+    [3, "ArrowDown"],
+    [4, "ArrowUp"],
+  ] as const) {
+    test(`${key} from the blank line ${blank === 3 ? "above" : "below"} reveals the source`, async ({
+      page,
+    }) => {
+      await openFixture(page, { mode: "in-place", doc: "embed", embed: "1" })
+      await line(page, 0).click()
+      await line(page, blank).click()
+      await expect(page.locator(".cm-inplace-embed")).toHaveCount(1)
+      await page.keyboard.press(key)
+      await expect(page.locator(".cm-inplace-embed")).toHaveCount(0)
+      await expect(line(page, 4)).toHaveText("![[Weekly note]]")
+    })
+  }
+
+  test.describe("an embed touching its neighbours", () => {
+    const open = async (page: Page) => {
+      await openFixture(page, { mode: "in-place", doc: "embedtight", embed: "1" })
+      await expect(page.locator(".cm-inplace-embed")).toHaveCount(1)
+    }
+    test("ArrowUp keeps the column, clipped to the embed line", async ({ page }) => {
+      await open(page)
+      await line(page, 3).click() // "Text below the embed line."
+      await page.keyboard.press("End")
+      await page.keyboard.press("ArrowUp")
+      await expect(page.locator(".cm-inplace-embed")).toHaveCount(0)
+      expect(await caret(page)).toEqual({ line: "![[Weekly note]]", at: 16 })
+    })
+
+    test("ArrowDown moves through a wrapped line first, then onto the embed", async ({ page }) => {
+      await open(page)
+      await line(page, 2).click({ position: { x: 4, y: 4 } }) // first visual line of the paragraph
+      await page.keyboard.press("Home")
+      await page.keyboard.press("ArrowDown")
+      await expect(page.locator(".cm-inplace-embed")).toHaveCount(1)
+      expect((await caret(page)).line).toContain("A long paragraph")
+
+      for (let i = 0; i < 12; i++) {
+        if ((await page.locator(".cm-inplace-embed").count()) === 0) break
+        await page.keyboard.press("ArrowDown")
+      }
+      expect((await caret(page)).line).toBe("![[Weekly note]]")
+    })
   })
 
   test("a ![[ref]] mid-sentence renders inline, flowing with the text", async ({ page }) => {

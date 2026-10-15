@@ -1,16 +1,23 @@
 import { afterEach, expect, test, vi } from "vitest"
 import { cleanup, render } from "@testing-library/react"
+import { EditorSelection, EditorState, type Extension } from "@codemirror/state"
 import { EditorView } from "@codemirror/view"
 import { Stylo } from "../src/Stylo"
 import { imageRegistryFacet } from "../src/inplace/config"
 import { imageField } from "../src/inplace/image"
+import { isWidgetLine, stepOntoWidgetLine } from "../src/inplace/widget-line-keys"
 import type { EmbedSource, ImageSource } from "../src/types"
 
 afterEach(cleanup)
 
 const picture: ImageSource = (src, alt) => <img src={src} alt={alt} />
 
-async function mount(value: string, imageSource?: ImageSource, embedSource?: EmbedSource) {
+async function mount(
+  value: string,
+  imageSource?: ImageSource,
+  embedSource?: EmbedSource,
+  extensions?: readonly Extension[],
+) {
   const result = render(
     <Stylo
       value={value}
@@ -18,6 +25,7 @@ async function mount(value: string, imageSource?: ImageSource, embedSource?: Emb
       mode="in-place"
       imageSource={imageSource}
       embedSource={embedSource}
+      extensions={extensions}
     />,
   )
   await vi.waitFor(() => {
@@ -162,3 +170,36 @@ test("deleting an image line takes its slot out of the registry", async () => {
 // The slot DOM and the portalled host node are layout-dependent (CodeMirror
 // renders no widgets into a zero-height jsdom viewport); that path is covered
 // by test/browser/image.spec.ts.
+
+test("a line replaced by an image widget is a widget line, the caret's own line is not", async () => {
+  const { view } = await mount("para\n\n![logo](a.svg)\n\nafter\n", picture)
+  expect([1, 2, 3, 4, 5].map((n) => isWidgetLine(view.state, n))).toEqual([
+    false,
+    false,
+    true,
+    false,
+    false,
+  ])
+  expect(isWidgetLine(view.state, 0)).toBe(false)
+  expect(isWidgetLine(view.state, view.state.doc.lines + 1)).toBe(false) // where ArrowDown on the last line looks
+
+  view.dispatch({ selection: { anchor: view.state.doc.line(3).from + 3 } })
+  expect(isWidgetLine(view.state, 3)).toBe(false)
+})
+
+test("the arrow steps are left to CodeMirror with more than one cursor", async () => {
+  const { view } = await mount("para\n\n![logo](a.svg)\n", picture, undefined, [
+    EditorState.allowMultipleSelections.of(true),
+  ])
+  const blankAbove = view.state.doc.line(2).from
+  view.dispatch({
+    selection: EditorSelection.create([
+      EditorSelection.cursor(blankAbove),
+      EditorSelection.cursor(0),
+    ]),
+  })
+  expect(view.state.selection.ranges).toHaveLength(2)
+
+  expect(stepOntoWidgetLine(true)(view)).toBe(false)
+  expect(view.state.selection.ranges).toHaveLength(2)
+})
