@@ -6,6 +6,39 @@ Notable changes to Stylo. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- **`imageSource(src, alt)` draws Markdown images through the host.** A
+  `![alt](src)` alone on its line (a top-level paragraph by itself) is handed to
+  the hook as written, before any URL filtering, so a `data:` source or a route
+  only the host can serve reaches it. Return a node to draw in its place, or
+  `null` to keep the source; the hook may be async, and while it resolves, on
+  `null` and on an error the image's own text stands in. It works on `preview`,
+  `split` and the in-place canvas, where the picture shows while the caret is off
+  its line and the source returns when the caret is on it. Results are cached by
+  `src` and `alt`, and a rejection reaches `onResolveError` with
+  `info.source: "imageSource"`. Stylo does not read a size out of `alt`; the props
+  reference documents a convention (`|300`, `|w300`, `|h200`, `|300x200`,
+  `|full`) a host can copy. `ImageSource` is exported. An image in a sentence, a
+  list item, a quote or a table cell is left as it was.
+- **`handle.invalidateImage(src?)`** drops the cached result for every image with
+  that `src` (all alts), or every image with no argument, and re-resolves the
+  ones on screen. The counterpart of `invalidateEmbed`.
+
+### Changed
+
+- **`ResolveErrorInfo["source"]` gains `"imageSource"`.** Code that switches over
+  it exhaustively needs the new case.
+
+### Fixed
+
+- **A host source that throws synchronously now reaches `onResolveError`.** An
+  `embedSource` that threw, rather than returning a rejected promise, escaped
+  into the render effect and the callback never ran.
+- **`invalidateEmbed()` with no ref also re-resolves an embed the cache had
+  evicted.** With more than 64 embeds on screen, the oldest kept showing their old
+  result because only refs that still had a cache entry were visited.
+
 ## [0.22.0] - 2026-10-05
 
 ### Changed
