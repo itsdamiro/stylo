@@ -109,7 +109,7 @@ test.describe("![alt](src) images", () => {
       await page.keyboard.press("ArrowDown")
       const source = page.locator(".cm-content .cm-line", { hasText: SOURCE })
       await expect(source).toBeVisible()
-      await expect(source).toBeInViewport({ ratio: 1 })
+      await expect(source).toBeInViewport({ ratio: 0.5 }) // fonts differ by platform; unscrolled it is 0
     })
 
     for (const [blank, key] of [
