@@ -17,6 +17,7 @@ jobs:
       - run: npm ci
       - run: npm run format:check
       - run: npm run check:theme
+      - run: npm run check:lines
       - run: npm run typecheck
       - run: npm run test
       - run: npm run build

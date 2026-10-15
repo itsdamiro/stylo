@@ -46,6 +46,7 @@
     "dev": "vite",
     "typecheck": "tsc --noEmit",
     "check:theme": "node scripts/check-theme-tokens.mjs",
+    "check:lines": "node scripts/check-line-count.mjs",
     "check:size": "node scripts/check-bundle-size.mjs",
     "check:package": "node scripts/smoke-package.mjs",
     "test": "vitest run",
