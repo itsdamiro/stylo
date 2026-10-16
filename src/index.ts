@@ -3,6 +3,8 @@ export { Stylo } from "./Stylo"
 export { splitFrontmatter } from "./frontmatter"
 export type {
   CodeLanguages,
+  ContextMenuConfig,
+  ContextMenuItem,
   EmbedSource,
   FrontmatterDisplay,
   ImageSource,
@@ -10,6 +12,7 @@ export type {
   CellWidget,
   InPlaceConfig,
   InPlaceDecorationToggles,
+  MenuGroupId,
   ResolveErrorInfo,
   RevealMode,
   SelectionUI,

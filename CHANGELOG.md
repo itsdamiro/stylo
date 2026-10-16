@@ -6,6 +6,10 @@ Notable changes to Stylo. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- **`ContextMenuConfig`, `ContextMenuItem` and `MenuGroupId` are exported from the package entry,** so a host can type its `inPlace.contextMenu` value and its own menu items. They were already the shape of the prop; only the export was missing.
+
 ## [0.24.0] - 2026-10-16
 
 ### Added
@@ -337,6 +341,8 @@ place` and `source` have no rendered checkbox element to click.
 
 ## [0.13.4] - 2026-09-13
 
+Never tagged or published on its own: these fixes first shipped in [0.13.5].
+
 ### Fixed
 
 - **`preview` and the in-place canvas each hard-coded their own copy of the
@@ -359,6 +365,8 @@ place` and `source` have no rendered checkbox element to click.
   value as preview's `<li>` margin.
 
 ## [0.13.3] - 2026-09-13
+
+Never tagged or published on its own: these fixes first shipped in [0.13.5].
 
 ### Fixed
 
@@ -843,7 +851,7 @@ the first npm-registry publish is deferred to a later version.
 ## [0.1.0] - 2026-09-04
 
 First versioned, installable release. Marks the point the library became
-consumable from git.
+consumable from git. Never tagged and never published to npm; 0.2.0 was the first npm publish.
 
 ### Added
 
@@ -906,8 +914,6 @@ consumable from git.
 [0.14.0]: https://github.com/itsdamiro/stylo/releases/tag/v0.14.0
 [0.13.6]: https://github.com/itsdamiro/stylo/releases/tag/v0.13.6
 [0.13.5]: https://github.com/itsdamiro/stylo/releases/tag/v0.13.5
-[0.13.4]: https://github.com/itsdamiro/stylo/releases/tag/v0.13.4
-[0.13.3]: https://github.com/itsdamiro/stylo/releases/tag/v0.13.3
 [0.13.1]: https://github.com/itsdamiro/stylo/releases/tag/v0.13.1
 [0.13.0]: https://github.com/itsdamiro/stylo/releases/tag/v0.13.0
 [0.12.0]: https://github.com/itsdamiro/stylo/releases/tag/v0.12.0
@@ -922,4 +928,3 @@ consumable from git.
 [0.4.0]: https://github.com/itsdamiro/stylo/releases/tag/v0.4.0
 [0.3.0]: https://github.com/itsdamiro/stylo/releases/tag/v0.3.0
 [0.2.0]: https://github.com/itsdamiro/stylo/releases/tag/v0.2.0
-[0.1.0]: https://github.com/itsdamiro/stylo/releases/tag/v0.1.0
