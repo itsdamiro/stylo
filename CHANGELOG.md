@@ -6,6 +6,8 @@ Notable changes to Stylo. The format follows
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-10-16
+
 ### Added
 
 - **`imageSource` draws an image in a sentence, a list item, a quote or a
@@ -885,6 +887,7 @@ consumable from git.
 - `inPlace` config is read once at mount; changing it needs a remount. (Now
   documented as an intentional contract — see `[Unreleased]`.)
 
+[0.24.0]: https://github.com/itsdamiro/stylo/releases/tag/v0.24.0
 [0.23.2]: https://github.com/itsdamiro/stylo/releases/tag/v0.23.2
 [0.23.1]: https://github.com/itsdamiro/stylo/releases/tag/v0.23.1
 [0.23.0]: https://github.com/itsdamiro/stylo/releases/tag/v0.23.0
