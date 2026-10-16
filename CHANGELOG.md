@@ -6,6 +6,8 @@ Notable changes to Stylo. The format follows
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-10-17
+
 ### Added
 
 - **`ContextMenuConfig`, `ContextMenuItem` and `MenuGroupId` are exported from the package entry,** so a host can type its `inPlace.contextMenu` value and its own menu items. They were already the shape of the prop; only the export was missing.
@@ -895,6 +897,7 @@ consumable from git. Never tagged and never published to npm; 0.2.0 was the firs
 - `inPlace` config is read once at mount; changing it needs a remount. (Now
   documented as an intentional contract — see `[Unreleased]`.)
 
+[0.25.0]: https://github.com/itsdamiro/stylo/releases/tag/v0.25.0
 [0.24.0]: https://github.com/itsdamiro/stylo/releases/tag/v0.24.0
 [0.23.2]: https://github.com/itsdamiro/stylo/releases/tag/v0.23.2
 [0.23.1]: https://github.com/itsdamiro/stylo/releases/tag/v0.23.1
