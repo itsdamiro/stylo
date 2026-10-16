@@ -5,7 +5,7 @@ export type StyloMode = "in-place" | "source" | "preview" | "split"
 /**
  * How `preview` (and the preview pane of `split`) treats the leading `---` YAML
  * block. `"hidden"` (default) drops it from the render; `"code"` renders it as a
- * styled `<pre class="stylo-frontmatter">` a consumer can restyle with its own
+ * styled `<div class="stylo-frontmatter">` a consumer can restyle with its own
  * CSS. A parsed key/value panel is deferred (ADR-001, needs a YAML parser).
  */
 export type FrontmatterDisplay = "hidden" | "code"

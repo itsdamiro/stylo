@@ -17,7 +17,7 @@ Stylo is a zero-bloat Markdown editor component for React. Plain text stays cano
 - **`[[wikilinks]]`** — recognised, styled, and clickable, with an `onWikiLinkClick` callback and opt-in `[[` autocomplete from an index you supply (`wikiLinkSource`).
 - **`#tags`** — opt-in `#` autocomplete from an index you supply (`tagSource`), mirroring `wikiLinkSource`'s trigger-while-typing UX.
 - **`![[embed]]` transclusion** — opt-in on every rendered surface (`preview`, `split`, and the in-place canvas): pass `embedSource` and Stylo hands you the reference, you return the node to render in its place.
-- **`![alt](src)` images** — the same opt-in for a Markdown image, alone on its line or in a sentence, a list item or a quote: pass `imageSource` and Stylo hands you `src` and `alt` before any URL filtering, you return the picture. Two props lay it out: `imageAlign` (`left`, `center`, `right`) places a picture narrower than the column, and `imageWidth="wide"` lets one spill past the column toward the editor's edge on the in-place canvas. [Reference](./docs/wiki/reference/props.md#images).
+- **`![alt](src)` images** — the same opt-in for a Markdown image, alone on its line or in a sentence, a list item, a quote or a heading: pass `imageSource` and Stylo hands you `src` and `alt` before any URL filtering, you return the picture. Two props lay it out: `imageAlign` (`left`, `center`, `right`) places a picture narrower than the column, and `imageWidth="wide"` lets one spill past the column toward the editor's edge on the in-place canvas. [Reference](./docs/wiki/reference/props.md#images).
 - **Interactive tables** — edit a rendered table cell by cell in the in-place canvas, with row / column controls; or keep plain source pipes.
 - **Callouts** — `> [!note]` blockquotes render as tinted admonition blocks (`note` / `tip` / `warning` / `danger` / `example`).
 - **Declarative toolbar** — trim, reorder, or extend the command set, supply your own buttons, swap the icons, and fold what doesn't fit into a `⋯` menu instead of wrapping. [Reference](./docs/wiki/reference/toolbar.md).
@@ -26,7 +26,7 @@ Stylo is a zero-bloat Markdown editor component for React. Plain text stays cano
 - **Frontmatter-aware** — YAML frontmatter round-trips untouched; `onFrontmatter` hands you the raw block to parse.
 - **Opt-in code highlighting** — fenced code is coloured through a `--stylo-syntax-*` token palette once you pass the grammars you want. [Reference](./docs/wiki/reference/code-languages.md).
 - **Themeable** — structural CSS only; a `--stylo-*` custom-property palette with a built-in dark mode.
-- **Imperative handle** — `focus()`, `scrollToHeading()`, `insertAtCursor()`, and `getView()` for the raw CodeMirror `EditorView`.
+- **Imperative handle** — `focus()`, `scrollToHeading()`, `insertAtCursor()`, `invalidateEmbed()`, `invalidateImage()`, and `getView()` for the raw CodeMirror `EditorView`.
 
 ---
 
@@ -109,13 +109,13 @@ function Editor() {
 }
 ```
 
-`ref` gives an imperative handle: `focus()`, `scrollToHeading(text)`, `insertAtCursor(md)`, and `getView()` for the raw CodeMirror `EditorView`.
+`ref` gives an imperative handle: `focus()`, `scrollToHeading(text)`, `insertAtCursor(md)`, `invalidateEmbed(ref?)`, `invalidateImage(src?)`, and `getView()` for the raw CodeMirror `EditorView`.
 
 `toolbar` trims, reorders, or extends the formatting bar — built-in command ids, your own `ToolbarCustomItem` buttons, and a `render` slot to wrap it. `overflow: "menu"` keeps the bar on one row, folding the buttons that don't fit into a trailing menu. See the [toolbar reference](./docs/wiki/reference/toolbar.md).
 
 `canvasHeader` docks your own content — a frontmatter card, say — inside the editing surface itself, below the find/replace panel and above the document body, a seam `toolbar.render` can't reach since it wraps content before the whole canvas. See [Canvas header](./docs/wiki/reference/props.md#canvas-header).
 
-`inPlace`, `codeLanguages`, `wikiLinkSource`, and `tagSource` are read once, when the editing surface mounts — give `<Stylo>` a `key` derived from the config to apply a change. (`codeLanguages` is the exception in `preview`, which is a pure function of its props and picks up a change immediately, no `key` needed.) Every other prop is fully reactive. See [props · applied at mount](./docs/wiki/reference/props.md#config-applied-at-mount).
+`inPlace`, `codeLanguages`, `wikiLinkSource`, `tagSource`, and `canvasHeader` are read once, when the editing surface mounts — give `<Stylo>` a `key` derived from the config to apply a change. (`codeLanguages` is the exception in `preview`, which is a pure function of its props and picks up a change immediately, no `key` needed.) Every other prop is fully reactive. See [props · applied at mount](./docs/wiki/reference/props.md#config-applied-at-mount).
 
 Pass `wikiLinkSource` — `(query) => { target, label? }[]`, sync or async — to turn on `[[wikilink]]` autocomplete backed by your own index. See [Wikilink autocomplete](./docs/wiki/reference/props.md#wikilink-autocomplete).
 
@@ -143,6 +143,7 @@ Full documentation lives in the [wiki](./docs/wiki/index.md).
 
 - [Integrating Stylo](./docs/wiki/guides/integration.md) — live vs. mount-time props, persistence, stylesheet and peer-dependency setup, the theming contract.
 - [Auto-save](./docs/wiki/guides/autosave.md) — why it is not a prop, and a `useAutosave` hook to copy.
+- [Host extensions](./docs/wiki/guides/host-extensions.md) — adding your own CodeMirror extensions through the `extensions` prop.
 - [Layout and touch](./docs/wiki/guides/layout-and-touch.md) — the page layouts, the full-height recipe that pins a toolbar for free, and touch behaviour.
 
 **Reference**

@@ -20,12 +20,12 @@ This is the Obsidian stance, and it is a deliberate rejection of the ProseMirror
 
 Stylo assembles four well-scoped libraries rather than taking on an editor framework:
 
-| Concern          | Library                                                                    | Role                                                                                                   |
-| ---------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| Editing surface  | CodeMirror 6 (`@codemirror/lang-markdown`)                                 | Text input, selection, syntax-aware source styling, toolbar commands as transactions                   |
-| Render / preview | `react-markdown` + `remark-gfm` + `remark-math` + `rehype-katex` + `katex` | Markdown string → React element tree for the preview pane                                              |
-| `[[wikilinks]]`  | small custom `remark` plugin (~30 LOC)                                     | Rewrites `[[target]]` / `[[target\|label]]` into link nodes with a `data-wikilink` target              |
-| Frontmatter      | `remark-frontmatter` (render side) + `gray-matter` (parse side)            | Keeps the leading `---` YAML block out of the rendered body; exposes it as structured data to the host |
+| Concern          | Library                                                                    | Role                                                                                                                            |
+| ---------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Editing surface  | CodeMirror 6 (`@codemirror/lang-markdown`)                                 | Text input, selection, syntax-aware source styling, toolbar commands as transactions                                            |
+| Render / preview | `react-markdown` + `remark-gfm` + `remark-math` + `rehype-katex` + `katex` | Markdown string → React element tree for the preview pane                                                                       |
+| `[[wikilinks]]`  | small custom `remark` plugin (~30 LOC)                                     | Rewrites `[[target]]` / `[[target\|label]]` into link nodes with a `data-wikilink` target                                       |
+| Frontmatter      | `remark-frontmatter`                                                       | Keeps the leading `---` YAML block out of the rendered body; hands the raw block to the host (`onFrontmatter`), which parses it |
 
 Every dependency is modular, tree-shakeable, and MIT.
 
@@ -60,7 +60,7 @@ The UX layer, customization API, and design-token system are specified in [ADR-0
 
 `<Stylo mode>` selects the interaction layout:
 
-- `in-place` (**default**) — Notion-like canvas: headings, emphasis, links and wikilinks, `$…$` / `$$…$$` math, rules, blockquotes, list bullets, task checkboxes, and GFM tables render live in the CodeMirror surface via view decorations, with the raw source revealed under the caret. Fenced-code syntax highlighting stays as source for now (waits on the `codeLanguages` prop); rendered table cells show inline formatting (`**bold**`, `` `code` ``, links, wikilinks, `$math$`) but the caret entering a table line reveals the source. Architecture and node set in [ADR-004](../../decisions/004-in-place-decoration-canvas.md).
+- `in-place` (**default**) — Notion-like canvas: headings, emphasis, links and wikilinks, `$…$` / `$$…$$` math, rules, blockquotes, list bullets, task checkboxes, and GFM tables render live in the CodeMirror surface via view decorations, with the raw source revealed under the caret. Fenced-code syntax highlighting is opt-in through the `codeLanguages` prop (without it a fence stays as source); rendered table cells show inline formatting (`**bold**`, `` `code` ``, links, wikilinks, `$math$`) but the caret entering a table line reveals the source. Architecture and node set in [ADR-004](../../decisions/004-in-place-decoration-canvas.md).
 - `source` — raw CodeMirror Markdown text surface; loads no render chunk.
 - `preview` — rendered HTML/KaTeX preview pane.
 - `split` — side-by-side editing and preview with synchronized scroll.
@@ -76,7 +76,7 @@ The UX layer, customization API, and design-token system are specified in [ADR-0
 1. **Adaptive canvas** — responsive writing surface themed through a small set of CSS custom properties: `--stylo-bg`, `--stylo-text`, `--stylo-text-muted`, `--stylo-border`, `--stylo-accent`, `--stylo-link`, `--stylo-ring`, `--stylo-radius`. Defaults follow shadcn/ui's neutral conventions as a visual reference; no Tailwind or shadcn code is bundled.
 2. **Declarative toolbar** — a single ordered `items` list of command ids with `"|"` separators, `toolbar={false}` to hide it, and a per-id `icons` override (inline-SVG built-ins, no icon dependency). Shipped 2026-09-02; see [[reference/toolbar|the toolbar reference]] and the ADR-002 §2 amendment.
 
-**Deferred (post-v1, additive — see ADR-002):** the `left` / `right` docks, the `overflow` mode, a `headings` dropdown sub-config, the context-aware selection tooltip, and the `<StyloToolbarSettings />` drag-and-drop customizer with magnetic docks.
+**Deferred (post-v1, additive — see ADR-002):** the `left` / `right` docks (with the magnetic docks a customizer could drag the bar between), a `headings` dropdown sub-config, and the context-aware selection tooltip. The `overflow` mode and the `<StyloToolbarSettings />` customizer have shipped: see [[reference/toolbar|the toolbar reference]] and [[reference/toolbar-settings|the customizer reference]].
 
 Internal UI is styled with CSS Modules compiled to a single `dist/styles.css`; consumers import it once and need no build-time CSS tooling.
 

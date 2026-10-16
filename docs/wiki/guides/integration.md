@@ -39,11 +39,11 @@ return <Stylo value={doc} onChange={setDoc} />
 
 An "unsaved changes" indicator, undo history beyond the editor session, conflict resolution — all of that is app state you layer on top, because only the app knows the persistence policy.
 
-## Most props are reactive; three are read at mount
+## Most props are reactive; five are read at mount
 
 `value`, `onChange`, `onSave`, `mode`, `toolbar`, `frontmatter`, `icons`, `readOnly`, `placeholder`, `className`, the click callbacks, and the styling tokens all update live.
 
-**`inPlace`, `codeLanguages`, and `wikiLinkSource` are read once, when the editing surface mounts.** They feed the CodeMirror extension configuration, which is built at construction. Changing one after mount has no effect until the surface is recreated — give `<Stylo>` a `key` derived from the config:
+**`inPlace`, `codeLanguages`, `wikiLinkSource`, `tagSource`, and `canvasHeader` are read once, when the editing surface mounts.** They feed the CodeMirror extension configuration, which is built at construction. Changing one after mount has no effect until the surface is recreated — give `<Stylo>` a `key` derived from the config:
 
 ```tsx
 <Stylo
@@ -72,7 +72,7 @@ The [Auto-save guide](autosave.md) has a `useAutosave` hook that debounces `onCh
 
 ## Resolver failures are quiet — `onResolveError` to hear them
 
-`embedSource`, `imageSource` and `wikiLinkSource` swallow their own failures: a rejected embed falls back to literal `![[ref]]`, a rejected image to its literal `![alt](src)`, a rejected wikilink search shows no completions. When either is network-backed, wire **`onResolveError(error, info)`** so a backend outage is a log line or a toast, not a silent blank. It is observation only — the fallback is unchanged — and a resolver returning `null` is a valid result, not an error. See [props · resolver errors](../reference/props.md#resolver-errors).
+`embedSource`, `imageSource`, `wikiLinkSource` and `tagSource` swallow their own failures: a rejected embed falls back to literal `![[ref]]`, a rejected image to its literal `![alt](src)`, a rejected wikilink search shows no completions. When either is network-backed, wire **`onResolveError(error, info)`** so a backend outage is a log line or a toast, not a silent blank. It is observation only — the fallback is unchanged — and a resolver returning `null` is a valid result, not an error. See [props · resolver errors](../reference/props.md#resolver-errors).
 
 ## Stylesheets — import once
 
@@ -91,7 +91,7 @@ CodeMirror, Lezer, and React are peer dependencies. Stylo shares the host's copy
 
 ## Extending the editor through `getView()`
 
-The `ref` handle exposes `focus()`, `scrollToHeading(text)`, `insertAtCursor(md)`, and `getView()` — the raw CodeMirror `EditorView`. Use `getView()` to dispatch commands, rather than importing a separate `EditorView` elsewhere and expecting shared state (see the peer-dependency note above). To add your own CodeMirror extensions, use the supported [`extensions` prop](host-extensions.md) instead of a post-mount `StateEffect.appendConfig`. Full list at [props · ref](../reference/props.md#ref--imperative-handle).
+The `ref` handle exposes `focus()`, `scrollToHeading(text)`, `insertAtCursor(md)`, `invalidateEmbed(ref?)`, `invalidateImage(src?)`, and `getView()` — the raw CodeMirror `EditorView`. Use `getView()` to dispatch commands, rather than importing a separate `EditorView` elsewhere and expecting shared state (see the peer-dependency note above). To add your own CodeMirror extensions, use the supported [`extensions` prop](host-extensions.md) instead of a post-mount `StateEffect.appendConfig`. Full list at [props · ref](../reference/props.md#ref--imperative-handle).
 
 ## Theming: override tokens, cover both modes
 
