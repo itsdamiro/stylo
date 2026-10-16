@@ -48,7 +48,7 @@ export interface StyloProps {
   /**
    * How `preview` (and `split`'s preview pane) shows the leading `---` YAML
    * block. `"hidden"` (default) drops it; `"code"` renders it as a styled
-   * `<pre class="stylo-frontmatter">`.
+   * `<div class="stylo-frontmatter">`.
    */
   frontmatter?: FrontmatterDisplay
   /**
@@ -89,16 +89,16 @@ export interface StyloProps {
    */
   tagSource?: TagSource
   /**
-   * Resolves `![[ref]]` embeds (transclusion) for `preview` and `split`. Called
-   * with the raw reference; return a node to render in its place, or `null` to
-   * leave it as literal text. May be async. Off when omitted. See
-   * {@link EmbedSource}.
+   * Resolves `![[ref]]` embeds (transclusion) for `preview`, `split` and the
+   * in-place canvas. Called with the raw reference; return a node to render in
+   * its place, or `null` to leave it as literal text. May be async. Off when
+   * omitted. See {@link EmbedSource}.
    */
   embedSource?: EmbedSource
   /**
    * Resolves a Markdown image, `![alt](src)`, for `preview`, `split` and the
-   * in-place canvas: alone on its line or in a sentence, list item or quote
-   * (phrasing content for those); a table cell on `preview` and `split` only.
+   * in-place canvas: alone on its line or in a sentence, list item, quote or
+   * heading (phrasing content for those); a table cell on `preview` and `split` only.
    * Called with `src` and `alt` as written, before any URL filtering; return a
    * node, or `null` to keep the source. May be async. Off when omitted. Read once,
    * at mount, on the canvas. See {@link ImageSource}.

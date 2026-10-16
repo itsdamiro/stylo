@@ -228,7 +228,7 @@ To apply a change, remount the component with a `key` derived from the config:
 />
 ```
 
-`value`, `onChange`, the callback props, `readOnly`, `placeholder`, `toolbar`, and `icons` are all fully reactive — only `inPlace` and `codeLanguages` need the remount.
+`value`, `onChange`, the callback props, `readOnly`, `placeholder`, `toolbar`, and `icons` are all fully reactive — only `inPlace`, `codeLanguages`, `wikiLinkSource`, `tagSource`, and `canvasHeader` need the remount.
 
 ## Not in this pass
 
@@ -238,4 +238,4 @@ Deferred, each its own later decision:
 - Drag-to-reorder rows / columns and multi-cell selection on the `"cells"` widget.
 - A consumer-supplied decorator hook for custom in-place node types.
 
-See the [in-place canvas tracker](../../journal/2026-09/2026-09-01_in-place-canvas.md) for what each of the twelve constructs above does when it is on.
+See the [in-place canvas tracker](../../journal/2026-09/2026-09-01_in-place-canvas.md) for what each of the thirteen constructs above does when it is on.

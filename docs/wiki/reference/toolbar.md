@@ -171,7 +171,7 @@ The context menu and the table's structural menu are reachable on touch too — 
 | `math`          | Wrap in `$…$`                                            | —                       |
 | `mathBlock`     | Fence the selected lines in `$$`                         | —                       |
 
-The default bar shows every id above **except `save`, `search`, and `underline`**, grouped by kind: history · headings · inline text (with `link` and `wikilink`) · the three list markers · block structure (`quote` `hr` `frontmatter` `table`) · code and math.
+The default bar shows every id above **except `save`, `search`, `underline`, and `body`**, grouped by kind: history · headings · inline text (with `link` and `wikilink`) · the three list markers · block structure (`quote` `hr` `frontmatter` `table`) · code and math.
 
 `save` is opt-in: add it to `items` yourself. It renders **disabled** until an [`onSave`](./props.md) prop is wired, so it stays out of the default bar rather than sitting there greyed out for every consumer. `Mod-s` triggers the same path with or without the button; with no `onSave` handler it does nothing and the browser keeps the key. A "saved / saving" status pill is not built in — see the [auto-save guide](../guides/autosave.md).
 

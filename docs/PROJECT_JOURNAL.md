@@ -37,6 +37,9 @@ The records moved to [`docs/decisions/`](./decisions/README.md) (ADR-013, 2026-1
 | 2026-09-17 | [Full codebase review — findings and remediation order](./journal/2026-09/2026-09-17_full-codebase-review-findings.md)                                                                  |
 | 2026-09-14 | [Audit: is display-overriding-native-layout a recurring footgun beyond the table fixes?](./journal/2026-09/2026-09-14_table-layout-footgun-audit.md)                                    |
 | 2026-09-14 | [`preview`'s table gets a real wrapper — `display: block` was disabling its own layout algorithm](./journal/2026-09/2026-09-14_preview-table-wrapper.md)                                |
+| 2026-09-13 | [`#tag` autocomplete — mirrors `wikiLinkSource` exactly](./journal/2026-09/2026-09-13_tag-autocomplete.md)                                                                              |
+| 2026-09-13 | [Opt-in soft line breaks in preview — `softBreaks`](./journal/2026-09/2026-09-13_preview-soft-breaks.md)                                                                                |
+| 2026-09-13 | [`preview`'s fenced code blocks wrap by default, behind a new override token](./journal/2026-09/2026-09-13_preview-code-wrap-token.md)                                                  |
 | 2026-09-13 | [In-place table reaches the wrap's full width — gizmo gutter moved off the table's own box](./journal/2026-09/2026-09-13_inplace-table-full-width.md)                                   |
 | 2026-09-13 | [Clickable task checkboxes in preview — `onTaskToggle`](./journal/2026-09/2026-09-13_preview-task-checkboxes.md)                                                                        |
 | 2026-09-13 | [`readOnly` reaches editable table cells too — the same gap, one layer deeper](./journal/2026-09/2026-09-13_readonly-table-cells.md)                                                    |
@@ -44,6 +47,7 @@ The records moved to [`docs/decisions/`](./decisions/README.md) (ADR-013, 2026-1
 | 2026-09-13 | [Exiting an editable table downward could land the caret above it; `insertTable` now leaves room to move past one](./journal/2026-09/2026-09-13_table-exit-caret-and-insert-spacing.md) |
 | 2026-09-13 | [`preview` gets a scroll container; `readOnly` actually blocks the in-place menu and selection bar](./journal/2026-09/2026-09-13_preview-scroll-and-readonly-guards.md)                 |
 | 2026-09-13 | [A surface-parity rule for `--stylo-*` tokens — in-place leads, preview's reach is decided, not assumed](./journal/2026-09/2026-09-13_surface-parity-rule.md)                           |
+| 2026-09-12 | [Two caret/layout bugs after a table and an embed](./journal/2026-09/2026-09-12_table-caret-and-embed-rail-fixes.md)                                                                    |
 | 2026-09-12 | [Toolbar groups wrap as a unit; the search button shows pressed](./journal/2026-09/2026-09-12_toolbar-group-wrap-and-search-toggle.md)                                                  |
 | 2026-09-11 | [Tracker — making Stylo dependable for downstream projects](./journal/2026-09/2026-09-11_dependable-tracker.md)                                                                         |
 | 2026-09-11 | [`![[embed]]` reaches the in-place canvas — a portal registry](./journal/2026-09/2026-09-11_inplace-embeds.md)                                                                          |
