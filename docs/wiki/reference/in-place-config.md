@@ -90,7 +90,7 @@ inPlace={{ contextMenu: { groups: ["paragraph", "insert", "clipboard"] } }}
 
 ### Host items
 
-`contextMenu.items` adds the host's own entries, the way `toolbar.items` adds buttons. They are drawn as the `host` group, which is **first** unless `groups` places it elsewhere; a `groups` list without `"host"` hides them.
+`contextMenu.items` adds the host's own entries, the way `toolbar.items` adds buttons. They are drawn as the `host` group, which is **first** unless `groups` places it elsewhere; a `groups` list without `"host"` hides them. The types `ContextMenuConfig`, `ContextMenuItem` and `MenuGroupId` are exported from the package entry.
 
 ```tsx
 inPlace={{
