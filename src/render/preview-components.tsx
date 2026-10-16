@@ -45,11 +45,12 @@ function embedOrChildren(
   )
 }
 
-/** The `HostImage` for a `data-stylo-image` carrier, or `children` unchanged. */
+/** The `HostImage` for a `data-stylo-image` carrier (block or inline), or `children` unchanged. */
 function imageOrChildren(
   rest: object,
   imageSource: ImageSource | undefined,
   onResolveError: PreviewComponentsOptions["onResolveError"],
+  inline: boolean,
   children: ReactNode,
 ): ReactNode {
   const src = dataAttr(rest, "data-stylo-image")
@@ -60,6 +61,7 @@ function imageOrChildren(
       alt={dataAttr(rest, "data-stylo-image-alt") ?? ""}
       literal={dataAttr(rest, "data-stylo-image-raw") ?? ""}
       source={imageSource}
+      inline={inline}
       onError={onResolveError}
     />
   )
@@ -110,7 +112,7 @@ export function buildPreviewComponents({
             embedSource,
             onResolveError,
             false,
-            imageOrChildren(rest, imageSource, onResolveError, children),
+            imageOrChildren(rest, imageSource, onResolveError, false, children),
           )}
         </div>
       )
@@ -123,7 +125,7 @@ export function buildPreviewComponents({
             embedSource,
             onResolveError,
             true,
-            children,
+            imageOrChildren(rest, imageSource, onResolveError, true, children),
           )}
         </span>
       )

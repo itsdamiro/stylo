@@ -6,6 +6,29 @@ Notable changes to Stylo. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- **`imageSource` draws an image in a sentence, a list item, a quote or a
+  heading,** not only one alone on its line, on `preview`, `split` and the
+  in-place canvas (and in a table cell on `preview` and `split`). The host is
+  called the same way and should return phrasing content for these, as for an
+  inline `![[embed]]`. A linked image (`[![alt](src)](url)`), code and a table
+  cell on the canvas stay as they were.
+- **`imageAlign` (`"left"`, `"center"`, `"right"`)** places a picture alone on
+  its line that is narrower than the column, on every surface.
+- **`imageWidth` (`"column"`, `"wide"`)**: `"wide"` lets a picture alone on its
+  line spill past the text column toward the open side, up to the editor's edge
+  less 1rem, on the in-place canvas. It assumes a centred column for `center`
+  and `right`; `preview` and `split` keep the column.
+
+### Changed
+
+- **Every drawn image is capped at its column** (`max-width: 100%` on the node
+  the host returns). A picture wider than the column no longer overflows it; a
+  host's own inline style still wins. An image in a sentence, a list item or a
+  quote used to render as source on the canvas and as the browser's `<img>` in
+  `preview`, and now goes through `imageSource` when the host passes one.
+
 ## [0.23.2] - 2026-10-15
 
 ### Fixed

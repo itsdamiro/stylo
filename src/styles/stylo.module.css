@@ -660,6 +660,71 @@
   margin: 1em 0;
 }
 
+/* Images (ADR-017). Every drawn image is capped at its column, in a block slot
+   and in a line alike, on every surface; a host's own inline style still wins.
+   Scoped to image slots so `![[embed]]` content is untouched. */
+.preview :global(.stylo-image) :global(.stylo-embed-content) > *,
+.preview :global(.stylo-image-inline) :global(.stylo-embed-content) > *,
+.root :global(.cm-inplace-image) :global(.stylo-embed-content) > *,
+.root :global(.cm-inplace-image-inline) :global(.stylo-embed-content) > * {
+  max-width: 100%;
+}
+
+/* `imageAlign`: a block picture narrower than the column sits left (the flow),
+   centred or right. The wrapper becomes the flex row only for centre and right,
+   so a host `width: 100%` (the `|full` size) still resolves against the column,
+   and the cap above keeps the picture from shrinking or overflowing. */
+.root[data-stylo-image-align="center"] :global(.cm-inplace-image) :global(.stylo-embed-content),
+.root[data-stylo-image-align="center"]
+  .preview
+  :global(.stylo-image)
+  :global(.stylo-embed-content) {
+  display: flex;
+  justify-content: center;
+}
+
+.root[data-stylo-image-align="right"] :global(.cm-inplace-image) :global(.stylo-embed-content),
+.root[data-stylo-image-align="right"] .preview :global(.stylo-image) :global(.stylo-embed-content) {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* `imageWidth="wide"`, on the canvas only: a block picture may spill past the
+   column toward the open side, up to the editor's edge less 1rem. The slot is a
+   flex row (so the wrapper can run past it either way) and the wrapper grows to
+   its picture: at least the column (so a host's `width: 100%` still means the
+   column), at most the cap. The scroller is the container, so `cqw` is the
+   editor's width; it includes the scrollbar, so the 1rem is held back for it.
+   Left spills right and right spills left, by the room beside a column centred
+   in the editor; centre spills both ways. */
+.root[data-stylo-image-width="wide"] :global(.cm-scroller) {
+  container-type: inline-size;
+}
+
+.root[data-stylo-image-width="wide"] :global(.cm-inplace-image) {
+  display: flex;
+}
+
+.root[data-stylo-image-width="wide"][data-stylo-image-align="center"] :global(.cm-inplace-image) {
+  justify-content: center;
+}
+
+.root[data-stylo-image-width="wide"][data-stylo-image-align="right"] :global(.cm-inplace-image) {
+  justify-content: flex-end;
+}
+
+.root[data-stylo-image-width="wide"] :global(.cm-inplace-image) :global(.stylo-embed-content) {
+  flex: none;
+  min-width: 100%;
+  max-width: calc((100cqw - 1rem + 100%) / 2);
+}
+
+.root[data-stylo-image-width="wide"][data-stylo-image-align="center"]
+  :global(.cm-inplace-image)
+  :global(.stylo-embed-content) {
+  max-width: calc(100cqw - 1rem);
+}
+
 /* A GFM table renders wrapped in `<div class="stylo-table-wrap">`, which
    carries the block/scroll behaviour a table wider than its column needs —
    `display: block` directly on `<table>` disables its own table-layout

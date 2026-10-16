@@ -20,6 +20,7 @@ The records moved to [`docs/decisions/`](./decisions/README.md) (ADR-013, 2026-1
 
 | Date       | Entry                                                                                                                                                                                   |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-16 | [Images in a sentence, and a width the host chooses](./journal/2026-10/2026-10-16_images-in-a-sentence-and-wide.md)                                                                     |
 | 2026-10-15 | [The nine files over the ceiling, split](./journal/2026-10/2026-10-15_split-files-over-ceiling.md)                                                                                      |
 | 2026-10-15 | [A line-count gate for the 200-line ceiling](./journal/2026-10/2026-10-15_line-count-gate.md)                                                                                           |
 | 2026-10-15 | [Stylo.tsx split under the 200-line ceiling](./journal/2026-10/2026-10-15_split-stylo-tsx.md)                                                                                           |

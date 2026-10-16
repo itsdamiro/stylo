@@ -17,7 +17,7 @@ Stylo is a zero-bloat Markdown editor component for React. Plain text stays cano
 - **`[[wikilinks]]`** — recognised, styled, and clickable, with an `onWikiLinkClick` callback and opt-in `[[` autocomplete from an index you supply (`wikiLinkSource`).
 - **`#tags`** — opt-in `#` autocomplete from an index you supply (`tagSource`), mirroring `wikiLinkSource`'s trigger-while-typing UX.
 - **`![[embed]]` transclusion** — opt-in on every rendered surface (`preview`, `split`, and the in-place canvas): pass `embedSource` and Stylo hands you the reference, you return the node to render in its place.
-- **`![alt](src)` images** — the same opt-in for a Markdown image alone on its line: pass `imageSource` and Stylo hands you `src` and `alt` before any URL filtering, you return the picture.
+- **`![alt](src)` images** — the same opt-in for a Markdown image, alone on its line or in a sentence, a list item or a quote: pass `imageSource` and Stylo hands you `src` and `alt` before any URL filtering, you return the picture. Two props lay it out: `imageAlign` (`left`, `center`, `right`) places a picture narrower than the column, and `imageWidth="wide"` lets one spill past the column toward the editor's edge on the in-place canvas. [Reference](./docs/wiki/reference/props.md#images).
 - **Interactive tables** — edit a rendered table cell by cell in the in-place canvas, with row / column controls; or keep plain source pipes.
 - **Callouts** — `> [!note]` blockquotes render as tinted admonition blocks (`note` / `tip` / `warning` / `danger` / `example`).
 - **Declarative toolbar** — trim, reorder, or extend the command set, supply your own buttons, swap the icons, and fold what doesn't fit into a `⋯` menu instead of wrapping. [Reference](./docs/wiki/reference/toolbar.md).

@@ -9,6 +9,8 @@ interface HostImageProps {
   /** The image as written, shown while it resolves, on `null`, and on an error. */
   literal: string
   source: ImageSource
+  /** Phrasing content in a `<span>`: an image in a sentence, a list item or a quote. */
+  inline?: boolean
   onError?: (error: unknown, info: ResolveErrorInfo) => void
 }
 
@@ -18,7 +20,7 @@ interface HostImageProps {
  * report, the invalidation listener — so an image behaves as an embed does, on
  * `preview` and on the canvas alike.
  */
-export function HostImage({ src, alt, literal, source, onError }: HostImageProps) {
+export function HostImage({ src, alt, literal, source, inline, onError }: HostImageProps) {
   const entry = useMemo(() => imageEntry(source, src, alt), [source, src, alt])
   const errorInfo = useMemo<ResolveErrorInfo>(() => ({ source: "imageSource", input: src }), [src])
   return (
@@ -26,6 +28,7 @@ export function HostImage({ src, alt, literal, source, onError }: HostImageProps
       reference={entry.key}
       source={entry.source}
       onError={onError}
+      inline={inline}
       literal={literal}
       errorInfo={errorInfo}
     />

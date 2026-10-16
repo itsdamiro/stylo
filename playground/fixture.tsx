@@ -27,13 +27,20 @@ import "katex/dist/katex.min.css"
  *   ?sticky=top|bottom                    (default none)
  *   ?toolbar=0                            (default on)
  *   ?theme=dark                           (default light)
- *   ?doc=basic|math|code|rule|table|long|embed|embedtight|image|imagefull|imageedge (default basic)
+ *   ?doc=basic|math|code|rule|table|long|embed|embedtight|image|imagefull|imageedge|imagewide|imageinline|imageinlinewide (default basic)
  *   ?wikilinks=1                          (canned wikiLinkSource; default off)
  *   ?tags=1                               (canned tagSource; default off)
  *   ?embed=1                              (canned embedSource; default off)
  *   ?image=1                              (canned imageSource: an inline SVG picture, sized
  *                                          by a `|w120` / `|h80` suffix on the alt; default off;
  *                                          `image=slow` resolves each after 600 ms)
+ *   ?imageWidth=wide  ?imageAlign=center|right   (the props of the same names; default column, left)
+ *   ?hostCap=0                            (the canned picture drops its own `max-width: 100%`, so
+ *                                          only Stylo's cap holds it)
+ *   ?editorHeight=480                     (the canvas editor is that many px tall, so its scroller
+ *                                          scrolls and shows a scrollbar, as in a host's fixed pane)
+ *   ?column=420                           (a host column: `.cm-content` capped at that many px and
+ *                                          centred in the editor, as a host that lays out a page does)
  *   ?hostItem=1                           (one right-click "Comment" item, readOnlySafe; its
  *                                          run writes the selected text to window.__hostRun)
  *   ?cellMark=1                           (doc=table, table=cells: marks the word "paint" in its
@@ -89,7 +96,7 @@ const cannedImageSource: ImageSource = (src, alt) => {
       width={width ? Number(width) : undefined}
       height={height ? Number(height) : undefined}
       style={{
-        maxWidth: "100%",
+        maxWidth: new URLSearchParams(location.search).get("hostCap") === "0" ? undefined : "100%",
         width: full ? "100%" : undefined,
         height: full || (width && !height) ? "auto" : undefined,
       }}
@@ -166,6 +173,48 @@ const DOCS: Record<string, string> = {
   imagefull: ["# Wide", "", "Text before.", "", "![wide|full](a/b.svg)", "", "Text after."].join(
     "\n",
   ),
+  imagewide: [
+    "# Wide",
+    "",
+    "Text before.",
+    "",
+    "![narrow|w200](a.svg)",
+    "",
+    "Text between.",
+    "",
+    "![mid|w450](b.svg)",
+    "",
+    "Text beside.",
+    "",
+    "![huge|w1500](c.svg)",
+    "",
+    "Text after.",
+    "",
+    ...Array.from(
+      { length: new URLSearchParams(location.search).get("long") === "1" ? 40 : 0 },
+      (_, i) => `Filler ${i + 1}.\n`,
+    ),
+  ].join("\n"),
+  imageinline: [
+    "# Heading with ![h](h.svg) in it",
+    "",
+    "A sentence with ![sentence](s.svg) in it.",
+    "",
+    "- a list item with ![item](i.svg) in it",
+    "",
+    "> a quote with ![quote](q.svg) in it",
+    "",
+    "- ![alone in an item](a.svg)",
+    "",
+    "| a | b |",
+    "| - | - |",
+    "| ![cell](c.svg) | x |",
+    "",
+    "A badge [![linked](l.svg)](https://example.com) stays source.",
+    "",
+    "Code `![code](k.svg)` stays source.",
+  ].join("\n"),
+  imageinlinewide: ["# Inline", "", "A sentence with ![big|w1500](big.svg) in it."].join("\n"),
   imageedge: ["![top|w120](a/b.svg)", "", "middle", "", "![bottom|h80](d.svg)"].join("\n"),
   embedtight: [
     "# Tight",
@@ -202,6 +251,10 @@ const sticky = params.get("sticky") as "top" | "bottom" | null
 const toolbar = params.get("toolbar") !== "0"
 const overflow = params.get("overflow") === "menu" ? "menu" : undefined
 const width = params.get("width")
+const column = Number(params.get("column")) || null
+const editorHeight = Number(params.get("editorHeight")) || null
+const imageWidth = params.get("imageWidth") === "wide" ? "wide" : undefined
+const imageAlign = (["center", "right"] as const).find((a) => a === params.get("imageAlign"))
 const wikiLinkSource = params.get("wikilinks") === "1" ? cannedWikiLinkSource : undefined
 const tagSource = params.get("tags") === "1" ? cannedTagSource : undefined
 const embedSource = params.get("embed") === "1" ? cannedEmbedSource : undefined
@@ -292,6 +345,16 @@ const cellWidgets =
     : undefined
 
 if (params.get("theme") === "dark") document.documentElement.dataset.theme = "dark"
+if (column || editorHeight) {
+  const style = document.createElement("style")
+  style.textContent = [
+    column && `#fixture .cm-editor .cm-content { max-width: ${column}px; margin-inline: auto; }`,
+    editorHeight && `#fixture .cm-editor { height: ${editorHeight}px; }`,
+  ]
+    .filter(Boolean)
+    .join("\n")
+  document.head.appendChild(style)
+}
 
 function Fixture() {
   const [value, setValue] = useState(doc)
@@ -318,6 +381,8 @@ function Fixture() {
         tagSource={tagSource}
         embedSource={embedSource}
         imageSource={imageSource}
+        imageWidth={imageWidth}
+        imageAlign={imageAlign}
         extensions={hostExtensions}
       />
     </div>

@@ -79,32 +79,82 @@ test("the source text is shown as written, with angle brackets and title", async
   await vi.waitFor(() => expect(container.textContent).toContain('![a](<my file.png> "t")'))
 })
 
-test("an image inside a sentence, a list item or a quote is left alone", () => {
+test("an image inside a sentence, a list item or a quote is drawn inline", async () => {
   const source = vi.fn(picture)
   const { container } = preview("see ![a](b.png) here\n\n- ![c](d.png)\n\n> ![e](f.png)\n", source)
-  expect(source).not.toHaveBeenCalled()
-  expect(container.querySelectorAll("img")).toHaveLength(3)
+  await vi.waitFor(() => expect(screen.getAllByTestId("pic")).toHaveLength(3))
+  expect(source).toHaveBeenCalledTimes(3)
+  expect(container.querySelectorAll("span.stylo-image-inline")).toHaveLength(3)
+  expect(container.querySelector("div.stylo-image")).toBeNull()
+  expect(container.textContent).toContain("see ")
+  expect(container.textContent).toContain(" here")
 })
 
-test("an image that continues a paragraph is not a lone image", () => {
-  const source = vi.fn(picture)
-  preview("some words\n![a](b.png)\n", source)
-  expect(source).not.toHaveBeenCalled()
+test("a lone image in a list item or a quote is inline, not a block slot", async () => {
+  const { container } = preview("- ![c](d.png)\n", picture)
+  await screen.findByTestId("pic")
+  expect(container.querySelector("li span.stylo-image-inline img")).not.toBeNull()
+  expect(container.querySelector("div.stylo-image")).toBeNull()
 })
-
-test("an image followed by words in the same paragraph is left alone", () => {
+test("an image that continues a paragraph is drawn inline, after the words", async () => {
   const source = vi.fn(picture)
-  const { container } = preview("![a](b.png) and more words\n", source)
-  expect(source).not.toHaveBeenCalled()
+  const { container } = preview("some words\n![a](b.png)\n", source)
+  await screen.findByTestId("pic")
+  expect(source).toHaveBeenCalledWith("b.png", "a")
+  expect(container.querySelector("p")?.textContent).toContain("some words")
+})
+test("an image followed by words keeps the words", async () => {
+  const { container } = preview("![a](b.png) and more words\n", picture)
+  await screen.findByTestId("pic")
   expect(container.textContent).toContain("and more words")
 })
-
-test("two images on one line are not a lone image", () => {
-  const source = vi.fn(picture)
-  preview("![a](b.png) ![c](d.png)\n", source)
-  expect(source).not.toHaveBeenCalled()
+test("two images on one line are resolved separately, inline", async () => {
+  const { container } = preview("![a](b.png) ![c](d.png)\n", picture)
+  await vi.waitFor(() => expect(screen.getAllByTestId("pic")).toHaveLength(2))
+  expect(container.querySelectorAll("span.stylo-image-inline")).toHaveLength(2)
 })
 
+test("an image in a heading and in a table cell is drawn", async () => {
+  const { container } = preview(
+    "# T ![h](h.png)\n\n| a | b |\n| - | - |\n| ![g](g.png) | x |\n",
+    picture,
+  )
+  await vi.waitFor(() => expect(screen.getAllByTestId("pic")).toHaveLength(2))
+  expect(container.querySelector("h1 span.stylo-image-inline img")).not.toBeNull()
+  expect(container.querySelector("td span.stylo-image-inline img")).not.toBeNull()
+})
+
+test("a linked image and an image in code are left to react-markdown", () => {
+  const source = vi.fn(picture)
+  const { container } = preview("[![l](m.png)](https://x.test)\n\n`![c](k.png)`\n", source)
+  expect(source).not.toHaveBeenCalled()
+  expect(container.querySelector("a img")?.getAttribute("src")).toBe("m.png")
+  expect(container.querySelector("code")?.textContent).toBe("![c](k.png)")
+})
+
+test("an inline image that resolves to null keeps its source in the sentence", async () => {
+  const { container } = preview("see ![a](b.png) here\n", () => null)
+  await vi.waitFor(() => expect(container.textContent).toContain("see ![a](b.png) here"))
+})
+
+test("imageWidth and imageAlign reach the root as attributes, defaulting to column and left", () => {
+  const { container, rerender } = preview("![a](b.png)\n", picture)
+  const root = () => container.querySelector(".stylo") as HTMLElement
+  expect(root().dataset.styloImageWidth).toBe("column")
+  expect(root().dataset.styloImageAlign).toBe("left")
+  rerender(
+    <Stylo
+      value="![a](b.png)"
+      onChange={() => {}}
+      mode="preview"
+      imageSource={picture}
+      imageWidth="wide"
+      imageAlign="center"
+    />,
+  )
+  expect(root().dataset.styloImageWidth).toBe("wide")
+  expect(root().dataset.styloImageAlign).toBe("center")
+})
 test("an image with no destination is left alone", () => {
   const source = vi.fn(picture)
   const { container } = preview("![a]()\n", source)
