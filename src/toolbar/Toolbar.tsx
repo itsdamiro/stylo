@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef, useState } from "react"
+import { useRef } from "react"
 import type { ReactNode } from "react"
 import type { EditorView } from "@codemirror/view"
 import styles from "../styles/stylo.module.css"
@@ -12,6 +12,7 @@ import { useKeyboardInset } from "./keyboard-inset"
 import { OverflowBar } from "./OverflowBar"
 import { groupItems, toButton } from "./toolbar-model"
 import type { Btn, Resolved } from "./toolbar-model"
+import { useToolbarRefresh } from "./use-toolbar-refresh"
 
 export interface ToolbarProps {
   /** The surface the commands act on. `null` while a lazy view is mounting. */
@@ -50,36 +51,12 @@ export function Toolbar({
   overflow,
   overflowIcon,
 }: ToolbarProps) {
-  const [, refresh] = useReducer((n: number) => n + 1, 0)
-  const [focused, setFocused] = useState(false)
+  const { focused, refresh } = useToolbarRefresh(view)
   // Only "bottom" needs keyboard tracking — nothing eats into the top of the
   // screen the way a keyboard eats the bottom.
   const keyboardInset = useKeyboardInset(sticky === "bottom")
   const barRef = useRef<HTMLDivElement>(null)
   useFloatingWatchdog(barRef, sticky === "top")
-
-  useEffect(() => {
-    if (!view) return
-    const el = view.contentDOM
-    setFocused(view.hasFocus)
-    const onFocus = () => {
-      setFocused(true)
-      refresh()
-    }
-    const onBlur = () => {
-      setFocused(false)
-      refresh()
-    }
-    const events = ["keyup", "mouseup", "input"] as const
-    for (const ev of events) el.addEventListener(ev, refresh)
-    el.addEventListener("focus", onFocus)
-    el.addEventListener("blur", onBlur)
-    return () => {
-      for (const ev of events) el.removeEventListener(ev, refresh)
-      el.removeEventListener("focus", onFocus)
-      el.removeEventListener("blur", onBlur)
-    }
-  }, [view])
 
   // "dynamic" fades the bar out while nothing is focused, so it doesn't sit
   // over the content while the caret is elsewhere (e.g. scrolling to read).
