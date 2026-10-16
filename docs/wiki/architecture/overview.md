@@ -29,7 +29,7 @@ Stylo assembles four well-scoped libraries rather than taking on an editor frame
 
 Every dependency is modular, tree-shakeable, and MIT.
 
-**The bundle boundary.** CodeMirror and Lezer are _peer_ dependencies ([ADR-008](../../decisions/008-codemirror-peer-dependency.md)), externalised from `dist/`: the host installs one copy and Stylo shares it, so `EditorState`, facets, and the syntax tree have one module identity across the host app and the editor — which is what makes `getView()` and host-supplied extensions safe. `react` is a peer for the same reason. The preview-side libraries (`katex`, the `remark` / `rehype` pipeline) stay bundled — they carry no identity contract, only weight.
+**The bundle boundary.** CodeMirror and Lezer are _peer_ dependencies ([ADR-008](../../decisions/008-codemirror-peer-dependency.md)), externalised from `dist/`: the host installs one copy and Stylo shares it, so `EditorState`, facets, and the syntax tree have one module identity across the host app and the editor — which is what makes `getView()` and host-supplied extensions safe. Two feature packages, `@codemirror/autocomplete` and `@codemirror/search`, are regular dependencies on purpose: they pull in no second copy of `state` or `view` (see the ADR's 2026-10-16 amendment). `react` is a peer for the same reason. The preview-side libraries (`katex`, the `remark` / `rehype` pipeline) stay bundled — they carry no identity contract, only weight.
 
 ## Data flow
 
