@@ -1,17 +1,12 @@
 /**
- * Re-export barrel over `types/`, split by domain: `core` (`StyloProps` and the
- * top-level display/mode types), `handle` (`StyloHandle`), `toolbar` (toolbar
- * config), `sources` (wikilink/tag/embed resolver types), and `inplace`
- * (in-place canvas config). Kept so nothing importing from `./types` today
- * has to change.
+ * Re-export barrel over `types/`, split by domain: `core` (`StyloProps`),
+ * `display` (the mode, frontmatter, code-language and task-toggle types),
+ * `handle` (`StyloHandle`), `toolbar` (toolbar config), `sources`
+ * (wikilink/tag/embed resolver types), and `inplace` (in-place canvas config).
+ * Kept so nothing importing from `./types` today has to change.
  */
-export type {
-  StyloMode,
-  FrontmatterDisplay,
-  CodeLanguages,
-  TaskToggleInfo,
-  StyloProps,
-} from "./types/core"
+export type { StyloMode, FrontmatterDisplay, CodeLanguages, TaskToggleInfo } from "./types/display"
+export type { StyloProps } from "./types/core"
 export type { StyloHandle } from "./types/handle"
 export type {
   ToolbarCommandId,
